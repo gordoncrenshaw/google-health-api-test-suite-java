@@ -81,7 +81,11 @@ public class DataTypeRegistryTest {
         for (DataTypeDefinition dt : all) {
             assertNotNull(dt.getEndpointVersion(), "DataType " + dt.getName() + " must have endpointVersion");
             assertFalse(dt.getEndpointVersion().trim().isEmpty(), "DataType " + dt.getName() + " endpointVersion must not be empty");
-            assertEquals("v4", dt.getEndpointVersion(), "Default endpoint version for " + dt.getName() + " must be v4");
+            assertTrue(dt.getEndpointVersion().startsWith("v"), "Endpoint version for " + dt.getName() + " must start with 'v'");
+        }
+        assertEquals("v4", registry.getDataType("steps").get().getEndpointVersion());
+        if (registry.hasDataType("skin-temperature-sensors")) {
+            assertEquals("v4beta", registry.getDataType("skin-temperature-sensors").get().getEndpointVersion());
         }
     }
 

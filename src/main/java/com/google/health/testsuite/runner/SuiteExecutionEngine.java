@@ -68,7 +68,19 @@ public class SuiteExecutionEngine {
 
             ValidationResult valResult = validationEngine.validate(def, response.getBody());
             boolean passed = response.isSuccess() && valResult.isValid();
-            String msg = (passed ? "Success" : "Failed") + ": HTTP " + response.getStatusCode() + " - " + valResult.getMessage();
+            String msg;
+            if (!response.isSuccess()) {
+                String statusMsg = response.getStatusMessage();
+                if (statusMsg != null && !statusMsg.isBlank() && !statusMsg.equals("HTTP " + response.getStatusCode())) {
+                    msg = "Failed: HTTP " + response.getStatusCode() + " - " + statusMsg;
+                } else {
+                    msg = "Failed: HTTP " + response.getStatusCode();
+                }
+            } else if (!valResult.isValid()) {
+                msg = "Failed range validation: " + valResult.getMessage();
+            } else {
+                msg = "Success: HTTP " + response.getStatusCode() + " (" + valResult.getMessage() + ")";
+            }
 
             return new TestResult("Test " + def.getName() + " [" + op + "]", def.getName(), op,
                     passed, response.getStatusCode(), response.getLatencyMs(), msg, valResult, response);

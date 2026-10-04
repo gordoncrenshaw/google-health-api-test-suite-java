@@ -34,8 +34,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.classList.add('active');
                 const targetPane = document.getElementById(targetTabId);
                 if (targetPane) targetPane.classList.add('active');
+
+                // Persist active tab across page reloads
+                localStorage.setItem('activeTab', targetTabId);
+                history.replaceState(null, null, '#' + targetTabId);
             });
         });
+
+        // Restore active tab from hash or localStorage on page load
+        const savedTab = window.location.hash.replace('#', '') || localStorage.getItem('activeTab');
+        if (savedTab) {
+            const btn = document.querySelector(`.nav-tab[data-tab="${savedTab}"]`);
+            if (btn) btn.click();
+        }
     }
 
     // ==========================================================================
@@ -495,6 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else failed++;
             totalLatency += r.latencyMs;
 
+            const detailText = !r.passed ? r.message : (r.validationResult?.message || r.message);
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><span class="pill-badge ${r.passed ? 'pill-success' : 'pill-danger'}">${r.passed ? 'PASS' : 'FAIL'}</span></td>
@@ -502,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><span class="font-mono">${r.endpoint}</span></td>
                 <td><span class="font-mono ${r.statusCode === 200 ? 'text-success' : 'text-danger'}">HTTP ${r.statusCode}</span></td>
                 <td>${r.latencyMs} ms</td>
-                <td><span class="text-secondary" style="font-size: 12px;">${r.validationResult?.message || r.message}</span></td>
+                <td><span class="text-secondary" style="font-size: 12px;">${detailText}</span></td>
                 <td><span class="text-muted font-mono" style="font-size: 11px;">${new Date().toLocaleTimeString()}</span></td>
             `;
             tbody.appendChild(tr);
@@ -804,23 +816,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const resData = await res.json();
                     if (res.ok && resData.success) {
-                        showFeedback(`✓ Data type '${name}' registered successfully!`, 'success');
-                        // Reset form
-                        document.getElementById('form-add-datatype').reset();
-                        document.getElementById('new-dt-version').value = 'v4';
-                        document.getElementById('ep-list').checked = true;
-                        document.getElementById('ep-get').checked = true;
-                        document.getElementById('ep-create').checked = true;
-                        document.getElementById('ep-batchdelete').checked = true;
+                        showFeedback(`✓ Data type '${name}' registered successfully! Refreshing page...`, 'success');
+                        localStorage.setItem('activeTab', 'tab-datatypes');
+                        window.location.hash = '#tab-datatypes';
 
-                        // Reload data types list
-                        await loadDataTypes();
-
-                        // Auto-hide panel after 2.5 seconds
+                        // Refresh page so the new data type appears in the list
                         setTimeout(() => {
-                            togglePanel(false);
-                            if (feedbackEl) feedbackEl.style.display = 'none';
-                        }, 2500);
+                            window.location.reload();
+                        }, 750);
                     } else {
                         showFeedback(resData.error || resData.message || 'Failed to register data type.', 'danger');
                     }

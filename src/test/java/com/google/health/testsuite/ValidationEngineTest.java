@@ -95,4 +95,31 @@ public class ValidationEngineTest {
         ValidationResult result = validationEngine.validate(heartRateDef, json);
         assertFalse(result.isValid(), "Validation should fail for 350 bpm (max 300)");
     }
+
+    @Test
+    void testValidateWithoutMinMaxConstraints() {
+        DataTypeDefinition unconstrained = new DataTypeDefinition("skin-temperature-sensors",
+                "Skin Temperature Sensors", "v4beta", null,
+                List.of("list"), "skin_temperature_sensors", false, null, null, "celcius");
+        unconstrained.setSampleValueField("skinTemperatureSensor.sensorData.temperatureCelsius");
+
+        String json = """
+                {
+                  "dataPoints": [
+                    {
+                      "name": "users/me/dataTypes/skin-temperature-sensors/dataPoints/1",
+                      "skinTemperatureSensor": {
+                        "sensorData": {
+                          "temperatureCelsius": 36.6
+                        }
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        ValidationResult result = validationEngine.validate(unconstrained, json);
+        assertTrue(result.isValid(), "Validation must not fail when minValue and maxValue are not listed in the definition");
+        assertTrue(result.getMessage().contains("passed") || result.getMessage().contains("Valid"));
+    }
 }
