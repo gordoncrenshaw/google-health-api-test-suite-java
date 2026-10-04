@@ -1,0 +1,70 @@
+# ==============================================================================
+# Google Health API Test Suite - Sample Script (Mode 3)
+# ==============================================================================
+# Demonstrates running automated test steps with query filters, assertions,
+# and min/max value validation against datatypes.yaml.
+# ==============================================================================
+
+name: "Google Health API End-to-End Sample Test Suite"
+description: "Verifies user identity, device pairing, and query endpoints for activity and biometric metrics"
+stopOnError: false
+
+steps:
+  # Step 1: Verify Authorization Status
+  - name: "Verify Stored Authorization Tokens"
+    action: "check_auth"
+    assertStatus: [200]
+
+  # Step 2: Query User Profile
+  - name: "Fetch User Profile Identity"
+    action: "profile"
+    userId: "me"
+    assertStatus: [200]
+
+  # Step 3: List Paired Wearables and Trackers
+  - name: "List Paired Devices"
+    action: "devices"
+    userId: "me"
+    assertStatus: [200]
+
+  # Step 4: Query Step Count with Range Validation
+  - name: "Query Steps DataPoints"
+    action: "list"
+    dataType: "steps"
+    queryParams:
+      pageSize: "25"
+    assertStatus: [200]
+    validateRange: true
+
+  # Step 5: Query Heart Rate Samples with Range Validation (1-300 bpm)
+  - name: "Query Heart Rate Samples"
+    action: "list"
+    dataType: "heart_rate"
+    queryParams:
+      pageSize: "25"
+    assertStatus: [200]
+    validateRange: true
+
+  # Step 6: Query Distance Millimeters
+  - name: "Query Distance DataPoints"
+    action: "list"
+    dataType: "distance"
+    queryParams:
+      pageSize: "25"
+    assertStatus: [200]
+    validateRange: true
+
+  # Step 7: Query Body Weight in Grams
+  - name: "Query Weight Measurements"
+    action: "list"
+    dataType: "weight"
+    queryParams:
+      pageSize: "10"
+    assertStatus: [200]
+    validateRange: true
+
+  # Step 8: Physical Rollup for Steps
+  - name: "RollUp Steps Aggregation"
+    action: "rollup"
+    dataType: "steps"
+    assertStatus: [200]

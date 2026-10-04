@@ -1,0 +1,8 @@
+# Example User Authorization File Template
+healthUserID: "me"
+accessToken: "ya29.a0AfH6SMA..."
+refreshToken: "1//04..."
+tokenType: "Bearer"
+expiresAtEpochMs: 1735689600000
+updatedAt: "2026-10-04T02:00:00Z"
+scope: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"

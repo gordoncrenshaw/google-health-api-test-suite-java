@@ -1,0 +1,63 @@
+# Comprehensive regression test script covering multiple data types and endpoints
+name: "Google Health API Full Regression Test Suite"
+description: "Executes queries and validations across 9 key Health API data types"
+stopOnError: false
+
+steps:
+  - name: "Regression: Check Auth Status"
+    action: "check_auth"
+    assertStatus: [200]
+
+  - name: "Regression: Steps Query"
+    action: "list"
+    dataType: "steps"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Regression: Distance Query"
+    action: "list"
+    dataType: "distance"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Regression: Heart Rate Query"
+    action: "list"
+    dataType: "heart_rate"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Regression: Active Energy Burned Query"
+    action: "list"
+    dataType: "active_energy_burned"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Regression: Weight Query"
+    action: "list"
+    dataType: "weight"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Regression: Height Query"
+    action: "list"
+    dataType: "height"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Regression: Sleep Query"
+    action: "list"
+    dataType: "sleep"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Regression: Blood Oxygen (SpO2) Query"
+    action: "list"
+    dataType: "oxygen_saturation"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Regression: Blood Glucose Query"
+    action: "list"
+    dataType: "blood_glucose"
+    assertStatus: [200]
+    validateRange: true

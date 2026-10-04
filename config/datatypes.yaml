@@ -1,0 +1,344 @@
+# ==============================================================================
+# Google Health API (v4) - Supported Data Types Definition
+# ==============================================================================
+# Each datatype lists:
+#   - name: The official datatype identifier used in the API URL path
+#   - displayName: Human readable label
+#   - scopeRequired: The OAuth 2.0 scope required to read this datatype
+#   - writeScopeRequired: The OAuth 2.0 scope required to write/create this datatype
+#   - endpointsSupported: List of supported HTTP REST operations:
+#       ["list", "get", "create", "batchDelete", "rollUp", "dailyRollUp"]
+#   - filterParameterName: Field pattern used in list filters (AIP-160)
+#   - webhooksSupported: Boolean indicating if webhook subscription is supported
+#   - minValue: Minimum valid numerical value supported by Google Health API
+#   - maxValue: Maximum valid numerical value supported by Google Health API
+#   - unit: Measurement unit (count, bpm, millimeters, grams, kcal, %, mg/dL, etc.)
+#   - sampleValueField: JSON field path containing the primary measurement value
+#
+# To add a new datatype, append a new entry to the `dataTypes` list below.
+# ==============================================================================
+
+version: "1.0"
+dataTypes:
+  - name: "steps"
+    displayName: "Step Count"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+      - "rollUp"
+      - "dailyRollUp"
+    filterParameterName: "steps.interval.start_time"
+    webhooksSupported: true
+    minValue: 0
+    maxValue: 1000000
+    unit: "count"
+    sampleValueField: "steps.count"
+
+  - name: "distance"
+    displayName: "Distance"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+      - "rollUp"
+      - "dailyRollUp"
+    filterParameterName: "distance.interval.start_time"
+    webhooksSupported: true
+    minValue: 0
+    maxValue: 1000000000
+    unit: "millimeters"
+    sampleValueField: "distance.millimeters"
+
+  - name: "floors"
+    displayName: "Floors Climbed"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+      - "rollUp"
+      - "dailyRollUp"
+    filterParameterName: "floors.interval.start_time"
+    webhooksSupported: true
+    minValue: 0
+    maxValue: 1000000
+    unit: "count"
+    sampleValueField: "floors.count"
+
+  - name: "altitude"
+    displayName: "Altitude"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+      - "rollUp"
+      - "dailyRollUp"
+    filterParameterName: "altitude.interval.start_time"
+    webhooksSupported: true
+    minValue: -500
+    maxValue: 9000
+    unit: "meters"
+    sampleValueField: "altitude.gainMeters"
+
+  - name: "active_energy_burned"
+    displayName: "Active Calories Burned"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+      - "rollUp"
+      - "dailyRollUp"
+    filterParameterName: "active_energy_burned.interval.start_time"
+    webhooksSupported: false
+    minValue: 0
+    maxValue: 1000000
+    unit: "kcal"
+    sampleValueField: "activeEnergyBurned.kcal"
+
+  - name: "basal_energy_burned"
+    displayName: "Basal Calories Burned"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+      - "rollUp"
+      - "dailyRollUp"
+    filterParameterName: "basal_energy_burned.interval.start_time"
+    webhooksSupported: false
+    minValue: 0
+    maxValue: 1000000
+    unit: "kcal"
+    sampleValueField: "basalEnergyBurned.kcal"
+
+  - name: "active_zone_minutes"
+    displayName: "Active Zone Minutes"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+      - "rollUp"
+      - "dailyRollUp"
+    filterParameterName: "active_zone_minutes.interval.start_time"
+    webhooksSupported: false
+    minValue: 0
+    maxValue: 1440
+    unit: "minutes"
+    sampleValueField: "activeZoneMinutes.activeZoneMinutes"
+
+  - name: "heart_rate"
+    displayName: "Heart Rate"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+      - "rollUp"
+      - "dailyRollUp"
+    filterParameterName: "heart_rate.sample_time.physical_time"
+    webhooksSupported: false
+    minValue: 1
+    maxValue: 300
+    unit: "bpm"
+    sampleValueField: "heartRate.beatsPerMinute"
+
+  - name: "daily_resting_heart_rate"
+    displayName: "Daily Resting Heart Rate"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "dailyRollUp"
+    filterParameterName: "daily_resting_heart_rate.date"
+    webhooksSupported: false
+    minValue: 20
+    maxValue: 250
+    unit: "bpm"
+    sampleValueField: "dailyRestingHeartRate.beatsPerMinute"
+
+  - name: "heart_rate_variability"
+    displayName: "Heart Rate Variability (HRV)"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+    filterParameterName: "heart_rate_variability.sample_time.physical_time"
+    webhooksSupported: false
+    minValue: 0
+    maxValue: 500
+    unit: "ms"
+    sampleValueField: "heartRateVariability.rmssd"
+
+  - name: "weight"
+    displayName: "Body Weight"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+      - "rollUp"
+      - "dailyRollUp"
+    filterParameterName: "weight.sample_time.physical_time"
+    webhooksSupported: true
+    minValue: 0
+    maxValue: 1000000
+    unit: "grams"
+    sampleValueField: "weight.weightGrams"
+
+  - name: "height"
+    displayName: "Body Height"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+    filterParameterName: "height.sample_time.physical_time"
+    webhooksSupported: false
+    minValue: 0
+    maxValue: 3000
+    unit: "millimeters"
+    sampleValueField: "height.heightMillimeters"
+
+  - name: "body_fat"
+    displayName: "Body Fat Percentage"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+      - "rollUp"
+      - "dailyRollUp"
+    filterParameterName: "body_fat.sample_time.physical_time"
+    webhooksSupported: false
+    minValue: 0
+    maxValue: 100
+    unit: "percentage"
+    sampleValueField: "bodyFat.percentage"
+
+  - name: "oxygen_saturation"
+    displayName: "Blood Oxygen (SpO2)"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+    filterParameterName: "oxygen_saturation.sample_time.physical_time"
+    webhooksSupported: false
+    minValue: 0
+    maxValue: 100
+    unit: "percentage"
+    sampleValueField: "oxygenSaturation.percentage"
+
+  - name: "blood_glucose"
+    displayName: "Blood Glucose"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+      - "rollUp"
+      - "dailyRollUp"
+    filterParameterName: "blood_glucose.sample_time.physical_time"
+    webhooksSupported: false
+    minValue: 0
+    maxValue: 900
+    unit: "mg/dL"
+    sampleValueField: "bloodGlucose.bloodGlucoseMilligramsPerDeciliter"
+
+  - name: "sleep"
+    displayName: "Sleep Sessions"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.sleep.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.sleep.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+      - "reconcile"
+    filterParameterName: "sleep.interval.end_time"
+    webhooksSupported: true
+    minValue: 0
+    maxValue: 86400
+    unit: "seconds"
+    sampleValueField: "sleep.durationSeconds"
+
+  - name: "mindfulness"
+    displayName: "Mindfulness Sessions"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.mindfulness.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.mindfulness.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+    filterParameterName: "mindfulness.interval.start_time"
+    webhooksSupported: false
+    minValue: 0
+    maxValue: 86400
+    unit: "seconds"
+    sampleValueField: "mindfulness.durationSeconds"
+
+  - name: "exercise"
+    displayName: "Exercise Workouts"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "exportExerciseTcx"
+    filterParameterName: "exercise.interval.civil_start_time"
+    webhooksSupported: false
+    minValue: 0
+    maxValue: 86400
+    unit: "seconds"
+    sampleValueField: "exercise.durationSeconds"
+
+  - name: "electrocardiogram"
+    displayName: "Electrocardiogram (ECG)"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.ecg.readonly"
+    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.ecg.readonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+    filterParameterName: "electrocardiogram.interval.start_time"
+    webhooksSupported: false
+    minValue: 0
+    maxValue: 500
+    unit: "samples"
+    sampleValueField: "electrocardiogram.classification"

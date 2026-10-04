@@ -1,0 +1,24 @@
+# Example Preferences File Template
+clientId: "1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com"
+clientSecret: "GOCSPX-xxxxxxxxxxxxxxxxxxxxxxxx"
+authUri: "https://accounts.google.com/o/oauth2/v2/auth"
+tokenUri: "https://oauth2.googleapis.com/token"
+redirectUri: "http://localhost:8888/oauth2callback"
+apiBaseUrl: "https://health.googleapis.com"
+defaultUserId: "me"
+mockMode: false
+
+scopes:
+  - "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
+  - "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
+  - "https://www.googleapis.com/auth/googlehealth.sleep.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.sleep.writeonly"
+  - "https://www.googleapis.com/auth/googlehealth.mindfulness.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.logged_symptoms.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.reproductive_health.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.ecg.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.location.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.profile.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.settings.readonly"

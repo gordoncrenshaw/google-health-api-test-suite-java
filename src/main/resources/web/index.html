@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Google Health API Test Suite - Interactive test runner and API explorer supporting CLI, Web UX, and Script automation.">
+    <title>Google Health API Test Suite</title>
+    <!-- Modern Typography: Inter & Google Sans style -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top App Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo-box">
+                    <svg class="google-health-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="url(#heart-grad)"/>
+                        <path d="M11 7h2v4h4v2h-4v4h-2v-4H7v-2h4V7z" fill="#ffffff"/>
+                        <defs>
+                            <linearGradient id="heart-grad" x1="2" y1="3" x2="22" y2="21.35" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#38bdf8"/>
+                                <stop offset="1" stop-color="#3b82f6"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="app-title">Google Health API <span class="badge-v4">v4 Test Suite</span></h1>
+                    <p class="app-subtitle">Standardized HTTP testing, auto-refresh token management & schema validation</p>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div id="mode-badge" class="pill-badge pill-live">LIVE API</div>
+                <div id="token-status-pill" class="pill-badge pill-warn">Checking Auth...</div>
+                <button id="btn-quick-refresh" class="btn btn-secondary btn-sm" title="Refresh Access Token Now">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                    Refresh Token
+                </button>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="tab-dashboard" id="tab-btn-dashboard">
+                <svg viewBox="0 0 24 24" class="tab-icon"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+                Dashboard & Auth
+            </button>
+            <button class="nav-tab" data-tab="tab-explorer" id="tab-btn-explorer">
+                <svg viewBox="0 0 24 24" class="tab-icon"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.4z"/></svg>
+                API Explorer
+            </button>
+            <button class="nav-tab" data-tab="tab-suite" id="tab-btn-suite">
+                <svg viewBox="0 0 24 24" class="tab-icon"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+                Full Test Suite
+            </button>
+            <button class="nav-tab" data-tab="tab-script" id="tab-btn-script">
+                <svg viewBox="0 0 24 24" class="tab-icon"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                Script Runner
+            </button>
+            <button class="nav-tab" data-tab="tab-datatypes" id="tab-btn-datatypes">
+                <svg viewBox="0 0 24 24" class="tab-icon"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+                Data Types Registry
+            </button>
+            <button class="nav-tab" data-tab="tab-settings" id="tab-btn-settings">
+                <svg viewBox="0 0 24 24" class="tab-icon"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                Preferences
+            </button>
+        </nav>
+
+        <!-- Main Content Panes -->
+        <main class="content-area">
+
+            <!-- TAB 1: DASHBOARD & AUTH -->
+            <section id="tab-dashboard" class="tab-pane active">
+                <div class="grid-2-col">
+                    <!-- Token Status Card -->
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h2 class="card-title">User Authorization Status</h2>
+                            <span class="file-badge">config/userAuthorization.yaml</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="metric-row">
+                                <span class="metric-label">Health User ID:</span>
+                                <span id="dash-health-user-id" class="metric-value font-mono">me</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Access Token:</span>
+                                <span id="dash-access-token-status" class="metric-value">Not Loaded</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Refresh Token:</span>
+                                <span id="dash-refresh-token-status" class="metric-value">Not Loaded</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Token Expiration:</span>
+                                <span id="dash-token-countdown" class="metric-value font-mono highlight">0s</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Auto-Refresh:</span>
+                                <span class="metric-value text-success">&#10004; Active (on expiry or 401)</span>
+                            </div>
+
+                            <div class="action-buttons mt-4">
+                                <button id="btn-refresh-token-dash" class="btn btn-primary">
+                                    <svg viewBox="0 0 24 24" class="btn-icon"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                                    Force Token Refresh
+                                </button>
+                                <button id="btn-start-auth" class="btn btn-outline">
+                                    <svg viewBox="0 0 24 24" class="btn-icon"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                                    Authorize with Google
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Overview Card -->
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Quick Test Actions</h2>
+                            <span class="file-badge">API Base: https://health.googleapis.com</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-4">Execute quick verification calls to confirm credentials and Google connectivity:</p>
+                            <div class="button-stack">
+                                <button id="btn-quick-profile" class="btn btn-secondary btn-block">
+                                    <span>GET /v4/users/{userId}/profile</span>
+                                    <span class="btn-arrow">&rarr;</span>
+                                </button>
+                                <button id="btn-quick-devices" class="btn btn-secondary btn-block">
+                                    <span>GET /v4/users/{userId}/pairedDevices</span>
+                                    <span class="btn-arrow">&rarr;</span>
+                                </button>
+                                <button id="btn-quick-steps" class="btn btn-secondary btn-block">
+                                    <span>GET /v4/users/{userId}/dataTypes/steps/dataPoints</span>
+                                    <span class="btn-arrow">&rarr;</span>
+                                </button>
+                            </div>
+
+                            <div class="quick-result-box mt-4">
+                                <div class="quick-result-header">
+                                    <span>Last Result:</span>
+                                    <span id="quick-result-status" class="pill-badge pill-neutral">Ready</span>
+                                </div>
+                                <pre id="quick-result-body" class="code-preview">// Click any action above to inspect live response</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: INTERACTIVE API EXPLORER -->
+            <section id="tab-explorer" class="tab-pane">
+                <div class="card glass-card mb-4">
+                    <div class="card-header">
+                        <h2 class="card-title">Standardized HTTP Request Builder</h2>
+                        <span class="file-badge" id="explorer-syntax-badge">Syntax: Reusable across all data types</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="explorer-datatype-select">Select Data Type:</label>
+                                <select id="explorer-datatype-select" class="form-control">
+                                    <!-- Populated from datatypes.yaml -->
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="explorer-endpoint-select">Operation / Endpoint:</label>
+                                <select id="explorer-endpoint-select" class="form-control">
+                                    <option value="list">list (GET /dataPoints)</option>
+                                    <option value="get">get (GET /dataPoints/{id})</option>
+                                    <option value="create">create (POST /dataPoints)</option>
+                                    <option value="rollup">rollUp (POST /dataPoints:rollUp)</option>
+                                    <option value="dailyrollup">dailyRollUp (POST /dataPoints:dailyRollUp)</option>
+                                    <option value="batchdelete">batchDelete (POST /dataPoints:batchDelete)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="explorer-page-size">Page Size:</label>
+                                <input type="number" id="explorer-page-size" class="form-control" value="25" min="1" max="1000">
+                            </div>
+                        </div>
+
+                        <!-- Data Type Details Bar -->
+                        <div id="explorer-datatype-info" class="info-bar mt-3">
+                            <div class="info-item"><strong>Scope:</strong> <span id="dt-info-scope" class="font-mono text-cyan">-</span></div>
+                            <div class="info-item"><strong>Filter Param:</strong> <span id="dt-info-filter" class="font-mono">-</span></div>
+                            <div class="info-item"><strong>Webhooks:</strong> <span id="dt-info-webhooks" class="pill-badge pill-neutral">-</span></div>
+                            <div class="info-item"><strong>Valid Range:</strong> <span id="dt-info-range" class="font-mono text-success">-</span></div>
+                        </div>
+
+                        <!-- Request Payload (visible for POST/Create/Rollup) -->
+                        <div id="explorer-payload-container" class="form-group mt-3" style="display: none;">
+                            <label for="explorer-payload-input">Request Body (JSON):</label>
+                            <textarea id="explorer-payload-input" class="form-control font-mono" rows="6" placeholder="{ ... }"></textarea>
+                        </div>
+
+                        <div class="action-buttons mt-4">
+                            <button id="btn-send-request" class="btn btn-primary btn-lg">
+                                <svg viewBox="0 0 24 24" class="btn-icon"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                                Send HTTP Request
+                            </button>
+                            <button id="btn-copy-curl" class="btn btn-secondary">
+                                <svg viewBox="0 0 24 24" class="btn-icon"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                                Copy cURL
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Explorer Live Response Viewer -->
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <div class="response-title-group">
+                            <h3 class="card-title">HTTP Response Inspector</h3>
+                            <span id="explorer-response-status" class="pill-badge pill-neutral">No Request Sent</span>
+                            <span id="explorer-response-latency" class="pill-badge pill-neutral">0 ms</span>
+                            <span id="explorer-validation-badge" class="pill-badge pill-neutral">Range Check: Pending</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="url-display font-mono" id="explorer-request-url">URL: -</div>
+                        <div class="curl-display font-mono mt-2" id="explorer-curl-command">curl command will appear here...</div>
+                        <h4 class="mt-3 text-muted">Response Payload:</h4>
+                        <pre id="explorer-response-body" class="code-viewer">// Response will be displayed here</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: FULL TEST SUITE RUNNER -->
+            <section id="tab-suite" class="tab-pane">
+                <div class="card glass-card mb-4">
+                    <div class="card-header">
+                        <h2 class="card-title">Automated Google Health API Test Suite</h2>
+                        <span class="file-badge">Runs across all datatypes in datatypes.yaml</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">Executes automated HTTP calls across all supported data types, verifies HTTP response codes, checks schema compliance, and validates that returned values adhere to minimum and maximum range constraints.</p>
+
+                        <div class="suite-controls">
+                            <button id="btn-run-full-suite" class="btn btn-primary btn-lg">
+                                <svg viewBox="0 0 24 24" class="btn-icon"><path d="M8 5v14l11-7z"/></svg>
+                                Run All Data Types Test Suite
+                            </button>
+                            <span id="suite-status-text" class="text-muted ml-3">Ready to execute.</span>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="progress-bar-container mt-4">
+                            <div id="suite-progress-bar" class="progress-bar" style="width: 0%;"></div>
+                        </div>
+
+                        <!-- Summary Counters -->
+                        <div class="metric-cards-grid mt-4">
+                            <div class="metric-card">
+                                <div class="metric-card-label">Total Tests</div>
+                                <div id="suite-count-total" class="metric-card-value font-mono">0</div>
+                            </div>
+                            <div class="metric-card border-success">
+                                <div class="metric-card-label text-success">Passed</div>
+                                <div id="suite-count-passed" class="metric-card-value font-mono text-success">0</div>
+                            </div>
+                            <div class="metric-card border-danger">
+                                <div class="metric-card-label text-danger">Failed</div>
+                                <div id="suite-count-failed" class="metric-card-value font-mono text-danger">0</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-card-label">Avg Latency</div>
+                                <div id="suite-avg-latency" class="metric-card-value font-mono">0 ms</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Table -->
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Test Execution Results</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="data-table" id="suite-results-table">
+                                <thead>
+                                    <tr>
+                                        <th>Result</th>
+                                        <th>Data Type</th>
+                                        <th>Endpoint</th>
+                                        <th>HTTP Status</th>
+                                        <th>Latency</th>
+                                        <th>Validation & Range Check</th>
+                                        <th>Timestamp</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="suite-results-tbody">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-4">No test run executed yet. Click "Run All Data Types Test Suite" to start.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: SCRIPT RUNNER (MODE 3) -->
+            <section id="tab-script" class="tab-pane">
+                <div class="grid-2-col">
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Script File Execution (Mode 3)</h2>
+                            <span class="file-badge">scripts/*.yaml</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-4">Execute automated multi-step test scripts containing custom filters, status assertions, and min/max validation assertions.</p>
+
+                            <div class="form-group">
+                                <label for="script-file-select">Available Script Files:</label>
+                                <select id="script-file-select" class="form-control">
+                                    <!-- Populated from /api/scripts -->
+                                </select>
+                            </div>
+
+                            <div class="action-buttons mt-4">
+                                <button id="btn-run-script" class="btn btn-primary">
+                                    <svg viewBox="0 0 24 24" class="btn-icon"><path d="M8 5v14l11-7z"/></svg>
+                                    Execute Selected Script
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Script Execution Output</h2>
+                            <span id="script-run-status" class="pill-badge pill-neutral">Ready</span>
+                        </div>
+                        <div class="card-body">
+                            <pre id="script-output-viewer" class="code-viewer">// Script console output and test results will appear here...</pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: DATA TYPES REGISTRY -->
+            <section id="tab-datatypes" class="tab-pane">
+                <div class="card glass-card mb-4">
+                    <div class="card-header">
+                        <h2 class="card-title">Google Health API (v4) Supported Data Types</h2>
+                        <span class="file-badge">config/datatypes.yaml</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">All data types supported by the test suite are defined in a single file (<code>config/datatypes.yaml</code>). Adding a new data type is as simple as adding a new block to the YAML file.</p>
+                        <div class="table-responsive">
+                            <table class="data-table" id="datatypes-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Display Name</th>
+                                        <th>Unit</th>
+                                        <th>Supported Endpoints</th>
+                                        <th>Webhooks</th>
+                                        <th>Valid Min/Max Range</th>
+                                        <th>Required Scope</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="datatypes-tbody">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: PREFERENCES -->
+            <section id="tab-settings" class="tab-pane">
+                <div class="card glass-card max-w-700">
+                    <div class="card-header">
+                        <h2 class="card-title">Application Preferences</h2>
+                        <span class="file-badge">config/preferences.yaml</span>
+                    </div>
+                    <div class="card-body">
+                        <form id="preferences-form">
+                            <div class="form-group">
+                                <label for="pref-client-id">OAuth 2.0 Client ID:</label>
+                                <input type="text" id="pref-client-id" class="form-control font-mono" placeholder="your-client-id.apps.googleusercontent.com">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="pref-client-secret">OAuth 2.0 Client Secret:</label>
+                                <input type="password" id="pref-client-secret" class="form-control font-mono" placeholder="Enter new secret or leave blank to keep unchanged">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="pref-redirect-uri">Redirect URI:</label>
+                                <input type="text" id="pref-redirect-uri" class="form-control font-mono" value="http://localhost:8888/oauth2callback">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="pref-api-base-url">API Base URL:</label>
+                                <input type="text" id="pref-api-base-url" class="form-control font-mono" value="https://health.googleapis.com">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="pref-default-user">Default User ID:</label>
+                                <input type="text" id="pref-default-user" class="form-control font-mono" value="me">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="pref-mock-mode">
+                                    <span class="checkbox-label"><strong>Enable Mock / Simulation Mode</strong> (Simulates Google Health API responses without live Google credentials)</span>
+                                </label>
+                            </div>
+
+                            <div class="action-buttons mt-4">
+                                <button type="submit" id="btn-save-preferences" class="btn btn-primary">
+                                    Save Preferences
+                                </button>
+                                <span id="pref-save-status" class="text-success ml-3" style="display: none;">Saved successfully!</span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

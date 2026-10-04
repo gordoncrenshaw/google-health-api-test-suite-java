@@ -1,0 +1,42 @@
+# ==============================================================================
+# Google Health API Test Suite - Application Preferences
+# ==============================================================================
+# Stores Google OAuth 2.0 Client credentials and scopes for generating
+# the authorization URL and requesting tokens.
+#
+# Obtain your Client ID and Client Secret from:
+# https://console.cloud.google.com/apis/credentials
+# ==============================================================================
+
+# OAuth 2.0 Credentials
+clientId: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+clientSecret: "YOUR_GOOGLE_CLIENT_SECRET"
+
+# Authorization & Token Service Endpoints
+authUri: "https://accounts.google.com/o/oauth2/v2/auth"
+tokenUri: "https://oauth2.googleapis.com/token"
+redirectUri: "http://localhost:8888/oauth2callback"
+
+# API Base URL & Default Target User ("me" refers to the authenticated user)
+apiBaseUrl: "https://health.googleapis.com"
+defaultUserId: "me"
+
+# Mock Mode: When true, simulates responses and token refresh without requiring live credentials
+mockMode: false
+
+# Scopes to request in the authorization URL
+scopes:
+  - "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
+  - "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
+  - "https://www.googleapis.com/auth/googlehealth.sleep.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.sleep.writeonly"
+  - "https://www.googleapis.com/auth/googlehealth.mindfulness.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.mindfulness.writeonly"
+  - "https://www.googleapis.com/auth/googlehealth.logged_symptoms.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.reproductive_health.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.ecg.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.location.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.profile.readonly"
+  - "https://www.googleapis.com/auth/googlehealth.settings.readonly"
