@@ -254,13 +254,16 @@ All data types supported by the Google Health API are declared and maintained in
   endpointVersion: "v4"                              # Supported API endpoint version (e.g. "v4")
   scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly" # Read scope
   writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly" # Write scope
-  endpointsSupported:                                # List of supported REST endpoints
-    - "list"
-    - "get"
-    - "create"
-    - "batchDelete"
-    - "rollUp"
-    - "dailyRollUp"
+  endpointsSupported:                                # Map of all REST operations (true if supported, false if not)
+    list: true
+    get: true
+    create: true
+    batchDelete: true
+    rollUp: true
+    dailyRollUp: true
+    exportExerciseTcx: false
+    reconcile: false
+    patch: false
   filterParameterName: "steps.interval.start_time"   # AIP-160 filter field
   webhooksSupported: true                            # Webhook subscription capability
   minValue: 0                                        # Documented minimum valid value

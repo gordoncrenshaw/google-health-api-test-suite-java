@@ -103,15 +103,21 @@ public class DataTypeRegistry {
         if (newDef.getWriteScopeRequired() != null && !newDef.getWriteScopeRequired().trim().isEmpty()) {
             sb.append("    writeScopeRequired: \"").append(escapeYaml(newDef.getWriteScopeRequired().trim())).append("\"\n");
         }
-        if (newDef.getEndpointsSupported() != null && !newDef.getEndpointsSupported().isEmpty()) {
-            sb.append("    endpointsSupported:\n");
-            for (String ep : newDef.getEndpointsSupported()) {
-                sb.append("      - \"").append(escapeYaml(ep.trim())).append("\"\n");
+        sb.append("    endpointsSupported:\n");
+        Map<String, Boolean> epMap = newDef.getEndpointsSupported();
+        if (epMap == null || epMap.isEmpty()) {
+            epMap = DataTypeDefinition.createDefaultEndpointsMap();
+            epMap.put("list", true);
+            epMap.put("get", true);
+        }
+        for (String ep : DataTypeDefinition.ALL_ENDPOINTS) {
+            boolean supported = Boolean.TRUE.equals(epMap.get(ep));
+            sb.append("      ").append(ep).append(": ").append(supported).append("\n");
+        }
+        for (Map.Entry<String, Boolean> entry : epMap.entrySet()) {
+            if (!DataTypeDefinition.ALL_ENDPOINTS.contains(entry.getKey())) {
+                sb.append("      ").append(entry.getKey()).append(": ").append(Boolean.TRUE.equals(entry.getValue())).append("\n");
             }
-        } else {
-            sb.append("    endpointsSupported:\n");
-            sb.append("      - \"list\"\n");
-            sb.append("      - \"get\"\n");
         }
         if (newDef.getFilterParameterName() != null && !newDef.getFilterParameterName().trim().isEmpty()) {
             sb.append("    filterParameterName: \"").append(escapeYaml(newDef.getFilterParameterName().trim())).append("\"\n");

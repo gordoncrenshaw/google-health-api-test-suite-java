@@ -274,7 +274,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // Filter supported endpoints
         const endpointSelect = document.getElementById('explorer-endpoint-select');
         Array.from(endpointSelect.options).forEach(opt => {
-            const isSupported = dt.endpointsSupported && dt.endpointsSupported.some(ep => ep.toLowerCase() === opt.value.toLowerCase());
+            let isSupported = false;
+            if (dt.endpointsSupported) {
+                if (Array.isArray(dt.endpointsSupported)) {
+                    isSupported = dt.endpointsSupported.some(ep => ep.toLowerCase() === opt.value.toLowerCase());
+                } else if (typeof dt.endpointsSupported === 'object') {
+                    for (const [k, v] of Object.entries(dt.endpointsSupported)) {
+                        if (k.toLowerCase() === opt.value.toLowerCase() && (v === true || v === 'true')) {
+                            isSupported = true;
+                            break;
+                        }
+                    }
+                }
+            }
             opt.disabled = !isSupported;
             opt.textContent = isSupported ? opt.value : `${opt.value} (not supported)`;
         });
@@ -408,12 +420,26 @@ document.addEventListener('DOMContentLoaded', () => {
         types.forEach(dt => {
             const tr = document.createElement('tr');
             const rangeStr = `[${dt.minValue !== null ? dt.minValue : '0'}, ${dt.maxValue !== null ? dt.maxValue : '∞'}]`;
+            
+            let supportedEndpoints = [];
+            if (Array.isArray(dt.endpointsSupported)) {
+                supportedEndpoints = dt.endpointsSupported;
+            } else if (dt.endpointsSupported && typeof dt.endpointsSupported === 'object') {
+                supportedEndpoints = Object.entries(dt.endpointsSupported)
+                    .filter(([_, v]) => v === true || v === 'true')
+                    .map(([k]) => k);
+            }
+
+            const endpointsHtml = supportedEndpoints.length > 0 
+                ? supportedEndpoints.join(', ')
+                : '<span class="text-muted">None</span>';
+
             tr.innerHTML = `
                 <td><strong>${dt.name}</strong></td>
                 <td>${dt.displayName}</td>
                 <td><span class="pill-badge pill-cyan font-mono">${dt.endpointVersion || 'v4'}</span></td>
                 <td><span class="font-mono">${dt.unit || '-'}</span></td>
-                <td><span class="text-secondary">${(dt.endpointsSupported || []).join(', ')}</span></td>
+                <td><span class="text-secondary">${endpointsHtml}</span></td>
                 <td><span class="pill-badge ${dt.webhooksSupported ? 'pill-success' : 'pill-neutral'}">${dt.webhooksSupported ? 'YES' : 'NO'}</span></td>
                 <td><span class="font-mono text-cyan">${rangeStr}</span></td>
                 <td><span class="font-mono text-muted" style="font-size: 11px;">${dt.scopeRequired}</span></td>
@@ -738,13 +764,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                const endpoints = [];
-                ['list', 'get', 'create', 'batchdelete', 'rollup', 'dailyrollup'].forEach(epId => {
-                    const cb = document.getElementById('ep-' + epId);
-                    if (cb && cb.checked) {
-                        endpoints.push(cb.value);
-                    }
-                });
+                const endpointsMap = {
+                    list: document.getElementById('ep-list')?.checked ?? false,
+                    get: document.getElementById('ep-get')?.checked ?? false,
+                    create: document.getElementById('ep-create')?.checked ?? false,
+                    batchDelete: document.getElementById('ep-batchdelete')?.checked ?? false,
+                    rollUp: document.getElementById('ep-rollup')?.checked ?? false,
+                    dailyRollUp: document.getElementById('ep-dailyrollup')?.checked ?? false,
+                    exportExerciseTcx: document.getElementById('ep-exportexercisetcx')?.checked ?? false,
+                    reconcile: document.getElementById('ep-reconcile')?.checked ?? false,
+                    patch: document.getElementById('ep-patch')?.checked ?? false
+                };
 
                 const payload = {
                     name: name,
@@ -758,7 +788,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     filterParameterName: filterParamInput.value.trim() || null,
                     sampleValueField: sampleFieldInput.value.trim() || null,
                     webhooksSupported: webhooksCheckbox.checked,
-                    endpointsSupported: endpoints
+                    endpointsSupported: endpointsMap
                 };
 
                 saveBtn.disabled = true;

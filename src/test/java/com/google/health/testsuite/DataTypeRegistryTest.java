@@ -120,6 +120,71 @@ public class DataTypeRegistryTest {
         assertTrue(reloadedReg.hasDataType("vo2_max"));
         assertEquals(initialCount + 1, reloadedReg.getAllDataTypes().size());
 
+        // Verify vo2_max endpointsSupported is a map listing all endpoints with true/false
+        DataTypeDefinition reloadedVo2 = reloadedReg.getDataType("vo2_max").get();
+        assertNotNull(reloadedVo2.getEndpointsSupported());
+        for (String ep : DataTypeDefinition.ALL_ENDPOINTS) {
+            assertTrue(reloadedVo2.getEndpointsSupported().containsKey(ep), "vo2_max endpointsSupported must contain " + ep);
+        }
+        assertTrue(reloadedVo2.getEndpointsSupported().get("list"));
+        assertTrue(reloadedVo2.getEndpointsSupported().get("get"));
+        assertTrue(reloadedVo2.getEndpointsSupported().get("create"));
+        assertTrue(reloadedVo2.getEndpointsSupported().get("batchDelete"));
+        assertFalse(reloadedVo2.getEndpointsSupported().get("rollUp"));
+        assertFalse(reloadedVo2.getEndpointsSupported().get("exportExerciseTcx"));
+        assertFalse(reloadedVo2.getEndpointsSupported().get("reconcile"));
+
         tempFile.deleteOnExit();
+    }
+
+    @Test
+    void testEndpointsSupportedMapListsAllEndpointsWithTrueOrFalse() {
+        List<DataTypeDefinition> all = registry.getAllDataTypes();
+        assertFalse(all.isEmpty());
+
+        for (DataTypeDefinition dt : all) {
+            java.util.Map<String, Boolean> epMap = dt.getEndpointsSupported();
+            assertNotNull(epMap, "endpointsSupported must not be null for " + dt.getName());
+            for (String canonicalEp : DataTypeDefinition.ALL_ENDPOINTS) {
+                assertTrue(epMap.containsKey(canonicalEp),
+                        "endpointsSupported for " + dt.getName() + " must contain endpoint '" + canonicalEp + "'");
+                assertNotNull(epMap.get(canonicalEp),
+                        "endpoint '" + canonicalEp + "' for " + dt.getName() + " must have a boolean true/false value");
+            }
+        }
+
+        // Test specific known endpoint mappings
+        DataTypeDefinition steps = registry.getDataType("steps").orElseThrow();
+        assertTrue(steps.getEndpointsSupported().get("list"));
+        assertTrue(steps.getEndpointsSupported().get("get"));
+        assertTrue(steps.getEndpointsSupported().get("create"));
+        assertTrue(steps.getEndpointsSupported().get("batchDelete"));
+        assertTrue(steps.getEndpointsSupported().get("rollUp"));
+        assertTrue(steps.getEndpointsSupported().get("dailyRollUp"));
+        assertFalse(steps.getEndpointsSupported().get("exportExerciseTcx"));
+        assertFalse(steps.getEndpointsSupported().get("reconcile"));
+        assertFalse(steps.getEndpointsSupported().get("patch"));
+
+        DataTypeDefinition exercise = registry.getDataType("exercise").orElseThrow();
+        assertTrue(exercise.getEndpointsSupported().get("list"));
+        assertTrue(exercise.getEndpointsSupported().get("get"));
+        assertTrue(exercise.getEndpointsSupported().get("exportExerciseTcx"));
+        assertFalse(exercise.getEndpointsSupported().get("create"));
+        assertFalse(exercise.getEndpointsSupported().get("batchDelete"));
+        assertFalse(exercise.getEndpointsSupported().get("rollUp"));
+        assertFalse(exercise.getEndpointsSupported().get("dailyRollUp"));
+        assertFalse(exercise.getEndpointsSupported().get("reconcile"));
+        assertFalse(exercise.getEndpointsSupported().get("patch"));
+
+        DataTypeDefinition sleep = registry.getDataType("sleep").orElseThrow();
+        assertTrue(sleep.getEndpointsSupported().get("list"));
+        assertTrue(sleep.getEndpointsSupported().get("get"));
+        assertTrue(sleep.getEndpointsSupported().get("create"));
+        assertTrue(sleep.getEndpointsSupported().get("batchDelete"));
+        assertTrue(sleep.getEndpointsSupported().get("reconcile"));
+        assertFalse(sleep.getEndpointsSupported().get("rollUp"));
+        assertFalse(sleep.getEndpointsSupported().get("dailyRollUp"));
+        assertFalse(sleep.getEndpointsSupported().get("exportExerciseTcx"));
+        assertFalse(sleep.getEndpointsSupported().get("patch"));
     }
 }

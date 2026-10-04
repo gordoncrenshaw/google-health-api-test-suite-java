@@ -1,15 +1,31 @@
 package com.google.health.testsuite.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a Google Health API data type definition as maintained in datatypes.yaml.
+ * The endpointsSupported map explicitly lists all canonical endpoints and boolean true/false support.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DataTypeDefinition {
+
+    /**
+     * Canonical list of all REST operations available on Google Health API data points resources.
+     */
+    public static final List<String> ALL_ENDPOINTS = List.of(
+            "list", "get", "create", "batchDelete", "rollUp", "dailyRollUp",
+            "exportExerciseTcx", "reconcile", "patch"
+    );
 
     @JsonProperty("name")
     private String name;
@@ -23,12 +39,12 @@ public class DataTypeDefinition {
     @JsonProperty("writeScopeRequired")
     private String writeScopeRequired;
 
-    @com.fasterxml.jackson.annotation.JsonAlias({"endpointVersion", "version", "apiVersion"})
+    @JsonAlias({"endpointVersion", "version", "apiVersion"})
     @JsonProperty("endpointVersion")
     private String endpointVersion = "v4";
 
     @JsonProperty("endpointsSupported")
-    private List<String> endpointsSupported = new ArrayList<>();
+    private Map<String, Boolean> endpointsSupported = createDefaultEndpointsMap();
 
     @JsonProperty("filterParameterName")
     private String filterParameterName;
@@ -64,7 +80,7 @@ public class DataTypeDefinition {
         this.displayName = displayName;
         this.endpointVersion = (endpointVersion != null && !endpointVersion.trim().isEmpty()) ? endpointVersion.trim() : "v4";
         this.scopeRequired = scopeRequired;
-        this.endpointsSupported = endpointsSupported != null ? endpointsSupported : new ArrayList<>();
+        setEndpointsSupportedFromList(endpointsSupported);
         this.filterParameterName = filterParameterName;
         this.webhooksSupported = webhooksSupported;
         this.minValue = minValue;
@@ -72,13 +88,42 @@ public class DataTypeDefinition {
         this.unit = unit;
     }
 
+    public DataTypeDefinition(String name, String displayName, String endpointVersion, String scopeRequired,
+                              Map<String, Boolean> endpointsSupported, String filterParameterName,
+                              boolean webhooksSupported, Double minValue, Double maxValue, String unit) {
+        this.name = name;
+        this.displayName = displayName;
+        this.endpointVersion = (endpointVersion != null && !endpointVersion.trim().isEmpty()) ? endpointVersion.trim() : "v4";
+        this.scopeRequired = scopeRequired;
+        setEndpointsSupported(endpointsSupported);
+        this.filterParameterName = filterParameterName;
+        this.webhooksSupported = webhooksSupported;
+        this.minValue = minValue;
+        this.maxValue = maxValue;
+        this.unit = unit;
+    }
+
+    /**
+     * Generates a template map containing all canonical endpoints initialized to false.
+     */
+    public static Map<String, Boolean> createDefaultEndpointsMap() {
+        Map<String, Boolean> map = new LinkedHashMap<>();
+        for (String ep : ALL_ENDPOINTS) {
+            map.put(ep, false);
+        }
+        return map;
+    }
+
+    /**
+     * Checks if the given endpoint is supported (true). Case-insensitive.
+     */
     public boolean supportsEndpoint(String endpoint) {
         if (endpointsSupported == null || endpoint == null) {
             return false;
         }
-        for (String ep : endpointsSupported) {
-            if (ep.equalsIgnoreCase(endpoint.trim())) {
-                return true;
+        for (Map.Entry<String, Boolean> entry : endpointsSupported.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(endpoint.trim())) {
+                return Boolean.TRUE.equals(entry.getValue());
             }
         }
         return false;
@@ -127,12 +172,56 @@ public class DataTypeDefinition {
         this.writeScopeRequired = writeScopeRequired;
     }
 
-    public List<String> getEndpointsSupported() {
+    public Map<String, Boolean> getEndpointsSupported() {
         return endpointsSupported;
     }
 
-    public void setEndpointsSupported(List<String> endpointsSupported) {
-        this.endpointsSupported = endpointsSupported;
+    public void setEndpointsSupported(Map<String, Boolean> endpointsSupported) {
+        this.endpointsSupported = createDefaultEndpointsMap();
+        if (endpointsSupported != null) {
+            for (Map.Entry<String, Boolean> entry : endpointsSupported.entrySet()) {
+                this.endpointsSupported.put(entry.getKey(), Boolean.TRUE.equals(entry.getValue()));
+            }
+        }
+    }
+
+    public void setEndpointsSupportedFromList(List<String> endpoints) {
+        this.endpointsSupported = createDefaultEndpointsMap();
+        if (endpoints != null) {
+            for (String ep : endpoints) {
+                if (ep != null) {
+                    this.endpointsSupported.put(ep.trim(), true);
+                }
+            }
+        }
+    }
+
+    @JsonSetter("endpointsSupported")
+    public void deserializeEndpointsSupported(JsonNode node) {
+        this.endpointsSupported = createDefaultEndpointsMap();
+        if (node == null) return;
+        if (node.isObject()) {
+            node.fields().forEachRemaining(entry -> {
+                this.endpointsSupported.put(entry.getKey(), entry.getValue().asBoolean(false));
+            });
+        } else if (node.isArray()) {
+            for (JsonNode item : node) {
+                this.endpointsSupported.put(item.asText(), true);
+            }
+        }
+    }
+
+    @JsonIgnore
+    public List<String> getSupportedEndpointNames() {
+        List<String> list = new ArrayList<>();
+        if (endpointsSupported != null) {
+            for (Map.Entry<String, Boolean> entry : endpointsSupported.entrySet()) {
+                if (Boolean.TRUE.equals(entry.getValue())) {
+                    list.add(entry.getKey());
+                }
+            }
+        }
+        return list;
     }
 
     public String getFilterParameterName() {

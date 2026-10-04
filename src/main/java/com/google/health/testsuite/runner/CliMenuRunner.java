@@ -347,7 +347,7 @@ public class CliMenuRunner {
                     def.getUnit() != null ? def.getUnit() : "-",
                     def.isWebhooksSupported() ? GREEN + "YES" + RESET : "NO",
                     rangeStr,
-                    String.join(", ", def.getEndpointsSupported()));
+                    String.join(", ", def.getSupportedEndpointNames()));
         }
         System.out.println("------------------------------------------------------------------------");
         System.out.print("Options: [A] Add New Data Type Setting  |  [ENTER] Return: ");
@@ -430,7 +430,7 @@ public class CliMenuRunner {
             DataTypeDefinition def = dataTypeRegistry.getDataType(chosenType).orElseThrow();
 
             System.out.println("\nSelected: " + BOLD + def.getName() + RESET + " (Version: " + CYAN + def.getEndpointVersion() + RESET + ")");
-            System.out.println("Supported endpoints: " + def.getEndpointsSupported());
+            System.out.println("Supported endpoints: " + String.join(", ", def.getSupportedEndpointNames()));
             System.out.print("Enter operation (list/get/create/rollup/dailyrollup) [default: list]: ");
             String ep = scanner.nextLine().trim();
             if (ep.isEmpty()) ep = "list";

@@ -1,13 +1,14 @@
 healthUserID: 7226778021918831098
-accessToken: ya29.a0AX07Cmsswn77QvjJ8bPMqu2LvaXhRCUaPOQqpU8yFNxV1Iam_TJgVXRSrgQonif99vkN-PQGszXYDSY1X7O3qTGkU8z0dji_Hq6MIEyXh8Hlehght-XI4lnNsfaDfogrg6aBqy1KHWeUAyvBEpIsiOswjuCTFqLXtysy-KYklNBQoZEjKcrLlEAl_JfhqNJHf9Xm0M8aCgYKAUQSARYSFQHGX2Mip4i-ACoLNfEDs0j95EQ8nQ0206
+accessToken: ya29.a0AX07CmsZVzlYdL8gc6QudIJ3TEkwINKxvQoK7x_eFYi68eg2CqSGnIVT-IMs8CyLcFQKS7d4R-BcSacezFDLpOWhIXUqGGWarn_xQZXrqMekiX6gFnLTd10wFPdrUpigg0D8eymshucTUMbWpj7j7gdbSMzdVBB6QpkmyW8MfASfOl3voAPLv7qYiSVo22eMqLhHrUQaCgYKARQSARYSFQHGX2Mi_JJibgioS3tLHD2-zLB9cQ0206
 refreshToken: 1//011EacsnMhFmJCgYIARAAGAESNwF-L9IrqmgLRMHFOF-oqK744co8ilNqahZxM24cOnizeaGesbFk4IO2Qbx1yqzTtq99nGraLTk
 tokenType: Bearer
-expiresAtEpochMs: 1791101844230
-updatedAt: 2026-10-04T07:17:25.230067Z
-scope: https://www.googleapis.com/auth/googlehealth.reproductive_health.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly
-  https://www.googleapis.com/auth/googlehealth.ecg.readonly https://www.googleapis.com/auth/googlehealth.location.readonly
+expiresAtEpochMs: 1791104347472
+updatedAt: 2026-10-04T07:59:08.472552Z
+scope: https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly
+  https://www.googleapis.com/auth/googlehealth.location.readonly https://www.googleapis.com/auth/googlehealth.reproductive_health.readonly
+  https://www.googleapis.com/auth/googlehealth.sleep.readonly https://www.googleapis.com/auth/googlehealth.settings.readonly
+  https://www.googleapis.com/auth/googlehealth.sleep.writeonly https://www.googleapis.com/auth/googlehealth.logged_symptoms.readonly
   https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly
-  https://www.googleapis.com/auth/googlehealth.mindfulness.readonly https://www.googleapis.com/auth/googlehealth.sleep.readonly
-  https://www.googleapis.com/auth/googlehealth.settings.readonly https://www.googleapis.com/auth/googlehealth.sleep.writeonly
-  https://www.googleapis.com/auth/googlehealth.logged_symptoms.readonly https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly
-  https://www.googleapis.com/auth/googlehealth.mindfulness.writeonly https://www.googleapis.com/auth/googlehealth.profile.readonly
+  https://www.googleapis.com/auth/googlehealth.mindfulness.readonly https://www.googleapis.com/auth/googlehealth.mindfulness.writeonly
+  https://www.googleapis.com/auth/googlehealth.profile.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly
+  https://www.googleapis.com/auth/googlehealth.ecg.readonly
