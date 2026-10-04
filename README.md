@@ -242,13 +242,14 @@ steps:
 
 ## 📊 Data Types Catalog (`config/datatypes.yaml`)
 
-All data types supported by the Google Health API are declared and maintained in a single file: `config/datatypes.yaml`.
+All data types supported by the Google Health API are declared and maintained in a single file: `config/datatypes.yaml`. Each data type explicitly specifies the API endpoint version it supports (e.g., `v4`), and the test suite's HTTP client dynamically queries this version when calling endpoints.
 
 ### Structure of a Data Type Entry:
 
 ```yaml
 - name: "steps"                                      # Datatype name used in API path
   displayName: "Step Count"                          # Human-readable title
+  endpointVersion: "v4"                              # Supported API endpoint version (e.g. "v4")
   scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly" # Read scope
   writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly" # Write scope
   endpointsSupported:                                # List of supported REST endpoints
@@ -266,29 +267,29 @@ All data types supported by the Google Health API are declared and maintained in
   sampleValueField: "steps.count"                    # JSON path for value extraction
 ```
 
-### Supported Data Types in Google Health API (v4):
+### Supported Data Types & Endpoint Versions:
 
-| Data Type Name | Unit | Webhooks | Valid Range | Endpoints Supported |
-| :--- | :--- | :---: | :--- | :--- |
-| `steps` | count | ✅ Yes | [0, 1,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `distance` | millimeters | ✅ Yes | [0, 1,000,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `floors` | count | ✅ Yes | [0, 1,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `altitude` | meters | ✅ Yes | [-500, 9,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `active_energy_burned` | kcal | ❌ No | [0, 1,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `basal_energy_burned` | kcal | ❌ No | [0, 1,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `active_zone_minutes` | minutes | ❌ No | [0, 1,440] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `heart_rate` | bpm | ❌ No | [1, 300] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `daily_resting_heart_rate`| bpm | ❌ No | [20, 250] | list, get, dailyRollUp |
-| `heart_rate_variability`| ms | ❌ No | [0, 500] | list, get, create, batchDelete |
-| `weight` | grams | ✅ Yes | [0, 1,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `height` | millimeters | ❌ No | [0, 3,000] | list, get, create, batchDelete |
-| `body_fat` | percentage | ❌ No | [0, 100] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `oxygen_saturation` | percentage | ❌ No | [0, 100] | list, get, create, batchDelete |
-| `blood_glucose` | mg/dL | ❌ No | [0, 900] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `sleep` | seconds | ✅ Yes | [0, 86,400] | list, get, create, batchDelete, reconcile |
-| `mindfulness` | seconds | ❌ No | [0, 86,400] | list, get, create, batchDelete |
-| `exercise` | seconds | ❌ No | [0, 86,400] | list, get, exportExerciseTcx |
-| `electrocardiogram` | samples | ❌ No | [0, 500] | list, get |
+| Data Type Name | Version | Unit | Webhooks | Valid Range | Endpoints Supported |
+| :--- | :---: | :--- | :---: | :--- | :--- |
+| `steps` | `v4` | count | ✅ Yes | [0, 1,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `distance` | `v4` | millimeters | ✅ Yes | [0, 1,000,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `floors` | `v4` | count | ✅ Yes | [0, 1,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `altitude` | `v4` | meters | ✅ Yes | [-500, 9,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `active_energy_burned` | `v4` | kcal | ❌ No | [0, 1,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `basal_energy_burned` | `v4` | kcal | ❌ No | [0, 1,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `active_zone_minutes` | `v4` | minutes | ❌ No | [0, 1,440] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `heart_rate` | `v4` | bpm | ❌ No | [1, 300] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `daily_resting_heart_rate`| `v4` | bpm | ❌ No | [20, 250] | list, get, dailyRollUp |
+| `heart_rate_variability`| `v4` | ms | ❌ No | [0, 500] | list, get, create, batchDelete |
+| `weight` | `v4` | grams | ✅ Yes | [0, 1,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `height` | `v4` | millimeters | ❌ No | [0, 3,000] | list, get, create, batchDelete |
+| `body_fat` | `v4` | percentage | ❌ No | [0, 100] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `oxygen_saturation` | `v4` | percentage | ❌ No | [0, 100] | list, get, create, batchDelete |
+| `blood_glucose` | `v4` | mg/dL | ❌ No | [0, 900] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `sleep` | `v4` | seconds | ✅ Yes | [0, 86,400] | list, get, create, batchDelete, reconcile |
+| `mindfulness` | `v4` | seconds | ❌ No | [0, 86,400] | list, get, create, batchDelete |
+| `exercise` | `v4` | seconds | ❌ No | [0, 86,400] | list, get, exportExerciseTcx |
+| `electrocardiogram` | `v4` | samples | ❌ No | [0, 500] | list, get |
 
 ---
 

@@ -23,6 +23,10 @@ public class DataTypeDefinition {
     @JsonProperty("writeScopeRequired")
     private String writeScopeRequired;
 
+    @com.fasterxml.jackson.annotation.JsonAlias({"endpointVersion", "version", "apiVersion"})
+    @JsonProperty("endpointVersion")
+    private String endpointVersion = "v4";
+
     @JsonProperty("endpointsSupported")
     private List<String> endpointsSupported = new ArrayList<>();
 
@@ -50,8 +54,15 @@ public class DataTypeDefinition {
     public DataTypeDefinition(String name, String displayName, String scopeRequired,
                               List<String> endpointsSupported, String filterParameterName,
                               boolean webhooksSupported, Double minValue, Double maxValue, String unit) {
+        this(name, displayName, "v4", scopeRequired, endpointsSupported, filterParameterName, webhooksSupported, minValue, maxValue, unit);
+    }
+
+    public DataTypeDefinition(String name, String displayName, String endpointVersion, String scopeRequired,
+                              List<String> endpointsSupported, String filterParameterName,
+                              boolean webhooksSupported, Double minValue, Double maxValue, String unit) {
         this.name = name;
         this.displayName = displayName;
+        this.endpointVersion = (endpointVersion != null && !endpointVersion.trim().isEmpty()) ? endpointVersion.trim() : "v4";
         this.scopeRequired = scopeRequired;
         this.endpointsSupported = endpointsSupported != null ? endpointsSupported : new ArrayList<>();
         this.filterParameterName = filterParameterName;
@@ -172,11 +183,23 @@ public class DataTypeDefinition {
         this.sampleValueField = sampleValueField;
     }
 
+    public String getEndpointVersion() {
+        if (endpointVersion == null || endpointVersion.trim().isEmpty()) {
+            return "v4";
+        }
+        return endpointVersion.trim();
+    }
+
+    public void setEndpointVersion(String endpointVersion) {
+        this.endpointVersion = endpointVersion;
+    }
+
     @Override
     public String toString() {
         return "DataTypeDefinition{" +
                 "name='" + name + '\'' +
                 ", displayName='" + displayName + '\'' +
+                ", endpointVersion='" + getEndpointVersion() + '\'' +
                 ", scopeRequired='" + scopeRequired + '\'' +
                 ", endpointsSupported=" + endpointsSupported +
                 ", filterParameterName='" + filterParameterName + '\'' +

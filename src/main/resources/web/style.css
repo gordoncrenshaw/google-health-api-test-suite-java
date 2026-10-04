@@ -176,6 +176,12 @@ body {
     border-color: var(--border-color);
 }
 
+.pill-cyan {
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--accent-cyan);
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
 /* Navigation Tabs */
 .nav-tabs {
     display: flex;

@@ -101,4 +101,41 @@ public class HealthApiClientTest {
         assertEquals("8677373576871223311", prefsAfter.getHealthUserId(),
                 "healthUserId must be automatically persisted to preferences when missing");
     }
+
+    @Test
+    void testEndpointsQueryVersionFromDataType() {
+        DataTypeDefinition steps = registry.getDataType("steps").orElseThrow();
+        assertEquals("v4", steps.getEndpointVersion());
+
+        // Default steps queries v4
+        ApiResponse respV4 = client.listDataPoints(steps, Map.of("pageSize", "10"));
+        assertNotNull(respV4);
+        assertTrue(respV4.getRequestUrl().contains("/v4/users/"), "Default request URL should query v4 version");
+        assertTrue(respV4.getCurlCommand().contains("/v4/users/"));
+
+        // Custom datatype with updated version queries that version
+        DataTypeDefinition customDef = new DataTypeDefinition("custom_metric", "Custom Metric", "v5",
+                "https://www.googleapis.com/auth/googlehealth.custom",
+                java.util.List.of("list", "get", "create", "batchDelete", "rollUp", "dailyRollUp"),
+                "custom.sample_time", false, 0.0, 100.0, "units");
+
+        ApiResponse listResp = client.listDataPoints(customDef, null);
+        assertTrue(listResp.getRequestUrl().contains("/v5/users/"), "Endpoint must query v5 version from DataTypeDefinition");
+        assertTrue(listResp.getCurlCommand().contains("/v5/users/"));
+
+        ApiResponse getResp = client.getDataPoint(customDef, "dp-123");
+        assertTrue(getResp.getRequestUrl().contains("/v5/users/"), "getDataPoint must query v5 version");
+
+        ApiResponse createResp = client.createDataPoint(customDef, "{}");
+        assertTrue(createResp.getRequestUrl().contains("/v5/users/"), "createDataPoint must query v5 version");
+
+        ApiResponse rollupResp = client.rollUpDataPoints(customDef, "{}");
+        assertTrue(rollupResp.getRequestUrl().contains("/v5/users/"), "rollUpDataPoints must query v5 version");
+
+        ApiResponse dailyRollupResp = client.dailyRollUpDataPoints(customDef, "{}");
+        assertTrue(dailyRollupResp.getRequestUrl().contains("/v5/users/"), "dailyRollUpDataPoints must query v5 version");
+
+        ApiResponse batchDelResp = client.batchDeleteDataPoints(customDef, java.util.List.of("dp-1"));
+        assertTrue(batchDelResp.getRequestUrl().contains("/v5/users/"), "batchDeleteDataPoints must query v5 version");
+    }
 }

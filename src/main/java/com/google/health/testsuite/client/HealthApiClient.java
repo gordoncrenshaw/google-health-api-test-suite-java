@@ -166,42 +166,81 @@ public class HealthApiClient {
     // =========================================================================
 
     /**
+     * Resolves the effective API endpoint version supported by the data type definition.
+     * Queries def.getEndpointVersion(), falling back to "v4" if not specified.
+     */
+    public String getEffectiveVersion(DataTypeDefinition def) {
+        if (def != null && def.getEndpointVersion() != null && !def.getEndpointVersion().trim().isEmpty()) {
+            String v = def.getEndpointVersion().trim();
+            while (v.startsWith("/")) {
+                v = v.substring(1);
+            }
+            while (v.endsWith("/")) {
+                v = v.substring(0, v.length() - 1);
+            }
+            return v;
+        }
+        return "v4";
+    }
+
+    /**
+     * Resolves the effective health user ID from preferences or authorization.
+     */
+    public String getEffectiveUserId() {
+        Preferences prefs = configManager.getPreferences();
+        if (prefs != null && prefs.getHealthUserId() != null && !prefs.getHealthUserId().trim().isEmpty()) {
+            return prefs.getHealthUserId().trim();
+        }
+        UserAuthorization userAuth = configManager.getUserAuthorization();
+        if (userAuth != null && userAuth.getHealthUserID() != null &&
+                !userAuth.getHealthUserID().trim().isEmpty() &&
+                !"me".equalsIgnoreCase(userAuth.getHealthUserID().trim())) {
+            return userAuth.getHealthUserID().trim();
+        }
+        return "me";
+    }
+
+    /**
      * Standard List Data Points request.
-     * Syntax: GET /v4/users/{userId}/dataTypes/{dataType}/dataPoints
+     * Syntax: GET /{version}/users/{userId}/dataTypes/{dataType}/dataPoints
      */
     public ApiResponse listDataPoints(DataTypeDefinition def, Map<String, String> queryParams) {
-        String userId = configManager.getUserAuthorization().getHealthUserID();
-        String path = "/v4/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints";
+        String version = getEffectiveVersion(def);
+        String userId = getEffectiveUserId();
+        String path = "/" + version + "/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints";
         return execute("GET", path, queryParams, null, def);
     }
 
     /**
      * Standard Get Single Data Point request.
-     * Syntax: GET /v4/users/{userId}/dataTypes/{dataType}/dataPoints/{dataPointId}
+     * Syntax: GET /{version}/users/{userId}/dataTypes/{dataType}/dataPoints/{dataPointId}
      */
     public ApiResponse getDataPoint(DataTypeDefinition def, String dataPointId) {
-        String userId = configManager.getUserAuthorization().getHealthUserID();
-        String path = "/v4/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints/" + dataPointId;
+        String version = getEffectiveVersion(def);
+        String userId = getEffectiveUserId();
+        String path = "/" + version + "/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints/" + dataPointId;
         return execute("GET", path, null, null, def);
     }
 
     /**
      * Standard Create Data Point request.
-     * Syntax: POST /v4/users/{userId}/dataTypes/{dataType}/dataPoints
+     * Syntax: POST /{version}/users/{userId}/dataTypes/{dataType}/dataPoints
      */
     public ApiResponse createDataPoint(DataTypeDefinition def, String jsonBody) {
-        String userId = configManager.getUserAuthorization().getHealthUserID();
-        String path = "/v4/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints";
+        String version = getEffectiveVersion(def);
+        String userId = getEffectiveUserId();
+        String path = "/" + version + "/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints";
         return execute("POST", path, null, jsonBody, def);
     }
 
     /**
      * Standard Batch Delete Data Points request.
-     * Syntax: POST /v4/users/{userId}/dataTypes/{dataType}/dataPoints:batchDelete
+     * Syntax: POST /{version}/users/{userId}/dataTypes/{dataType}/dataPoints:batchDelete
      */
     public ApiResponse batchDeleteDataPoints(DataTypeDefinition def, List<String> dataPointNames) {
-        String userId = configManager.getUserAuthorization().getHealthUserID();
-        String path = "/v4/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints:batchDelete";
+        String version = getEffectiveVersion(def);
+        String userId = getEffectiveUserId();
+        String path = "/" + version + "/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints:batchDelete";
 
         ObjectNode reqNode = jsonMapper.createObjectNode();
         ArrayNode namesArray = reqNode.putArray("names");
@@ -214,21 +253,23 @@ public class HealthApiClient {
 
     /**
      * Standard Physical Rollup request.
-     * Syntax: POST /v4/users/{userId}/dataTypes/{dataType}/dataPoints:rollUp
+     * Syntax: POST /{version}/users/{userId}/dataTypes/{dataType}/dataPoints:rollUp
      */
     public ApiResponse rollUpDataPoints(DataTypeDefinition def, String jsonBody) {
-        String userId = configManager.getUserAuthorization().getHealthUserID();
-        String path = "/v4/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints:rollUp";
+        String version = getEffectiveVersion(def);
+        String userId = getEffectiveUserId();
+        String path = "/" + version + "/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints:rollUp";
         return execute("POST", path, null, jsonBody != null ? jsonBody : "{}", def);
     }
 
     /**
      * Standard Daily Civil Rollup request.
-     * Syntax: POST /v4/users/{userId}/dataTypes/{dataType}/dataPoints:dailyRollUp
+     * Syntax: POST /{version}/users/{userId}/dataTypes/{dataType}/dataPoints:dailyRollUp
      */
     public ApiResponse dailyRollUpDataPoints(DataTypeDefinition def, String jsonBody) {
-        String userId = configManager.getUserAuthorization().getHealthUserID();
-        String path = "/v4/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints:dailyRollUp";
+        String version = getEffectiveVersion(def);
+        String userId = getEffectiveUserId();
+        String path = "/" + version + "/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints:dailyRollUp";
         return execute("POST", path, null, jsonBody != null ? jsonBody : "{}", def);
     }
 
@@ -237,7 +278,7 @@ public class HealthApiClient {
      * Syntax: GET /v4/users/{userId}/profile
      */
     public ApiResponse getProfile(String userId) {
-        String effectiveUser = (userId != null && !userId.isEmpty()) ? userId : configManager.getUserAuthorization().getHealthUserID();
+        String effectiveUser = (userId != null && !userId.trim().isEmpty()) ? userId.trim() : getEffectiveUserId();
         String path = "/v4/users/" + effectiveUser + "/profile";
         return execute("GET", path, null, null, null);
     }
@@ -250,19 +291,7 @@ public class HealthApiClient {
      */
     public ApiResponse getIdentity(String userId) {
         Preferences prefs = configManager.getPreferences();
-        String effectiveUser;
-        if (userId != null && !userId.trim().isEmpty()) {
-            effectiveUser = userId.trim();
-        } else if (prefs.getHealthUserId() != null && !prefs.getHealthUserId().trim().isEmpty()) {
-            effectiveUser = prefs.getHealthUserId().trim();
-        } else if (configManager.getUserAuthorization().getHealthUserID() != null &&
-                !configManager.getUserAuthorization().getHealthUserID().trim().isEmpty() &&
-                !"me".equalsIgnoreCase(configManager.getUserAuthorization().getHealthUserID())) {
-            effectiveUser = configManager.getUserAuthorization().getHealthUserID().trim();
-        } else {
-            effectiveUser = "me";
-        }
-
+        String effectiveUser = (userId != null && !userId.trim().isEmpty()) ? userId.trim() : getEffectiveUserId();
         String path = "/v4/users/" + effectiveUser + "/identity";
         ApiResponse resp = execute("GET", path, null, null, null);
 
@@ -303,7 +332,7 @@ public class HealthApiClient {
      * Syntax: GET /v4/users/{userId}/pairedDevices
      */
     public ApiResponse listPairedDevices(String userId) {
-        String effectiveUser = (userId != null && !userId.isEmpty()) ? userId : configManager.getUserAuthorization().getHealthUserID();
+        String effectiveUser = (userId != null && !userId.trim().isEmpty()) ? userId.trim() : getEffectiveUserId();
         String path = "/v4/users/" + effectiveUser + "/pairedDevices";
         return execute("GET", path, null, null, null);
     }

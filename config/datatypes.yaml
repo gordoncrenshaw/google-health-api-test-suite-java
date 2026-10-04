@@ -1,9 +1,10 @@
 # ==============================================================================
-# Google Health API (v4) - Supported Data Types Definition
+# Google Health API - Supported Data Types Definition
 # ==============================================================================
 # Each datatype lists:
 #   - name: The official datatype identifier used in the API URL path
 #   - displayName: Human readable label
+#   - endpointVersion: The Google Health API endpoint version supported (e.g. "v4")
 #   - scopeRequired: The OAuth 2.0 scope required to read this datatype
 #   - writeScopeRequired: The OAuth 2.0 scope required to write/create this datatype
 #   - endpointsSupported: List of supported HTTP REST operations:
@@ -22,6 +23,7 @@ version: "1.0"
 dataTypes:
   - name: "steps"
     displayName: "Step Count"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
     endpointsSupported:
@@ -40,6 +42,7 @@ dataTypes:
 
   - name: "distance"
     displayName: "Distance"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
     endpointsSupported:
@@ -58,6 +61,7 @@ dataTypes:
 
   - name: "floors"
     displayName: "Floors Climbed"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
     endpointsSupported:
@@ -76,6 +80,7 @@ dataTypes:
 
   - name: "altitude"
     displayName: "Altitude"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
     endpointsSupported:
@@ -94,6 +99,7 @@ dataTypes:
 
   - name: "active_energy_burned"
     displayName: "Active Calories Burned"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
     endpointsSupported:
@@ -112,6 +118,7 @@ dataTypes:
 
   - name: "basal_energy_burned"
     displayName: "Basal Calories Burned"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
     endpointsSupported:
@@ -130,6 +137,7 @@ dataTypes:
 
   - name: "active_zone_minutes"
     displayName: "Active Zone Minutes"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
     endpointsSupported:
@@ -148,6 +156,7 @@ dataTypes:
 
   - name: "heart_rate"
     displayName: "Heart Rate"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
     endpointsSupported:
@@ -166,6 +175,7 @@ dataTypes:
 
   - name: "daily_resting_heart_rate"
     displayName: "Daily Resting Heart Rate"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
     endpointsSupported:
@@ -181,6 +191,7 @@ dataTypes:
 
   - name: "heart_rate_variability"
     displayName: "Heart Rate Variability (HRV)"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
     endpointsSupported:
@@ -197,6 +208,7 @@ dataTypes:
 
   - name: "weight"
     displayName: "Body Weight"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
     endpointsSupported:
@@ -215,6 +227,7 @@ dataTypes:
 
   - name: "height"
     displayName: "Body Height"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
     endpointsSupported:
@@ -231,6 +244,7 @@ dataTypes:
 
   - name: "body_fat"
     displayName: "Body Fat Percentage"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
     endpointsSupported:
@@ -249,6 +263,7 @@ dataTypes:
 
   - name: "oxygen_saturation"
     displayName: "Blood Oxygen (SpO2)"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
     endpointsSupported:
@@ -265,6 +280,7 @@ dataTypes:
 
   - name: "blood_glucose"
     displayName: "Blood Glucose"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
     endpointsSupported:
@@ -283,6 +299,7 @@ dataTypes:
 
   - name: "sleep"
     displayName: "Sleep Sessions"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.sleep.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.sleep.writeonly"
     endpointsSupported:
@@ -300,6 +317,7 @@ dataTypes:
 
   - name: "mindfulness"
     displayName: "Mindfulness Sessions"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.mindfulness.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.mindfulness.writeonly"
     endpointsSupported:
@@ -316,6 +334,7 @@ dataTypes:
 
   - name: "exercise"
     displayName: "Exercise Workouts"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
     endpointsSupported:
@@ -331,6 +350,7 @@ dataTypes:
 
   - name: "electrocardiogram"
     displayName: "Electrocardiogram (ECG)"
+    endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.ecg.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.ecg.readonly"
     endpointsSupported:

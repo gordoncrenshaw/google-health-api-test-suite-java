@@ -251,6 +251,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const dt = dataTypes.find(d => d.name === selName);
         if (!dt) return;
 
+        const versionEl = document.getElementById('dt-info-version');
+        if (versionEl) {
+            versionEl.textContent = dt.endpointVersion || 'v4';
+        }
+
         document.getElementById('dt-info-scope').textContent = dt.scopeRequired || 'None';
         document.getElementById('dt-info-filter').textContent = dt.filterParameterName || '-';
 
@@ -315,7 +320,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const ep = document.getElementById('explorer-endpoint-select').value;
         const pageSize = document.getElementById('explorer-page-size').value;
         const method = (ep === 'create' || ep === 'rollup' || ep === 'dailyrollup' || ep === 'batchdelete') ? 'POST' : 'GET';
-        let path = `/v4/users/me/dataTypes/${dtName}/dataPoints`;
+        const dt = dataTypes.find(d => d.name === dtName);
+        const version = (dt && dt.endpointVersion) ? dt.endpointVersion : 'v4';
+        let path = `/${version}/users/me/dataTypes/${dtName}/dataPoints`;
         if (ep === 'rollup') path += ':rollUp';
         if (ep === 'dailyrollup') path += ':dailyRollUp';
         if (ep === 'batchdelete') path += ':batchDelete';
@@ -404,6 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.innerHTML = `
                 <td><strong>${dt.name}</strong></td>
                 <td>${dt.displayName}</td>
+                <td><span class="pill-badge pill-cyan font-mono">${dt.endpointVersion || 'v4'}</span></td>
                 <td><span class="font-mono">${dt.unit || '-'}</span></td>
                 <td><span class="text-secondary">${(dt.endpointsSupported || []).join(', ')}</span></td>
                 <td><span class="pill-badge ${dt.webhooksSupported ? 'pill-success' : 'pill-neutral'}">${dt.webhooksSupported ? 'YES' : 'NO'}</span></td>

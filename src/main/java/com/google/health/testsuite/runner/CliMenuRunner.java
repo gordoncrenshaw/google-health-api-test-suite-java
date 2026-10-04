@@ -336,13 +336,14 @@ public class CliMenuRunner {
     private void listSupportedDataTypes() {
         List<DataTypeDefinition> list = dataTypeRegistry.getAllDataTypes();
         System.out.println(CYAN + BOLD + "\n--- Supported Google Health API Data Types (" + list.size() + ") ---" + RESET);
-        System.out.printf("%-26s %-16s %-14s %-22s %s\n", "NAME", "UNIT", "WEBHOOKS", "RANGE", "ENDPOINTS");
-        System.out.println("-".repeat(95));
+        System.out.printf("%-24s %-9s %-14s %-12s %-20s %s\n", "NAME", "VERSION", "UNIT", "WEBHOOKS", "RANGE", "ENDPOINTS");
+        System.out.println("-".repeat(105));
         for (DataTypeDefinition def : list) {
             String rangeStr = "[" + (def.getMinValue() != null ? def.getMinValue() : "0") + ", " +
                     (def.getMaxValue() != null ? def.getMaxValue() : "inf") + "]";
-            System.out.printf("%-26s %-16s %-14s %-22s %s\n",
+            System.out.printf("%-24s %-9s %-14s %-12s %-20s %s\n",
                     BOLD + def.getName() + RESET,
+                    def.getEndpointVersion(),
                     def.getUnit() != null ? def.getUnit() : "-",
                     def.isWebhooksSupported() ? GREEN + "YES" + RESET : "NO",
                     rangeStr,
@@ -368,12 +369,13 @@ public class CliMenuRunner {
             String chosenType = names.get(idx);
             DataTypeDefinition def = dataTypeRegistry.getDataType(chosenType).orElseThrow();
 
-            System.out.println("\nSupported endpoints for " + def.getName() + ": " + def.getEndpointsSupported());
+            System.out.println("\nSelected: " + BOLD + def.getName() + RESET + " (Version: " + CYAN + def.getEndpointVersion() + RESET + ")");
+            System.out.println("Supported endpoints: " + def.getEndpointsSupported());
             System.out.print("Enter operation (list/get/create/rollup/dailyrollup) [default: list]: ");
             String ep = scanner.nextLine().trim();
             if (ep.isEmpty()) ep = "list";
 
-            System.out.println(CYAN + "\nSending HTTP request..." + RESET);
+            System.out.println(CYAN + "\nQuerying " + def.getEndpointVersion() + " endpoint and sending HTTP request..." + RESET);
             TestResult result = engine.executeSingleTest(def.getName(), ep, null, null);
             printTestResult(result);
 

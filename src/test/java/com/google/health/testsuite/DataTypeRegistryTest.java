@@ -35,6 +35,7 @@ public class DataTypeRegistryTest {
 
         DataTypeDefinition steps = stepsOpt.get();
         assertEquals("steps", steps.getName());
+        assertEquals("v4", steps.getEndpointVersion(), "steps endpoint version must be v4");
         assertEquals("https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly", steps.getScopeRequired());
         assertTrue(steps.isWebhooksSupported(), "steps must support webhooks");
         assertEquals(0.0, steps.getMinValue());
@@ -53,6 +54,7 @@ public class DataTypeRegistryTest {
         assertTrue(hrOpt.isPresent(), "heart_rate data type must exist in registry");
 
         DataTypeDefinition hr = hrOpt.get();
+        assertEquals("v4", hr.getEndpointVersion(), "heart_rate endpoint version must be v4");
         assertEquals(1.0, hr.getMinValue());
         assertEquals(300.0, hr.getMaxValue());
         assertEquals("bpm", hr.getUnit());
@@ -70,5 +72,16 @@ public class DataTypeRegistryTest {
         assertTrue(webhooksTypes.stream().anyMatch(d -> d.getName().equals("weight")));
         assertTrue(webhooksTypes.stream().anyMatch(d -> d.getName().equals("distance")));
         assertTrue(webhooksTypes.stream().anyMatch(d -> d.getName().equals("sleep")));
+    }
+
+    @Test
+    void testAllDataTypesHaveEndpointVersion() {
+        List<DataTypeDefinition> all = registry.getAllDataTypes();
+        assertFalse(all.isEmpty());
+        for (DataTypeDefinition dt : all) {
+            assertNotNull(dt.getEndpointVersion(), "DataType " + dt.getName() + " must have endpointVersion");
+            assertFalse(dt.getEndpointVersion().trim().isEmpty(), "DataType " + dt.getName() + " endpointVersion must not be empty");
+            assertEquals("v4", dt.getEndpointVersion(), "Default endpoint version for " + dt.getName() + " must be v4");
+        }
     }
 }
