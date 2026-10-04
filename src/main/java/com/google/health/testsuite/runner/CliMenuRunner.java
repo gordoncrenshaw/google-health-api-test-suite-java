@@ -93,15 +93,16 @@ public class CliMenuRunner {
     private void printMainMenu() {
         Preferences prefs = configManager.getPreferences();
         UserAuthorization auth = configManager.getUserAuthorization();
+        String effectiveUserId = !prefs.getHealthUserId().isEmpty() ? prefs.getHealthUserId() : auth.getHealthUserID();
 
         System.out.println(BOLD + "\n[ MAIN MENU ]" + RESET);
         System.out.printf(" Mode: %s | HealthUserID: %s | Token: %s (%ds remaining)\n",
                 (prefs.isMockMode() ? YELLOW + "MOCK/SIMULATION" : GREEN + "LIVE GOOGLE API") + RESET,
-                CYAN + auth.getHealthUserID() + RESET,
+                CYAN + effectiveUserId + RESET,
                 (auth.hasAccessToken() ? (auth.isExpired() ? RED + "EXPIRED" : GREEN + "VALID") : RED + "NONE") + RESET,
                 auth.getRemainingSeconds());
         System.out.println("------------------------------------------------------------------------");
-        System.out.println(" 1. View / Edit Preferences (Client ID, Secret, Scopes, Base URL)");
+        System.out.println(" 1. Preferences & Auth Menu (Dashboard, Auth, getIdentity, getDevices)");
         System.out.println(" 2. View Authorization & Token Details");
         System.out.println(" 3. Authorize with Google (OAuth 2.0 Web Callback / Manual Code)");
         System.out.println(" 4. Refresh Access Token Now (Automatic Rotation & Save)");
@@ -116,19 +117,133 @@ public class CliMenuRunner {
     }
 
     private void showPreferencesMenu() {
-        Preferences prefs = configManager.getPreferences();
-        System.out.println(CYAN + BOLD + "\n--- Preferences (config/preferences.yaml) ---" + RESET);
-        System.out.println(" Client ID:      " + (prefs.getClientId().isEmpty() ? "(Not configured)" : prefs.getClientId()));
-        System.out.println(" Client Secret:  " + (prefs.getClientSecret().isEmpty() ? "(Not configured)" : "********" + (prefs.getClientSecret().length() > 4 ? prefs.getClientSecret().substring(prefs.getClientSecret().length() - 4) : "")));
-        System.out.println(" Redirect URI:   " + prefs.getRedirectUri());
-        System.out.println(" API Base URL:   " + prefs.getApiBaseUrl());
-        System.out.println(" Default User:   " + prefs.getDefaultUserId());
-        System.out.println(" Mock Mode:      " + prefs.isMockMode());
-        System.out.println(" Scopes (" + prefs.getScopes().size() + "):");
-        for (String scope : prefs.getScopes()) {
-            System.out.println("   - " + scope);
+        boolean inPrefs = true;
+        while (inPrefs) {
+            Preferences prefs = configManager.getPreferences();
+            UserAuthorization auth = configManager.getUserAuthorization();
+
+            System.out.println(CYAN + BOLD + "\n========================================================================" + RESET);
+            System.out.println(CYAN + BOLD + "             PREFERENCES & AUTHORIZATION DASHBOARD                      " + RESET);
+            System.out.println(CYAN + BOLD + "========================================================================" + RESET);
+            System.out.println(BOLD + "[ Preferences Configuration (config/preferences.yaml) ]" + RESET);
+            System.out.println(" Client ID:      " + (prefs.getClientId().isEmpty() ? "(Not configured)" : prefs.getClientId()));
+            System.out.println(" Client Secret:  " + (prefs.getClientSecret().isEmpty() ? "(Not configured)" : "********" + (prefs.getClientSecret().length() > 4 ? prefs.getClientSecret().substring(prefs.getClientSecret().length() - 4) : "")));
+            System.out.println(" Health User ID: " + (prefs.getHealthUserId().isEmpty() ? YELLOW + "(None - run getIdentity to auto-populate)" + RESET : GREEN + prefs.getHealthUserId() + RESET));
+            System.out.println(" Redirect URI:   " + prefs.getRedirectUri());
+            System.out.println(" API Base URL:   " + prefs.getApiBaseUrl());
+            System.out.println(" Default User:   " + prefs.getDefaultUserId());
+            System.out.println(" Mock Mode:      " + (prefs.isMockMode() ? YELLOW + "ENABLED" : GREEN + "DISABLED (Live API)") + RESET);
+
+            System.out.println(BOLD + "\n[ User Authorization Status (config/userAuthorization.yaml) ]" + RESET);
+            System.out.println(" Health User ID: " + auth.getHealthUserID());
+            System.out.println(" Access Token:   " + (auth.hasAccessToken() ? (auth.isExpired() ? RED + "EXPIRED" : GREEN + "VALID") : RED + "NONE") + RESET + " (" + auth.getRemainingSeconds() + "s remaining)");
+            System.out.println(" Refresh Token:  " + (auth.hasRefreshToken() ? GREEN + "CONFIGURED (Auto-refresh active)" : RED + "NONE") + RESET);
+            System.out.println(" Auto-Refresh:   " + GREEN + "Active on 401 or token expiration" + RESET);
+
+            System.out.println(BOLD + "\n[ Actions ]" + RESET);
+            System.out.println(" 1. Authorize Connection with Google (OAuth 2.0 Web Callback / Manual)");
+            System.out.println(" 2. Force Refresh Access Token Now");
+            System.out.println(" 3. Call getIdentity Endpoint (GET /v4/users/{userId}/identity)");
+            System.out.println(" 4. Call getDevices Endpoint (GET /v4/users/{userId}/pairedDevices)");
+            System.out.println(" 5. Call getProfile Endpoint (GET /v4/users/{userId}/profile)");
+            System.out.println(" 6. Edit Preferences (Client ID, Secret, Health User ID, Redirect URI)");
+            System.out.println(" 7. View Stored Scopes");
+            System.out.println(" 0. Return to Main Menu");
+            System.out.println("------------------------------------------------------------------------");
+            System.out.print(BOLD + "Select option [0-7]: " + RESET);
+            String opt = scanner.nextLine().trim();
+
+            switch (opt) {
+                case "1" -> startAuthorizationFlow();
+                case "2" -> refreshAccessTokenManually();
+                case "3" -> callGetIdentityEndpoint();
+                case "4" -> callGetDevicesEndpoint();
+                case "5" -> callGetProfileEndpoint();
+                case "6" -> editPreferencesPrompt();
+                case "7" -> {
+                    System.out.println(CYAN + "\nConfigured OAuth Scopes (" + prefs.getScopes().size() + "):" + RESET);
+                    for (String s : prefs.getScopes()) System.out.println(" - " + s);
+                }
+                case "0", "back", "exit" -> inPrefs = false;
+                default -> System.out.println(RED + "Invalid option." + RESET);
+            }
+
+            if (inPrefs) {
+                System.out.println("\nPress [ENTER] to continue in Preferences Menu...");
+                scanner.nextLine();
+            }
         }
-        System.out.println("\nTo change preferences, edit " + configManager.getPreferencesFile().getAbsolutePath() + " or update via Web UI.");
+    }
+
+    private void callGetIdentityEndpoint() {
+        System.out.println(CYAN + BOLD + "\n--- Calling getIdentity Endpoint (GET /v4/users/{userId}/identity) ---" + RESET);
+        Preferences prefs = configManager.getPreferences();
+        String target = !prefs.getHealthUserId().isEmpty() ? prefs.getHealthUserId() : "me";
+        System.out.println("Target user: " + target);
+
+        ApiResponse resp = engine.getApiClient().getIdentity(null);
+
+        System.out.println("\nHTTP Status: " + (resp.isSuccess() ? GREEN : RED) + resp.getStatusCode() + " " + resp.getStatusMessage() + RESET +
+                " (" + resp.getLatencyMs() + "ms)");
+        System.out.println("cURL:\n" + YELLOW + resp.getCurlCommand() + RESET);
+        System.out.println("\nResponse Body (Pretty JSON):");
+        System.out.println(resp.getBody());
+
+        Preferences refreshed = configManager.getPreferences();
+        if (!refreshed.getHealthUserId().isEmpty()) {
+            System.out.println(GREEN + BOLD + "\n[INFO] Health User ID is stored in preferences: " + refreshed.getHealthUserId() + RESET);
+        }
+    }
+
+    private void callGetDevicesEndpoint() {
+        System.out.println(CYAN + BOLD + "\n--- Calling getDevices Endpoint (GET /v4/users/{userId}/pairedDevices) ---" + RESET);
+        ApiResponse resp = engine.getApiClient().getDevices(null);
+
+        System.out.println("\nHTTP Status: " + (resp.isSuccess() ? GREEN : RED) + resp.getStatusCode() + " " + resp.getStatusMessage() + RESET +
+                " (" + resp.getLatencyMs() + "ms)");
+        System.out.println("cURL:\n" + YELLOW + resp.getCurlCommand() + RESET);
+        System.out.println("\nResponse Body (Pretty JSON):");
+        System.out.println(resp.getBody());
+    }
+
+    private void callGetProfileEndpoint() {
+        System.out.println(CYAN + BOLD + "\n--- Calling getProfile Endpoint (GET /v4/users/{userId}/profile) ---" + RESET);
+        ApiResponse resp = engine.getApiClient().getProfile(null);
+
+        System.out.println("\nHTTP Status: " + (resp.isSuccess() ? GREEN : RED) + resp.getStatusCode() + " " + resp.getStatusMessage() + RESET +
+                " (" + resp.getLatencyMs() + "ms)");
+        System.out.println("cURL:\n" + YELLOW + resp.getCurlCommand() + RESET);
+        System.out.println("\nResponse Body (Pretty JSON):");
+        System.out.println(resp.getBody());
+    }
+
+    private void editPreferencesPrompt() {
+        Preferences prefs = configManager.getPreferences();
+        System.out.println(CYAN + BOLD + "\n--- Edit Preferences ---" + RESET);
+        System.out.println("(Press ENTER to leave current value unchanged)\n");
+
+        System.out.print("Client ID [" + prefs.getClientId() + "]: ");
+        String cid = scanner.nextLine().trim();
+        if (!cid.isEmpty()) prefs.setClientId(cid);
+
+        System.out.print("Client Secret [leave blank to keep unchanged]: ");
+        String sec = scanner.nextLine().trim();
+        if (!sec.isEmpty()) prefs.setClientSecret(sec);
+
+        System.out.print("Health User ID [" + prefs.getHealthUserId() + "]: ");
+        String hid = scanner.nextLine().trim();
+        if (!hid.isEmpty()) prefs.setHealthUserId(hid);
+
+        System.out.print("Redirect URI [" + prefs.getRedirectUri() + "]: ");
+        String ruri = scanner.nextLine().trim();
+        if (!ruri.isEmpty()) prefs.setRedirectUri(ruri);
+
+        System.out.print("API Base URL [" + prefs.getApiBaseUrl() + "]: ");
+        String url = scanner.nextLine().trim();
+        if (!url.isEmpty()) prefs.setApiBaseUrl(url);
+
+        configManager.savePreferences(prefs);
+        System.out.println(GREEN + BOLD + "Preferences saved successfully to config/preferences.yaml!" + RESET);
     }
 
     private void showTokenStatus() {

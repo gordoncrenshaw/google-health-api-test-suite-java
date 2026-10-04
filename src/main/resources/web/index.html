@@ -46,9 +46,9 @@
 
         <!-- Navigation Tabs -->
         <nav class="nav-tabs">
-            <button class="nav-tab active" data-tab="tab-dashboard" id="tab-btn-dashboard">
-                <svg viewBox="0 0 24 24" class="tab-icon"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-                Dashboard & Auth
+            <button class="nav-tab active" data-tab="tab-settings" id="tab-btn-settings">
+                <svg viewBox="0 0 24 24" class="tab-icon"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                Preferences & Auth
             </button>
             <button class="nav-tab" data-tab="tab-explorer" id="tab-btn-explorer">
                 <svg viewBox="0 0 24 24" class="tab-icon"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.4z"/></svg>
@@ -66,93 +66,10 @@
                 <svg viewBox="0 0 24 24" class="tab-icon"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
                 Data Types Registry
             </button>
-            <button class="nav-tab" data-tab="tab-settings" id="tab-btn-settings">
-                <svg viewBox="0 0 24 24" class="tab-icon"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-                Preferences
-            </button>
         </nav>
 
         <!-- Main Content Panes -->
         <main class="content-area">
-
-            <!-- TAB 1: DASHBOARD & AUTH -->
-            <section id="tab-dashboard" class="tab-pane active">
-                <div class="grid-2-col">
-                    <!-- Token Status Card -->
-                    <div class="card glass-card">
-                        <div class="card-header">
-                            <h2 class="card-title">User Authorization Status</h2>
-                            <span class="file-badge">config/userAuthorization.yaml</span>
-                        </div>
-                        <div class="card-body">
-                            <div class="metric-row">
-                                <span class="metric-label">Health User ID:</span>
-                                <span id="dash-health-user-id" class="metric-value font-mono">me</span>
-                            </div>
-                            <div class="metric-row">
-                                <span class="metric-label">Access Token:</span>
-                                <span id="dash-access-token-status" class="metric-value">Not Loaded</span>
-                            </div>
-                            <div class="metric-row">
-                                <span class="metric-label">Refresh Token:</span>
-                                <span id="dash-refresh-token-status" class="metric-value">Not Loaded</span>
-                            </div>
-                            <div class="metric-row">
-                                <span class="metric-label">Token Expiration:</span>
-                                <span id="dash-token-countdown" class="metric-value font-mono highlight">0s</span>
-                            </div>
-                            <div class="metric-row">
-                                <span class="metric-label">Auto-Refresh:</span>
-                                <span class="metric-value text-success">&#10004; Active (on expiry or 401)</span>
-                            </div>
-
-                            <div class="action-buttons mt-4">
-                                <button id="btn-refresh-token-dash" class="btn btn-primary">
-                                    <svg viewBox="0 0 24 24" class="btn-icon"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-                                    Force Token Refresh
-                                </button>
-                                <button id="btn-start-auth" class="btn btn-outline">
-                                    <svg viewBox="0 0 24 24" class="btn-icon"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-                                    Authorize with Google
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- System Overview Card -->
-                    <div class="card glass-card">
-                        <div class="card-header">
-                            <h2 class="card-title">Quick Test Actions</h2>
-                            <span class="file-badge">API Base: https://health.googleapis.com</span>
-                        </div>
-                        <div class="card-body">
-                            <p class="text-muted mb-4">Execute quick verification calls to confirm credentials and Google connectivity:</p>
-                            <div class="button-stack">
-                                <button id="btn-quick-profile" class="btn btn-secondary btn-block">
-                                    <span>GET /v4/users/{userId}/profile</span>
-                                    <span class="btn-arrow">&rarr;</span>
-                                </button>
-                                <button id="btn-quick-devices" class="btn btn-secondary btn-block">
-                                    <span>GET /v4/users/{userId}/pairedDevices</span>
-                                    <span class="btn-arrow">&rarr;</span>
-                                </button>
-                                <button id="btn-quick-steps" class="btn btn-secondary btn-block">
-                                    <span>GET /v4/users/{userId}/dataTypes/steps/dataPoints</span>
-                                    <span class="btn-arrow">&rarr;</span>
-                                </button>
-                            </div>
-
-                            <div class="quick-result-box mt-4">
-                                <div class="quick-result-header">
-                                    <span>Last Result:</span>
-                                    <span id="quick-result-status" class="pill-badge pill-neutral">Ready</span>
-                                </div>
-                                <pre id="quick-result-body" class="code-preview">// Click any action above to inspect live response</pre>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
 
             <!-- TAB 2: INTERACTIVE API EXPLORER -->
             <section id="tab-explorer" class="tab-pane">
@@ -379,41 +296,130 @@
                 </div>
             </section>
 
-            <!-- TAB 6: PREFERENCES -->
-            <section id="tab-settings" class="tab-pane">
-                <div class="card glass-card max-w-700">
+            <!-- TAB: PREFERENCES, AUTH & IDENTITY DASHBOARD -->
+            <section id="tab-settings" class="tab-pane active">
+                <div class="grid-2-col mb-4">
+                    <!-- Authorization & Token Management Card -->
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Authorization & Token Status</h2>
+                            <span class="file-badge">config/userAuthorization.yaml</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="metric-row">
+                                <span class="metric-label">Health User ID:</span>
+                                <span id="dash-health-user-id" class="metric-value font-mono">me</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Access Token:</span>
+                                <span id="dash-access-token-status" class="metric-value">Not Loaded</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Refresh Token:</span>
+                                <span id="dash-refresh-token-status" class="metric-value">Not Loaded</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Token Expiration:</span>
+                                <span id="dash-token-countdown" class="metric-value font-mono highlight">0s</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Auto-Refresh:</span>
+                                <span class="metric-value text-success">&#10004; Active (on expiry or 401)</span>
+                            </div>
+
+                            <div class="action-buttons mt-4">
+                                <button id="btn-refresh-token-dash" class="btn btn-primary">
+                                    <svg viewBox="0 0 24 24" class="btn-icon"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                                    Force Token Refresh
+                                </button>
+                                <button id="btn-start-auth" class="btn btn-outline">
+                                    <svg viewBox="0 0 24 24" class="btn-icon"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                                    Authorize with Google
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Identity & Paired Devices Endpoints Card -->
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Identity & Paired Devices Endpoints</h2>
+                            <span class="file-badge">GET /v4/users/...</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-3">Execute identity mapping and device queries. Responses are displayed in pretty JSON format.</p>
+                            <div class="button-stack">
+                                <button id="btn-get-identity" class="btn btn-secondary btn-block">
+                                    <span><strong>getIdentity:</strong> GET /v4/users/{userId}/identity</span>
+                                    <span class="btn-arrow">&rarr;</span>
+                                </button>
+                                <button id="btn-get-devices" class="btn btn-secondary btn-block">
+                                    <span><strong>getDevices:</strong> GET /v4/users/{userId}/pairedDevices</span>
+                                    <span class="btn-arrow">&rarr;</span>
+                                </button>
+                                <button id="btn-quick-profile" class="btn btn-secondary btn-block">
+                                    <span><strong>getProfile:</strong> GET /v4/users/{userId}/profile</span>
+                                    <span class="btn-arrow">&rarr;</span>
+                                </button>
+                            </div>
+
+                            <div class="quick-result-box mt-3">
+                                <div class="quick-result-header">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span>Response:</span>
+                                        <span id="quick-result-status" class="pill-badge pill-neutral">Ready</span>
+                                        <span id="identity-save-badge" class="pill-badge pill-success" style="display: none;">Saved to Preferences</span>
+                                    </div>
+                                    <span id="quick-result-latency" class="text-muted font-mono" style="font-size: 0.8rem;"></span>
+                                </div>
+                                <pre id="quick-result-body" class="code-preview font-mono" style="max-height: 220px; overflow-y: auto;">// Click 'getIdentity' or 'getDevices' above to inspect pretty JSON</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Application Preferences Configuration Card -->
+                <div class="card glass-card">
                     <div class="card-header">
-                        <h2 class="card-title">Application Preferences</h2>
+                        <h2 class="card-title">Application Preferences Configuration</h2>
                         <span class="file-badge">config/preferences.yaml</span>
                     </div>
                     <div class="card-body">
                         <form id="preferences-form">
-                            <div class="form-group">
-                                <label for="pref-client-id">OAuth 2.0 Client ID:</label>
-                                <input type="text" id="pref-client-id" class="form-control font-mono" placeholder="your-client-id.apps.googleusercontent.com">
+                            <div class="grid-2-col">
+                                <div class="form-group">
+                                    <label for="pref-client-id">OAuth 2.0 Client ID:</label>
+                                    <input type="text" id="pref-client-id" class="form-control font-mono" placeholder="your-client-id.apps.googleusercontent.com">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="pref-client-secret">OAuth 2.0 Client Secret:</label>
+                                    <input type="password" id="pref-client-secret" class="form-control font-mono" placeholder="Enter new secret or leave blank to keep unchanged">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="pref-health-user-id">Health User ID (healthUserId):</label>
+                                    <input type="text" id="pref-health-user-id" class="form-control font-mono" placeholder="e.g. 8677373576871223311 (auto-populated by getIdentity)">
+                                    <small class="text-muted" style="display: block; margin-top: 4px; font-size: 0.8rem;">Automatically saved when calling <code>getIdentity</code> if missing.</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="pref-default-user">Default User Alias:</label>
+                                    <input type="text" id="pref-default-user" class="form-control font-mono" value="me">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="pref-redirect-uri">Redirect URI:</label>
+                                    <input type="text" id="pref-redirect-uri" class="form-control font-mono" value="http://localhost:8888/callback">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="pref-api-base-url">API Base URL:</label>
+                                    <input type="text" id="pref-api-base-url" class="form-control font-mono" value="https://health.googleapis.com">
+                                </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="pref-client-secret">OAuth 2.0 Client Secret:</label>
-                                <input type="password" id="pref-client-secret" class="form-control font-mono" placeholder="Enter new secret or leave blank to keep unchanged">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="pref-redirect-uri">Redirect URI:</label>
-                                <input type="text" id="pref-redirect-uri" class="form-control font-mono" value="http://localhost:8888/callback">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="pref-api-base-url">API Base URL:</label>
-                                <input type="text" id="pref-api-base-url" class="form-control font-mono" value="https://health.googleapis.com">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="pref-default-user">Default User ID:</label>
-                                <input type="text" id="pref-default-user" class="form-control font-mono" value="me">
-                            </div>
-
-                            <div class="form-group">
+                            <div class="form-group mt-2">
                                 <label class="checkbox-container">
                                     <input type="checkbox" id="pref-mock-mode">
                                     <span class="checkbox-label"><strong>Enable Mock / Simulation Mode</strong> (Simulates Google Health API responses without live Google credentials)</span>
@@ -424,7 +430,7 @@
                                 <button type="submit" id="btn-save-preferences" class="btn btn-primary">
                                     Save Preferences
                                 </button>
-                                <span id="pref-save-status" class="text-success ml-3" style="display: none;">Saved successfully!</span>
+                                <span id="pref-save-status" class="text-success ml-3" style="display: none;">Preferences saved successfully!</span>
                             </div>
                         </form>
                     </div>

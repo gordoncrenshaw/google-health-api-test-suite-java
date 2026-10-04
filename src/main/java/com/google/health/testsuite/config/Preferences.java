@@ -31,6 +31,10 @@ public class Preferences {
     @JsonProperty("apiBaseUrl")
     private String apiBaseUrl = "https://health.googleapis.com";
 
+    @JsonProperty("healthUserId")
+    @JsonAlias({"health_user_id", "healthUserId"})
+    private String healthUserId = "";
+
     @JsonProperty("defaultUserId")
     private String defaultUserId = "me";
 
@@ -97,6 +101,14 @@ public class Preferences {
 
     public void setApiBaseUrl(String apiBaseUrl) {
         this.apiBaseUrl = apiBaseUrl;
+    }
+
+    public String getHealthUserId() {
+        return healthUserId != null ? healthUserId : "";
+    }
+
+    public void setHealthUserId(String healthUserId) {
+        this.healthUserId = healthUserId != null ? healthUserId : "";
     }
 
     public String getDefaultUserId() {

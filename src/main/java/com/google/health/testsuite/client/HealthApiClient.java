@@ -1,5 +1,6 @@
 package com.google.health.testsuite.client;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -147,15 +148,16 @@ public class HealthApiClient {
 
             HttpResponse<String> httpResponse = httpClient.send(reqBuilder.build(), HttpResponse.BodyHandlers.ofString());
             long latency = System.currentTimeMillis() - startTime;
+            String prettyBody = formatPrettyJson(httpResponse.body());
 
             return new ApiResponse(httpResponse.statusCode(), "HTTP " + httpResponse.statusCode(),
-                    httpResponse.headers().map(), httpResponse.body(), latency, fullUrl, method, body, curl);
+                    httpResponse.headers().map(), prettyBody, latency, fullUrl, method, body, curl);
 
         } catch (Exception e) {
             long latency = System.currentTimeMillis() - startTime;
             logger.error("HTTP request error for {} {}: {}", method, fullUrl, e.getMessage());
             return new ApiResponse(500, "Connection Error: " + e.getMessage(), Collections.emptyMap(),
-                    "{\"error\": \"" + e.getMessage() + "\"}", latency, fullUrl, method, body, curl);
+                    "{\n  \"error\": \"" + e.getMessage() + "\"\n}", latency, fullUrl, method, body, curl);
         }
     }
 
@@ -241,6 +243,62 @@ public class HealthApiClient {
     }
 
     /**
+     * Standard Get User Identity request.
+     * Syntax: GET /v4/users/{userId}/identity
+     * When called, if healthUserId in preferences is missing, it is automatically
+     * extracted and stored into the preferences file (config/preferences.yaml).
+     */
+    public ApiResponse getIdentity(String userId) {
+        Preferences prefs = configManager.getPreferences();
+        String effectiveUser;
+        if (userId != null && !userId.trim().isEmpty()) {
+            effectiveUser = userId.trim();
+        } else if (prefs.getHealthUserId() != null && !prefs.getHealthUserId().trim().isEmpty()) {
+            effectiveUser = prefs.getHealthUserId().trim();
+        } else if (configManager.getUserAuthorization().getHealthUserID() != null &&
+                !configManager.getUserAuthorization().getHealthUserID().trim().isEmpty() &&
+                !"me".equalsIgnoreCase(configManager.getUserAuthorization().getHealthUserID())) {
+            effectiveUser = configManager.getUserAuthorization().getHealthUserID().trim();
+        } else {
+            effectiveUser = "me";
+        }
+
+        String path = "/v4/users/" + effectiveUser + "/identity";
+        ApiResponse resp = execute("GET", path, null, null, null);
+
+        // Check if getIdentity returned a healthUserId and if preferences is missing it
+        if (resp.isSuccess() && resp.getBody() != null) {
+            try {
+                JsonNode root = jsonMapper.readTree(resp.getBody());
+                String discoveredId = "";
+                if (root.has("healthUserId") && !root.path("healthUserId").asText().trim().isEmpty()) {
+                    discoveredId = root.path("healthUserId").asText().trim();
+                } else if (root.has("response") && root.path("response").has("healthUserId")) {
+                    discoveredId = root.path("response").path("healthUserId").asText().trim();
+                }
+
+                if (!discoveredId.isEmpty()) {
+                    if (prefs.getHealthUserId() == null || prefs.getHealthUserId().trim().isEmpty()) {
+                        logger.info("Retrieved healthUserId '{}' from getIdentity endpoint. Storing into preferences file...", discoveredId);
+                        prefs.setHealthUserId(discoveredId);
+                        configManager.savePreferences(prefs);
+                    }
+                    // Also update UserAuthorization if missing or set to default "me"
+                    UserAuthorization auth = configManager.getUserAuthorization();
+                    if (auth.getHealthUserID() == null || auth.getHealthUserID().trim().isEmpty() || "me".equalsIgnoreCase(auth.getHealthUserID())) {
+                        auth.setHealthUserID(discoveredId);
+                        configManager.saveUserAuthorization(auth);
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn("Could not extract healthUserId from identity response: {}", e.getMessage());
+            }
+        }
+
+        return resp;
+    }
+
+    /**
      * Standard List Paired Devices request.
      * Syntax: GET /v4/users/{userId}/pairedDevices
      */
@@ -248,6 +306,30 @@ public class HealthApiClient {
         String effectiveUser = (userId != null && !userId.isEmpty()) ? userId : configManager.getUserAuthorization().getHealthUserID();
         String path = "/v4/users/" + effectiveUser + "/pairedDevices";
         return execute("GET", path, null, null, null);
+    }
+
+    /**
+     * Standard Get Paired Devices request (alias for listPairedDevices).
+     * Syntax: GET /v4/users/{userId}/pairedDevices
+     */
+    public ApiResponse getDevices(String userId) {
+        return listPairedDevices(userId);
+    }
+
+    public String formatPrettyJson(String rawJson) {
+        if (rawJson == null || rawJson.trim().isEmpty()) {
+            return rawJson != null ? rawJson : "";
+        }
+        String trimmed = rawJson.trim();
+        if ((trimmed.startsWith("{") && trimmed.endsWith("}")) || (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
+            try {
+                Object parsed = jsonMapper.readValue(trimmed, Object.class);
+                return jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(parsed);
+            } catch (Exception ignore) {
+                return rawJson;
+            }
+        }
+        return rawJson;
     }
 
     /**

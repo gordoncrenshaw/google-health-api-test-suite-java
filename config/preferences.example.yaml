@@ -5,6 +5,7 @@ authUri: "https://accounts.google.com/o/oauth2/v2/auth"
 tokenUri: "https://oauth2.googleapis.com/token"
 redirect_uri: "http://localhost:8888/callback"
 apiBaseUrl: "https://health.googleapis.com"
+healthUserId: ""
 defaultUserId: "me"
 mockMode: false
 

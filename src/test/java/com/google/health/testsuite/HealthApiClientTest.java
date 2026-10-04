@@ -74,4 +74,31 @@ public class HealthApiClientTest {
         assertEquals(200, resp.getStatusCode());
         assertTrue(resp.getBody().contains("pairedDevices"));
     }
+
+    @Test
+    void testGetDevices() {
+        ApiResponse resp = client.getDevices("me");
+        assertNotNull(resp);
+        assertEquals(200, resp.getStatusCode());
+        assertTrue(resp.getBody().contains("pairedDevices"));
+        // Response should be formatted as pretty JSON with indentation
+        assertTrue(resp.getBody().contains("\n"), "Response must be in pretty JSON format");
+    }
+
+    @Test
+    void testGetIdentityAndPersistHealthUserIdWhenMissing() {
+        Preferences prefsBefore = configManager.getPreferences();
+        assertEquals("", prefsBefore.getHealthUserId(), "healthUserId should initially be empty in preferences");
+
+        ApiResponse resp = client.getIdentity(null);
+        assertNotNull(resp);
+        assertEquals(200, resp.getStatusCode());
+        assertTrue(resp.isSuccess());
+        assertTrue(resp.getBody().contains("8677373576871223311"));
+        assertTrue(resp.getBody().contains("\n"), "Response must be in pretty JSON format");
+
+        Preferences prefsAfter = configManager.getPreferences();
+        assertEquals("8677373576871223311", prefsAfter.getHealthUserId(),
+                "healthUserId must be automatically persisted to preferences when missing");
+    }
 }

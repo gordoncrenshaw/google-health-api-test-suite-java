@@ -29,7 +29,14 @@ public class MockHealthBackend {
         String effectiveUser = (healthUserId != null && !healthUserId.isEmpty()) ? healthUserId : "me";
 
         try {
-            if (path.contains("/profile")) {
+            if (path.contains("/identity")) {
+                ObjectNode identity = jsonMapper.createObjectNode();
+                identity.put("name", "users/" + effectiveUser + "/identity");
+                identity.put("legacyUserId", "DCFX45");
+                identity.put("healthUserId", "8677373576871223311");
+                responseBody = identity.toPrettyString();
+
+            } else if (path.contains("/profile")) {
                 ObjectNode profile = jsonMapper.createObjectNode();
                 profile.put("name", "users/" + effectiveUser + "/profile");
                 profile.put("healthUserId", "gh-user-" + UUID.randomUUID().toString().substring(0, 8));

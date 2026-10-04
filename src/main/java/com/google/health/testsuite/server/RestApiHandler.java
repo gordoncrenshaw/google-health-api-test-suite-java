@@ -80,7 +80,8 @@ public class RestApiHandler implements HttpHandler {
                 case "/api/test/script" -> handleRunScript(exchange);
                 case "/api/scripts" -> handleListScripts(exchange);
                 case "/api/health/profile" -> handleGetProfile(exchange);
-                case "/api/health/devices" -> handleGetDevices(exchange);
+                case "/api/health/devices", "/api/health/getDevices" -> handleGetDevices(exchange);
+                case "/api/health/identity", "/api/health/getIdentity" -> handleGetIdentity(exchange);
                 default -> sendError(exchange, 404, "Endpoint not found: " + path);
             }
         } catch (Exception e) {
@@ -113,11 +114,12 @@ public class RestApiHandler implements HttpHandler {
         Preferences current = configManager.getPreferences();
 
         if (incoming.getClientId() != null) current.setClientId(incoming.getClientId());
-        if (incoming.getClientSecret() != null && !incoming.getClientSecret().contains("****")) {
-            current.setClientSecret(incoming.getClientSecret());
+        if (incoming.getClientSecret() != null && !incoming.getClientSecret().trim().isEmpty() && !incoming.getClientSecret().contains("****")) {
+            current.setClientSecret(incoming.getClientSecret().trim());
         }
         if (incoming.getRedirectUri() != null) current.setRedirectUri(incoming.getRedirectUri());
         if (incoming.getApiBaseUrl() != null) current.setApiBaseUrl(incoming.getApiBaseUrl());
+        if (incoming.getHealthUserId() != null) current.setHealthUserId(incoming.getHealthUserId());
         if (incoming.getDefaultUserId() != null) current.setDefaultUserId(incoming.getDefaultUserId());
         current.setMockMode(incoming.isMockMode());
         if (incoming.getScopes() != null && !incoming.getScopes().isEmpty()) {
@@ -302,6 +304,20 @@ public class RestApiHandler implements HttpHandler {
     private void handleGetDevices(HttpExchange exchange) throws IOException {
         ApiResponse resp = engine.getApiClient().listPairedDevices(null);
         sendApiResponse(exchange, resp);
+    }
+
+    private void handleGetIdentity(HttpExchange exchange) throws IOException {
+        ApiResponse resp = engine.getApiClient().getIdentity(null);
+        Preferences prefs = configManager.getPreferences();
+        ObjectNode node = jsonMapper.createObjectNode();
+        node.put("statusCode", resp.getStatusCode());
+        node.put("statusMessage", resp.getStatusMessage());
+        node.put("latencyMs", resp.getLatencyMs());
+        node.put("requestUrl", resp.getRequestUrl());
+        node.put("curlCommand", resp.getCurlCommand());
+        node.put("body", resp.getBody());
+        node.put("healthUserId", prefs.getHealthUserId());
+        sendJson(exchange, 200, node.toPrettyString());
     }
 
     private void sendApiResponse(HttpExchange exchange, ApiResponse resp) throws IOException {

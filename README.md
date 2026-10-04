@@ -108,9 +108,9 @@ java -jar target/health-api-testsuite.jar --menu
 **Menu Navigation:**
 ```
 [ MAIN MENU ]
- Mode: LIVE GOOGLE API | HealthUserID: me | Token: VALID (3450s remaining)
+ Mode: LIVE GOOGLE API | HealthUserID: 8677373576871223311 | Token: VALID (3450s remaining)
 ------------------------------------------------------------------------
- 1. View / Edit Preferences (Client ID, Secret, Scopes, Base URL)
+ 1. Preferences & Auth Menu (Dashboard, Auth, getIdentity, getDevices)
  2. View Authorization & Token Details
  3. Authorize with Google (OAuth 2.0 Web Callback / Manual Code)
  4. Refresh Access Token Now (Automatic Rotation & Save)
@@ -144,7 +144,13 @@ java -jar target/health-api-testsuite.jar --web 8080
 Open your browser to: **`http://localhost:8080`**
 
 **Web UX Capabilities:**
-- **Dashboard & Token Manager**: Live countdown timer for the access token, authorization status pills, and one-click **"Refresh Token"** button that rotates tokens in `userAuthorization.yaml` in real time.
+- **Preferences & Auth Dashboard**:
+  - **Live Token & Auth Status**: Live countdown timer for the access token, authorization status pills, and one-click **"Force Token Refresh"** and **"Authorize with Google"** buttons.
+  - **Identity & Devices Endpoints**:
+    - **`getIdentity`** (`GET /v4/users/{userId}/identity`): Queries Google Health identity mapping. If `healthUserId` is missing in `config/preferences.yaml`, it automatically stores the discovered user ID into `preferences.yaml`.
+    - **`getDevices`** (`GET /v4/users/{userId}/pairedDevices`): Retrieves connected smartwatches, fitness trackers, and devices.
+    - **Pretty JSON Viewer**: Displays API responses with latency and HTTP status in formatted, indented JSON.
+  - **Configuration Form**: Edit OAuth Client ID, Secret, Health User ID (`healthUserId`), Redirect URI, API Base URL, and Mock Mode with instant persistence.
 - **Interactive API Explorer**:
   - Dropdown populated directly from `config/datatypes.yaml`.
   - Displays required scopes, AIP-160 filter parameter syntax, webhook support status, and valid min/max ranges.
@@ -154,7 +160,6 @@ Open your browser to: **`http://localhost:8080`**
 - **Full Test Suite Runner**: One-click test runner across all data types with animated progress bar, pass/fail counters, average latency, and an interactive results table.
 - **Script Runner**: Select and run script files from the UI and observe live console output.
 - **Data Types Registry**: Complete searchable table of all Google Health API data types.
-- **Preferences**: Edit OAuth Client credentials, redirect URIs, and toggle Mock Mode directly in the browser.
 
 ---
 
@@ -356,6 +361,7 @@ authUri: "https://accounts.google.com/o/oauth2/v2/auth"
 tokenUri: "https://oauth2.googleapis.com/token"
 redirect_uri: "http://localhost:8888/callback"
 apiBaseUrl: "https://health.googleapis.com"
+healthUserId: "8677373576871223311" # Populated automatically by getIdentity
 defaultUserId: "me"
 mockMode: false
 

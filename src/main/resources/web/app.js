@@ -539,6 +539,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/preferences');
             const prefs = await res.json();
             document.getElementById('pref-client-id').value = prefs.clientId || '';
+            const healthUserField = document.getElementById('pref-health-user-id');
+            if (healthUserField) {
+                healthUserField.value = prefs.healthUserId || '';
+            }
             document.getElementById('pref-redirect-uri').value = prefs.redirect_uri || prefs.redirectUri || 'http://localhost:8888/callback';
             document.getElementById('pref-api-base-url').value = prefs.apiBaseUrl || '';
             document.getElementById('pref-default-user').value = prefs.defaultUserId || '';
@@ -552,9 +556,11 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const saveStatus = document.getElementById('pref-save-status');
 
+        const healthUserEl = document.getElementById('pref-health-user-id');
         const prefs = {
             clientId: document.getElementById('pref-client-id').value,
             clientSecret: document.getElementById('pref-client-secret').value,
+            healthUserId: healthUserEl ? healthUserEl.value.trim() : '',
             redirect_uri: document.getElementById('pref-redirect-uri').value,
             redirectUri: document.getElementById('pref-redirect-uri').value,
             apiBaseUrl: document.getElementById('pref-api-base-url').value,
@@ -580,21 +586,55 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================================================
-    // 7. Quick Test Buttons
+    // 7. Identity & Devices Endpoint Actions
     // ==========================================================================
     async function executeQuickCall(endpoint, url) {
         const statusEl = document.getElementById('quick-result-status');
+        const latencyEl = document.getElementById('quick-result-latency');
         const bodyEl = document.getElementById('quick-result-body');
+        const saveBadge = document.getElementById('identity-save-badge');
+        if (saveBadge) saveBadge.style.display = 'none';
 
         statusEl.textContent = 'Calling...';
         statusEl.className = 'pill-badge pill-warn';
+        if (latencyEl) latencyEl.textContent = '';
 
         try {
             const res = await fetch(url);
             const data = await res.json();
             statusEl.textContent = `HTTP ${data.statusCode || 200}`;
             statusEl.className = (data.statusCode >= 200 && data.statusCode < 300) ? 'pill-badge pill-success' : 'pill-badge pill-danger';
-            bodyEl.textContent = JSON.stringify(data, null, 2);
+            if (latencyEl && data.latencyMs !== undefined) {
+                latencyEl.textContent = `${data.latencyMs}ms`;
+            }
+
+            // Always display response in pretty JSON format
+            let displayObj = data;
+            if (data.body) {
+                try {
+                    const parsed = JSON.parse(data.body);
+                    displayObj = parsed;
+                } catch (e) {
+                    displayObj = data;
+                }
+            }
+            bodyEl.textContent = JSON.stringify(displayObj, null, 2);
+
+            // If getIdentity was called and returned a healthUserId, update UI and notify
+            if (url.includes('/identity')) {
+                if (data.healthUserId) {
+                    const healthUserField = document.getElementById('pref-health-user-id');
+                    if (healthUserField) {
+                        healthUserField.value = data.healthUserId;
+                    }
+                    if (saveBadge) {
+                        saveBadge.textContent = `healthUserId: ${data.healthUserId} (Saved)`;
+                        saveBadge.style.display = 'inline-block';
+                    }
+                    await loadPreferences();
+                    await loadAuthStatus();
+                }
+            }
         } catch (e) {
             statusEl.textContent = 'Error';
             statusEl.className = 'pill-badge pill-danger';
@@ -606,9 +646,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 8. Event Bindings
     // ==========================================================================
     function bindEvents() {
-        document.getElementById('btn-quick-refresh').addEventListener('click', refreshToken);
-        document.getElementById('btn-refresh-token-dash').addEventListener('click', refreshToken);
-        document.getElementById('btn-start-auth').addEventListener('click', startAuthorization);
+        const quickRefresh = document.getElementById('btn-quick-refresh');
+        if (quickRefresh) quickRefresh.addEventListener('click', refreshToken);
+        const dashRefresh = document.getElementById('btn-refresh-token-dash');
+        if (dashRefresh) dashRefresh.addEventListener('click', refreshToken);
+        const startAuth = document.getElementById('btn-start-auth');
+        if (startAuth) startAuth.addEventListener('click', startAuthorization);
 
         document.getElementById('explorer-datatype-select').addEventListener('change', onExplorerDataTypeChanged);
         document.getElementById('explorer-endpoint-select').addEventListener('change', onExplorerEndpointChanged);
@@ -624,13 +667,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('btn-run-script').addEventListener('click', executeSelectedScript);
         document.getElementById('preferences-form').addEventListener('submit', savePreferences);
 
-        document.getElementById('btn-quick-profile').addEventListener('click', () => executeQuickCall('Profile', '/api/health/profile'));
-        document.getElementById('btn-quick-devices').addEventListener('click', () => executeQuickCall('Devices', '/api/health/devices'));
-        document.getElementById('btn-quick-steps').addEventListener('click', () => {
-            document.getElementById('tab-btn-explorer').click();
-            document.getElementById('explorer-datatype-select').value = 'steps';
-            onExplorerDataTypeChanged();
-            sendExplorerRequest();
-        });
+        const getIdentityBtn = document.getElementById('btn-get-identity');
+        if (getIdentityBtn) getIdentityBtn.addEventListener('click', () => executeQuickCall('getIdentity', '/api/health/identity'));
+        const getDevicesBtn = document.getElementById('btn-get-devices');
+        if (getDevicesBtn) getDevicesBtn.addEventListener('click', () => executeQuickCall('getDevices', '/api/health/devices'));
+        const profileBtn = document.getElementById('btn-quick-profile');
+        if (profileBtn) profileBtn.addEventListener('click', () => executeQuickCall('getProfile', '/api/health/profile'));
     }
 });
