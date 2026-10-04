@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.health.testsuite.auth.BrowserUtil;
+import com.google.health.testsuite.auth.LocalOAuthReceiver;
 import com.google.health.testsuite.auth.OAuthService;
 import com.google.health.testsuite.config.ConfigManager;
 import com.google.health.testsuite.config.DataTypeRegistry;
@@ -35,6 +37,7 @@ public class RestApiHandler implements HttpHandler {
     private final DataTypeRegistry dataTypeRegistry;
     private final OAuthService oAuthService;
     private final ObjectMapper jsonMapper;
+    private LocalOAuthReceiver activeReceiver;
 
     public RestApiHandler(SuiteExecutionEngine engine, OAuthService oAuthService) {
         this.engine = engine;
@@ -70,6 +73,7 @@ public class RestApiHandler implements HttpHandler {
                 case "/api/auth/status" -> handleGetAuthStatus(exchange);
                 case "/api/auth/refresh" -> handleRefreshToken(exchange);
                 case "/api/auth/url" -> handleGetAuthUrl(exchange);
+                case "/api/auth/start" -> handleStartAuth(exchange);
                 case "/api/auth/code" -> handleExchangeAuthCode(exchange);
                 case "/api/test/single" -> handleRunSingleTest(exchange);
                 case "/api/test/run-all" -> handleRunAllTests(exchange);
@@ -177,6 +181,46 @@ public class RestApiHandler implements HttpHandler {
         resp.put("success", ok);
         resp.put("message", ok ? "Tokens successfully retrieved and stored." : "Failed to exchange code.");
         sendJson(exchange, ok ? 200 : 400, resp.toPrettyString());
+    }
+
+    private synchronized void handleStartAuth(HttpExchange exchange) throws IOException {
+        Preferences prefs = configManager.getPreferences();
+        if (activeReceiver != null) {
+            activeReceiver.stop();
+            activeReceiver = null;
+        }
+
+        try {
+            activeReceiver = LocalOAuthReceiver.fromRedirectUri(prefs.getRedirectUri(), oAuthService);
+            activeReceiver.start();
+
+            // Run callback listener in background thread
+            final LocalOAuthReceiver receiverRef = activeReceiver;
+            Thread listenerThread = new Thread(() -> {
+                try {
+                    logger.info("Local OAuth receiver waiting for callback on {}...", prefs.getRedirectUri());
+                    receiverRef.waitForCallback(180);
+                } catch (Exception e) {
+                    logger.warn("Callback listener encountered: {}", e.getMessage());
+                }
+            }, "oauth-callback-listener");
+            listenerThread.setDaemon(true);
+            listenerThread.start();
+
+            String authUrl = oAuthService.buildAuthorizationUrl("web_ux_" + System.currentTimeMillis());
+            boolean opened = BrowserUtil.openBrowser(authUrl);
+
+            ObjectNode resp = jsonMapper.createObjectNode();
+            resp.put("success", true);
+            resp.put("authUrl", authUrl);
+            resp.put("redirectUri", prefs.getRedirectUri());
+            resp.put("browserOpened", opened);
+            resp.put("message", "Local receiver listening on " + prefs.getRedirectUri() + ". Browser launched.");
+            sendJson(exchange, 200, resp.toPrettyString());
+        } catch (Exception e) {
+            logger.error("Failed to start OAuth callback receiver: {}", e.getMessage(), e);
+            sendError(exchange, 500, "Failed to start receiver on " + prefs.getRedirectUri() + ": " + e.getMessage());
+        }
     }
 
     private void handleRunSingleTest(HttpExchange exchange) throws IOException {

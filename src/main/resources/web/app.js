@@ -156,17 +156,64 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function startAuthorization() {
+        const btn = document.getElementById('btn-start-auth');
+        const originalText = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.innerHTML = '<span class="spinner"></span> Starting Auth...';
+            btn.disabled = true;
+        }
+
         try {
-            const res = await fetch('/api/auth/url');
+            const res = await fetch('/api/auth/start', { method: 'POST' });
             const data = await res.json();
-            if (data.authUrl) {
-                const choice = confirm('Redirect to Google OAuth consent screen?\n\nURL: ' + data.authUrl);
-                if (choice) {
+            if (data.success) {
+                if (!data.browserOpened && data.authUrl) {
                     window.open(data.authUrl, '_blank');
+                }
+                alert('Authorization flow initiated!\n\n' +
+                      '1. Local receiver is listening on ' + data.redirectUri + '\n' +
+                      '2. Approve the consent screen in your browser.\n\n' +
+                      'The application will automatically detect your tokens once granted.');
+
+                // Poll auth status every 2.5 seconds for up to 3 minutes
+                let attempts = 0;
+                const pollTimer = setInterval(async () => {
+                    attempts++;
+                    try {
+                        const statusRes = await fetch('/api/auth/status');
+                        const status = await statusRes.json();
+                        if (status.hasAccessToken && !status.isExpired) {
+                            clearInterval(pollTimer);
+                            renderAuthStatus(status);
+                            if (btn) {
+                                btn.innerHTML = originalText;
+                                btn.disabled = false;
+                            }
+                            alert('Success! Google Health API tokens received and saved to userAuthorization.yaml.');
+                        } else if (attempts >= 72) {
+                            clearInterval(pollTimer);
+                            if (btn) {
+                                btn.innerHTML = originalText;
+                                btn.disabled = false;
+                            }
+                        }
+                    } catch (e) {
+                        // ignore polling error
+                    }
+                }, 2500);
+            } else {
+                alert('Authorization error: ' + (data.message || 'Unknown error'));
+                if (btn) {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
                 }
             }
         } catch (e) {
-            alert('Failed to generate auth URL: ' + e.message);
+            alert('Failed to initiate authorization: ' + e.message);
+            if (btn) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         }
     }
 

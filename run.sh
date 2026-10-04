@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Google Health API Test Suite - Launcher Script
-# Supports 3 Execution Modes:
+# Supports Execution Modes:
 #   1. ./run.sh menu                  (Command line menu)
 #   2. ./run.sh web [port]            (UX using javascript/HTML)
 #   3. ./run.sh script <path-to-file> (Through a script file)
+#   4. ./run.sh auth                  (Direct OAuth authorization flow)
 # ==============================================================================
 
 set -e
@@ -43,6 +44,11 @@ case "$MODE" in
         echo ">> Launching Mode 3: Script Runner with $SCRIPT_PATH..."
         java -jar "$JAR_FILE" --script "$SCRIPT_PATH" "$@"
         ;;
+    auth|-a|--auth)
+        shift || true
+        echo ">> Launching Direct Authorization Flow..."
+        java -jar "$JAR_FILE" --auth "$@"
+        ;;
     help|-h|--help)
         java -jar "$JAR_FILE" --help
         ;;
@@ -52,7 +58,7 @@ case "$MODE" in
             java -jar "$JAR_FILE" --script "$MODE"
         else
             echo "Unknown mode: $MODE"
-            echo "Usage: ./run.sh [menu | web <port> | script <path-to-script>]"
+            echo "Usage: ./run.sh [menu | web <port> | script <path-to-script> | auth]"
             exit 1
         fi
         ;;

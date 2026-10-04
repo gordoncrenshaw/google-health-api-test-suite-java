@@ -1,5 +1,6 @@
 package com.google.health.testsuite.runner;
 
+import com.google.health.testsuite.auth.BrowserUtil;
 import com.google.health.testsuite.auth.LocalOAuthReceiver;
 import com.google.health.testsuite.auth.OAuthService;
 import com.google.health.testsuite.config.ConfigManager;
@@ -169,19 +170,26 @@ public class CliMenuRunner {
         System.out.print("Select [1/2]: ");
         String choice = scanner.nextLine().trim();
 
-        if ("1".equals(choice)) {
+        if ("1".equals(choice) || choice.isEmpty()) {
+            LocalOAuthReceiver receiver = null;
             try {
-                LocalOAuthReceiver receiver = LocalOAuthReceiver.fromRedirectUri(prefs.getRedirectUri(), oAuthService);
+                receiver = LocalOAuthReceiver.fromRedirectUri(prefs.getRedirectUri(), oAuthService);
                 receiver.start();
-                System.out.println(YELLOW + "Waiting up to 120 seconds for browser callback..." + RESET);
-                boolean success = receiver.waitForCallback(120);
+                System.out.println("Launching your browser to authorize access to Google Health API...");
+                BrowserUtil.openBrowser(authUrl);
+                System.out.println(YELLOW + "Waiting up to 180 seconds for browser callback on " + prefs.getRedirectUri() + "..." + RESET);
+                boolean success = receiver.waitForCallback(180);
                 if (success) {
-                    System.out.println(GREEN + BOLD + "Authorization successful! Tokens saved into userAuthorization.yaml" + RESET);
+                    System.out.println(GREEN + BOLD + "Authorization successful! Tokens saved into config/userAuthorization.yaml" + RESET);
                 } else {
                     System.out.println(RED + "Authorization timed out or failed." + RESET);
                 }
             } catch (Exception e) {
                 System.out.println(RED + "Could not start local callback server: " + e.getMessage() + RESET);
+            } finally {
+                if (receiver != null) {
+                    receiver.stop();
+                }
             }
         } else {
             System.out.print("\nEnter the 'code' parameter from the redirect URL: ");

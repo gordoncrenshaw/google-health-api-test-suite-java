@@ -301,6 +301,40 @@ updatedAt: "2026-10-04T02:00:00Z"
 scope: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly ..."
 ```
 
+---
+
+## 🔐 Authorizing the Connection
+
+The test suite provides several seamless ways to execute OAuth 2.0 authorization with Google and store your tokens:
+
+### Option A: Direct Authorization Flow (CLI / Terminal)
+Run the dedicated authorization command directly:
+```bash
+# Using the launcher script:
+./run.sh auth
+
+# Or using java directly:
+java -jar target/health-api-testsuite.jar --auth
+# (or with shorthand -a)
+```
+This command:
+1. Starts a temporary local HTTP callback server on your configured `redirect_uri` (e.g. `http://localhost:8888/callback`).
+2. Automatically launches your default web browser to the Google OAuth consent screen.
+3. Awaits the callback redirect, securely captures the authorization code, exchanges it with Google for access and refresh tokens, and saves them to `config/userAuthorization.yaml`.
+
+### Option B: Interactive CLI Menu
+1. Launch `./run.sh menu` or `mvn exec:java`.
+2. Select **Option 3** (`Authorize with Google`).
+3. The menu will start the local callback receiver, open your browser, and save the resulting tokens automatically.
+
+### Option C: Modern Web UX Dashboard
+1. Launch `./run.sh web 8080` and open `http://localhost:8080`.
+2. On the **Dashboard & Auth** tab, click **"Authorize with Google"**.
+3. The server starts the local receiver on port 8888 in the background and opens the Google OAuth consent page in your browser.
+4. Once you approve access, the web dashboard automatically detects the new tokens, updates the live expiration countdown, and confirms successful authorization.
+
+---
+
 ### Automatic Token Refresh Workflow:
 1. **Pre-flight Check**: Before dispatching any HTTP request, `HealthApiClient` checks if the access token has expired (or has `< 60s` remaining).
 2. **401 Interception**: If an API call receives an HTTP `401 Unauthorized` response from Google:
