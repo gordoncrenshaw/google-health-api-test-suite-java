@@ -492,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/preferences');
             const prefs = await res.json();
             document.getElementById('pref-client-id').value = prefs.clientId || '';
-            document.getElementById('pref-redirect-uri').value = prefs.redirectUri || '';
+            document.getElementById('pref-redirect-uri').value = prefs.redirect_uri || prefs.redirectUri || 'http://localhost:8888/callback';
             document.getElementById('pref-api-base-url').value = prefs.apiBaseUrl || '';
             document.getElementById('pref-default-user').value = prefs.defaultUserId || '';
             document.getElementById('pref-mock-mode').checked = !!prefs.mockMode;
@@ -508,6 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const prefs = {
             clientId: document.getElementById('pref-client-id').value,
             clientSecret: document.getElementById('pref-client-secret').value,
+            redirect_uri: document.getElementById('pref-redirect-uri').value,
             redirectUri: document.getElementById('pref-redirect-uri').value,
             apiBaseUrl: document.getElementById('pref-api-base-url').value,
             defaultUserId: document.getElementById('pref-default-user').value,

@@ -3,7 +3,7 @@ clientId: "1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com"
 clientSecret: "GOCSPX-xxxxxxxxxxxxxxxxxxxxxxxx"
 authUri: "https://accounts.google.com/o/oauth2/v2/auth"
 tokenUri: "https://oauth2.googleapis.com/token"
-redirectUri: "http://localhost:8888/oauth2callback"
+redirect_uri: "http://localhost:8888/callback"
 apiBaseUrl: "https://health.googleapis.com"
 defaultUserId: "me"
 mockMode: false

@@ -1,5 +1,6 @@
 package com.google.health.testsuite.config;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
@@ -23,8 +24,9 @@ public class Preferences {
     @JsonProperty("tokenUri")
     private String tokenUri = "https://oauth2.googleapis.com/token";
 
-    @JsonProperty("redirectUri")
-    private String redirectUri = "http://localhost:8888/oauth2callback";
+    @JsonProperty("redirect_uri")
+    @JsonAlias({"redirectUri", "redirect_uri"})
+    private String redirectUri = "http://localhost:8888/callback";
 
     @JsonProperty("apiBaseUrl")
     private String apiBaseUrl = "https://health.googleapis.com";

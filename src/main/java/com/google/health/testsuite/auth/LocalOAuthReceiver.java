@@ -33,7 +33,7 @@ public class LocalOAuthReceiver {
 
     public LocalOAuthReceiver(int port, String path, OAuthService oAuthService) {
         this.port = port;
-        this.path = (path != null && !path.isEmpty()) ? path : "/oauth2callback";
+        this.path = (path != null && !path.isEmpty()) ? path : "/callback";
         this.oAuthService = oAuthService;
     }
 
@@ -41,10 +41,10 @@ public class LocalOAuthReceiver {
         try {
             URI uri = URI.create(redirectUri);
             int port = uri.getPort() > 0 ? uri.getPort() : 8888;
-            String path = uri.getPath();
+            String path = (uri.getPath() != null && !uri.getPath().isEmpty()) ? uri.getPath() : "/callback";
             return new LocalOAuthReceiver(port, path, oAuthService);
         } catch (Exception e) {
-            return new LocalOAuthReceiver(8888, "/oauth2callback", oAuthService);
+            return new LocalOAuthReceiver(8888, "/callback", oAuthService);
         }
     }
 

@@ -9,13 +9,13 @@
 # ==============================================================================
 
 # OAuth 2.0 Credentials
-clientId: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-clientSecret: "YOUR_GOOGLE_CLIENT_SECRET"
+clientId: "915464942867-jnuqqchamj2v0sm6jq8207chlje8vlgu.apps.googleusercontent.com"
+clientSecret: "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"
 
 # Authorization & Token Service Endpoints
 authUri: "https://accounts.google.com/o/oauth2/v2/auth"
 tokenUri: "https://oauth2.googleapis.com/token"
-redirectUri: "http://localhost:8888/oauth2callback"
+redirect_uri: "http://localhost:8888/callback"
 
 # API Base URL & Default Target User ("me" refers to the authenticated user)
 apiBaseUrl: "https://health.googleapis.com"

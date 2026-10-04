@@ -320,7 +320,7 @@ clientId: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
 clientSecret: "YOUR_GOOGLE_CLIENT_SECRET"
 authUri: "https://accounts.google.com/o/oauth2/v2/auth"
 tokenUri: "https://oauth2.googleapis.com/token"
-redirectUri: "http://localhost:8888/oauth2callback"
+redirect_uri: "http://localhost:8888/callback"
 apiBaseUrl: "https://health.googleapis.com"
 defaultUserId: "me"
 mockMode: false
