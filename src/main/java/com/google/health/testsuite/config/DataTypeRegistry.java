@@ -79,6 +79,85 @@ public class DataTypeRegistry {
         return list;
     }
 
+    public boolean hasDataType(String name) {
+        return name != null && dataTypesMap.containsKey(name.trim().toLowerCase());
+    }
+
+    public synchronized boolean addDataType(DataTypeDefinition newDef) {
+        if (newDef == null || newDef.getName() == null || newDef.getName().trim().isEmpty()) {
+            return false;
+        }
+        String cleanName = newDef.getName().trim().toLowerCase();
+        if (dataTypesMap.containsKey(cleanName)) {
+            logger.warn("Data type '{}' already exists in registry.", cleanName);
+            return false;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n  - name: \"").append(escapeYaml(cleanName)).append("\"\n");
+        sb.append("    displayName: \"").append(escapeYaml(newDef.getDisplayName())).append("\"\n");
+        sb.append("    endpointVersion: \"").append(escapeYaml(newDef.getEndpointVersion())).append("\"\n");
+        if (newDef.getScopeRequired() != null && !newDef.getScopeRequired().trim().isEmpty()) {
+            sb.append("    scopeRequired: \"").append(escapeYaml(newDef.getScopeRequired().trim())).append("\"\n");
+        }
+        if (newDef.getWriteScopeRequired() != null && !newDef.getWriteScopeRequired().trim().isEmpty()) {
+            sb.append("    writeScopeRequired: \"").append(escapeYaml(newDef.getWriteScopeRequired().trim())).append("\"\n");
+        }
+        if (newDef.getEndpointsSupported() != null && !newDef.getEndpointsSupported().isEmpty()) {
+            sb.append("    endpointsSupported:\n");
+            for (String ep : newDef.getEndpointsSupported()) {
+                sb.append("      - \"").append(escapeYaml(ep.trim())).append("\"\n");
+            }
+        } else {
+            sb.append("    endpointsSupported:\n");
+            sb.append("      - \"list\"\n");
+            sb.append("      - \"get\"\n");
+        }
+        if (newDef.getFilterParameterName() != null && !newDef.getFilterParameterName().trim().isEmpty()) {
+            sb.append("    filterParameterName: \"").append(escapeYaml(newDef.getFilterParameterName().trim())).append("\"\n");
+        }
+        sb.append("    webhooksSupported: ").append(newDef.isWebhooksSupported()).append("\n");
+        if (newDef.getMinValue() != null) {
+            sb.append("    minValue: ").append(formatNumber(newDef.getMinValue())).append("\n");
+        }
+        if (newDef.getMaxValue() != null) {
+            sb.append("    maxValue: ").append(formatNumber(newDef.getMaxValue())).append("\n");
+        }
+        if (newDef.getUnit() != null && !newDef.getUnit().trim().isEmpty()) {
+            sb.append("    unit: \"").append(escapeYaml(newDef.getUnit().trim())).append("\"\n");
+        }
+        if (newDef.getSampleValueField() != null && !newDef.getSampleValueField().trim().isEmpty()) {
+            sb.append("    sampleValueField: \"").append(escapeYaml(newDef.getSampleValueField().trim())).append("\"\n");
+        }
+
+        try {
+            java.nio.file.Files.writeString(
+                    dataTypesFile.toPath(),
+                    sb.toString(),
+                    java.nio.file.StandardOpenOption.CREATE,
+                    java.nio.file.StandardOpenOption.APPEND
+            );
+            load();
+            return true;
+        } catch (IOException e) {
+            logger.error("Failed to append new data type to {}: {}", dataTypesFile.getAbsolutePath(), e.getMessage(), e);
+            return false;
+        }
+    }
+
+    private String escapeYaml(String val) {
+        if (val == null) return "";
+        return val.replace("\"", "\\\"");
+    }
+
+    private String formatNumber(Double val) {
+        if (val == null) return "0";
+        if (val == Math.floor(val) && !Double.isInfinite(val)) {
+            return String.valueOf(val.longValue());
+        }
+        return String.valueOf(val);
+    }
+
     public List<String> getDataTypeNames() {
         return new ArrayList<>(dataTypesMap.keySet());
     }

@@ -64,7 +64,11 @@ public class RestApiHandler implements HttpHandler {
 
         try {
             switch (path) {
-                case "/api/datatypes" -> handleGetDataTypes(exchange);
+                case "/api/datatypes" -> {
+                    if ("GET".equals(method)) handleGetDataTypes(exchange);
+                    else if ("POST".equals(method)) handleAddDataType(exchange);
+                    else sendError(exchange, 405, "Method Not Allowed");
+                }
                 case "/api/preferences" -> {
                     if ("GET".equals(method)) handleGetPreferences(exchange);
                     else if ("POST".equals(method)) handleSavePreferences(exchange);
@@ -93,6 +97,51 @@ public class RestApiHandler implements HttpHandler {
     private void handleGetDataTypes(HttpExchange exchange) throws IOException {
         List<DataTypeDefinition> list = dataTypeRegistry.getAllDataTypes();
         sendJson(exchange, 200, jsonMapper.writeValueAsString(list));
+    }
+
+    private void handleAddDataType(HttpExchange exchange) throws IOException {
+        String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        if (body == null || body.trim().isEmpty()) {
+            sendError(exchange, 400, "Request body is empty.");
+            return;
+        }
+
+        DataTypeDefinition newDef;
+        try {
+            newDef = jsonMapper.readValue(body, DataTypeDefinition.class);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON data type payload: " + e.getMessage());
+            return;
+        }
+
+        if (newDef.getName() == null || newDef.getName().trim().isEmpty()) {
+            sendError(exchange, 400, "Property 'name' (identifier) is required.");
+            return;
+        }
+
+        String name = newDef.getName().trim().toLowerCase();
+        if (dataTypeRegistry.hasDataType(name)) {
+            sendError(exchange, 409, "Data type '" + name + "' already exists in registry.");
+            return;
+        }
+
+        if (newDef.getDisplayName() == null || newDef.getDisplayName().trim().isEmpty()) {
+            newDef.setDisplayName(name);
+        }
+        if (newDef.getEndpointVersion() == null || newDef.getEndpointVersion().trim().isEmpty()) {
+            newDef.setEndpointVersion("v4");
+        }
+
+        boolean ok = dataTypeRegistry.addDataType(newDef);
+        if (ok) {
+            ObjectNode resp = jsonMapper.createObjectNode();
+            resp.put("success", true);
+            resp.put("message", "Data type '" + name + "' successfully added to registry and datatypes.yaml.");
+            resp.set("dataType", jsonMapper.valueToTree(newDef));
+            sendJson(exchange, 201, resp.toPrettyString());
+        } else {
+            sendError(exchange, 500, "Failed to persist new data type to datatypes.yaml.");
+        }
     }
 
     private void handleGetPreferences(HttpExchange exchange) throws IOException {
@@ -334,6 +383,10 @@ public class RestApiHandler implements HttpHandler {
     private void sendJson(HttpExchange exchange, int statusCode, String json) throws IOException {
         byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+        if ("HEAD".equalsIgnoreCase(exchange.getRequestMethod())) {
+            exchange.sendResponseHeaders(statusCode, -1);
+            return;
+        }
         exchange.sendResponseHeaders(statusCode, bytes.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(bytes);

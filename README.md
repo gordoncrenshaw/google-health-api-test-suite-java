@@ -143,23 +143,25 @@ java -jar target/health-api-testsuite.jar --web 8080
 
 Open your browser to: **`http://localhost:8080`**
 
-**Web UX Capabilities:**
-- **Preferences & Auth Dashboard**:
-  - **Live Token & Auth Status**: Live countdown timer for the access token, authorization status pills, and one-click **"Force Token Refresh"** and **"Authorize with Google"** buttons.
-  - **Identity & Devices Endpoints**:
-    - **`getIdentity`** (`GET /v4/users/{userId}/identity`): Queries Google Health identity mapping. If `healthUserId` is missing in `config/preferences.yaml`, it automatically stores the discovered user ID into `preferences.yaml`.
-    - **`getDevices`** (`GET /v4/users/{userId}/pairedDevices`): Retrieves connected smartwatches, fitness trackers, and devices.
-    - **Pretty JSON Viewer**: Displays API responses with latency and HTTP status in formatted, indented JSON.
-  - **Configuration Form**: Edit OAuth Client ID, Secret, Health User ID (`healthUserId`), Redirect URI, API Base URL, and Mock Mode with instant persistence.
-- **Interactive API Explorer**:
-  - Dropdown populated directly from `config/datatypes.yaml`.
-  - Displays required scopes, AIP-160 filter parameter syntax, webhook support status, and valid min/max ranges.
-  - Select operations: `list`, `get`, `create`, `rollUp`, `dailyRollUp`, `batchDelete`.
-  - Generates live, copyable `curl` commands.
-  - Color-coded HTTP status pills (`200 OK`, `401`, `404`), latency badges, min/max range check badge (`PASS` / `FAIL`), and syntax-highlighted JSON response viewer.
-- **Full Test Suite Runner**: One-click test runner across all data types with animated progress bar, pass/fail counters, average latency, and an interactive results table.
-- **Script Runner**: Select and run script files from the UI and observe live console output.
-- **Data Types Registry**: Complete searchable table of all Google Health API data types.
+**Web UX Capabilities (Menu Order):**
+1. **Interactive API Explorer**:
+   - Dropdown populated dynamically from `config/datatypes.yaml`.
+   - Displays endpoint version (e.g. `v4`), required scopes, AIP-160 filter parameter syntax, webhook support status, and valid min/max ranges.
+   - Select operations: `list`, `get`, `create`, `rollUp`, `dailyRollUp`, `batchDelete`.
+   - Generates live, copyable `curl` commands.
+   - Color-coded HTTP status pills (`200 OK`, `401`, `404`), latency badges, min/max range check badge (`PASS` / `FAIL`), and syntax-highlighted JSON response viewer.
+2. **Full Test Suite Runner**: One-click test runner across all data types with animated progress bar, pass/fail counters, average latency, and an interactive results table.
+3. **Script Runner**: Select and run script files from the UI and observe live console output.
+4. **Data Types Registry**:
+   - Complete searchable and filterable catalog of all Google Health API data types.
+   - **"+ Add Data Type Setting"**: In-app setting to register additional data types with endpoint version, valid ranges, units, scopes, and supported endpoints. Changes are saved directly to `config/datatypes.yaml` and hot-reloaded into the running test suite immediately.
+5. **Preferences & Auth**:
+   - **Live Token & Auth Status**: Live countdown timer for the access token, authorization status pills, and one-click **"Force Token Refresh"** and **"Authorize with Google"** buttons.
+   - **Identity & Devices Endpoints**:
+     - **`getIdentity`** (`GET /v4/users/{userId}/identity`): Queries Google Health identity mapping. If `healthUserId` is missing in `config/preferences.yaml`, it automatically stores the discovered user ID into `preferences.yaml`.
+     - **`getDevices`** (`GET /v4/users/{userId}/pairedDevices`): Retrieves connected smartwatches, fitness trackers, and devices.
+     - **Pretty JSON Viewer**: Displays API responses with latency and HTTP status in formatted, indented JSON.
+   - **Configuration Form**: Edit OAuth Client ID, Secret, Health User ID (`healthUserId`), Redirect URI, API Base URL, and Mock Mode with instant persistence.
 
 ---
 
@@ -290,8 +292,25 @@ All data types supported by the Google Health API are declared and maintained in
 | `mindfulness` | `v4` | seconds | ❌ No | [0, 86,400] | list, get, create, batchDelete |
 | `exercise` | `v4` | seconds | ❌ No | [0, 86,400] | list, get, exportExerciseTcx |
 | `electrocardiogram` | `v4` | samples | ❌ No | [0, 500] | list, get |
+| `blood_pressure` | `v4` | mmHg | ❌ No | [0, 300] | list, get, create, batchDelete |
 
----
+### Adding Additional Data Types:
+
+Additional health metrics and data types can be added through three mechanisms without modifying application source code:
+
+1. **Via Web UX Dashboard**:
+   - Open **Data Types Registry** tab.
+   - Click the **"+ Add Data Type Setting"** button to toggle the registration panel.
+   - Specify Name (ID), Display Name, Endpoint Version (default: `v4`), Unit, Min/Max Bounds, Read/Write Scopes, Filter Parameter, and Supported Endpoints.
+   - Click **Save & Register Data Type**. The application automatically appends the entry to `config/datatypes.yaml`, reloads the registry in memory, and immediately updates the catalog and API Explorer dropdown.
+
+2. **Via Command Line Menu (Mode 1)**:
+   - Select option `5. List Supported Data Types`.
+   - Choose `[A] Add New Data Type Setting`.
+   - Follow the interactive prompts to define the name, version, unit, bounds, scopes, and endpoints. The new definition is immediately persisted to `config/datatypes.yaml` and loaded into the active session.
+
+3. **Directly in YAML (`config/datatypes.yaml`)**:
+   - Add a new YAML element adhering to the structure shown above. The test suite automatically validates ranges, binds endpoints, and attaches the appropriate API version prefix.
 
 ## 🔐 Authorization & Token Management (`userAuthorization.yaml`)
 

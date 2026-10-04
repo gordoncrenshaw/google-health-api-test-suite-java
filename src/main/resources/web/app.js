@@ -681,5 +681,136 @@ document.addEventListener('DOMContentLoaded', () => {
         if (getDevicesBtn) getDevicesBtn.addEventListener('click', () => executeQuickCall('getDevices', '/api/health/devices'));
         const profileBtn = document.getElementById('btn-quick-profile');
         if (profileBtn) profileBtn.addEventListener('click', () => executeQuickCall('getProfile', '/api/health/profile'));
+
+        initAddDataTypeSetting();
+    }
+
+    // ==========================================================================
+    // 9. Add Data Type Setting Handler
+    // ==========================================================================
+    function initAddDataTypeSetting() {
+        const toggleBtn = document.getElementById('btn-toggle-add-datatype');
+        const toggleBtnText = document.getElementById('btn-toggle-add-datatype-text');
+        const card = document.getElementById('add-datatype-card');
+        const cancelBtn = document.getElementById('btn-cancel-add-datatype');
+        const saveBtn = document.getElementById('btn-save-datatype');
+        const feedbackEl = document.getElementById('add-datatype-feedback');
+
+        if (!toggleBtn || !card) return;
+
+        function togglePanel(show) {
+            const isVisible = card.style.display !== 'none';
+            const willShow = (typeof show === 'boolean') ? show : !isVisible;
+            card.style.display = willShow ? 'block' : 'none';
+            if (toggleBtnText) {
+                toggleBtnText.textContent = willShow ? '✕ Close Setting' : '+ Add Data Type Setting';
+            }
+            if (willShow) {
+                const nameInput = document.getElementById('new-dt-name');
+                if (nameInput) nameInput.focus();
+            }
+        }
+
+        toggleBtn.addEventListener('click', () => togglePanel());
+        if (cancelBtn) cancelBtn.addEventListener('click', () => togglePanel(false));
+
+        if (saveBtn) {
+            saveBtn.addEventListener('click', async () => {
+                const nameInput = document.getElementById('new-dt-name');
+                const displayNameInput = document.getElementById('new-dt-display-name');
+                const versionInput = document.getElementById('new-dt-version');
+                const unitInput = document.getElementById('new-dt-unit');
+                const minValInput = document.getElementById('new-dt-min-val');
+                const maxValInput = document.getElementById('new-dt-max-val');
+                const scopeInput = document.getElementById('new-dt-scope');
+                const writeScopeInput = document.getElementById('new-dt-write-scope');
+                const filterParamInput = document.getElementById('new-dt-filter-param');
+                const sampleFieldInput = document.getElementById('new-dt-sample-field');
+                const webhooksCheckbox = document.getElementById('new-dt-webhooks');
+
+                const name = nameInput.value.trim().toLowerCase();
+                const displayName = displayNameInput.value.trim() || name;
+                const endpointVersion = versionInput.value.trim() || 'v4';
+
+                if (!name) {
+                    showFeedback('Data type identifier (name) is required.', 'danger');
+                    nameInput.focus();
+                    return;
+                }
+
+                const endpoints = [];
+                ['list', 'get', 'create', 'batchdelete', 'rollup', 'dailyrollup'].forEach(epId => {
+                    const cb = document.getElementById('ep-' + epId);
+                    if (cb && cb.checked) {
+                        endpoints.push(cb.value);
+                    }
+                });
+
+                const payload = {
+                    name: name,
+                    displayName: displayName,
+                    endpointVersion: endpointVersion,
+                    unit: unitInput.value.trim() || null,
+                    minValue: minValInput.value.trim() !== '' ? parseFloat(minValInput.value) : null,
+                    maxValue: maxValInput.value.trim() !== '' ? parseFloat(maxValInput.value) : null,
+                    scopeRequired: scopeInput.value.trim() || null,
+                    writeScopeRequired: writeScopeInput.value.trim() || null,
+                    filterParameterName: filterParamInput.value.trim() || null,
+                    sampleValueField: sampleFieldInput.value.trim() || null,
+                    webhooksSupported: webhooksCheckbox.checked,
+                    endpointsSupported: endpoints
+                };
+
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+                showFeedback('Saving data type to datatypes.yaml...', 'warn');
+
+                try {
+                    const res = await fetch('/api/datatypes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const resData = await res.json();
+                    if (res.ok && resData.success) {
+                        showFeedback(`✓ Data type '${name}' registered successfully!`, 'success');
+                        // Reset form
+                        document.getElementById('form-add-datatype').reset();
+                        document.getElementById('new-dt-version').value = 'v4';
+                        document.getElementById('ep-list').checked = true;
+                        document.getElementById('ep-get').checked = true;
+                        document.getElementById('ep-create').checked = true;
+                        document.getElementById('ep-batchdelete').checked = true;
+
+                        // Reload data types list
+                        await loadDataTypes();
+
+                        // Auto-hide panel after 2.5 seconds
+                        setTimeout(() => {
+                            togglePanel(false);
+                            if (feedbackEl) feedbackEl.style.display = 'none';
+                        }, 2500);
+                    } else {
+                        showFeedback(resData.error || resData.message || 'Failed to register data type.', 'danger');
+                    }
+                } catch (e) {
+                    showFeedback('Network error: ' + e.message, 'danger');
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = `
+                        <svg class="btn-icon" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                        Save & Register Data Type
+                    `;
+                }
+            });
+        }
+
+        function showFeedback(msg, type) {
+            if (!feedbackEl) return;
+            feedbackEl.textContent = msg;
+            feedbackEl.className = `pill-badge pill-${type}`;
+            feedbackEl.style.display = 'inline-block';
+        }
     }
 });

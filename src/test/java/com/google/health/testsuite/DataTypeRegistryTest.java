@@ -84,4 +84,42 @@ public class DataTypeRegistryTest {
             assertEquals("v4", dt.getEndpointVersion(), "Default endpoint version for " + dt.getName() + " must be v4");
         }
     }
+
+    @Test
+    void testAddAdditionalDataType() throws Exception {
+        File tempFile = File.createTempFile("datatypes_test", ".yaml");
+        java.nio.file.Files.copy(new File("config/datatypes.yaml").toPath(), tempFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+        DataTypeRegistry testReg = new DataTypeRegistry(tempFile);
+        int initialCount = testReg.getAllDataTypes().size();
+        assertFalse(testReg.hasDataType("vo2_max"));
+
+        DataTypeDefinition vo2 = new DataTypeDefinition("vo2_max", "VO2 Max", "v4",
+                "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
+                List.of("list", "get", "create", "batchDelete"),
+                "vo2_max.sample_time.physical_time", true, 10.0, 95.0, "mL/kg/min");
+
+        boolean added = testReg.addDataType(vo2);
+        assertTrue(added, "addDataType should succeed for new definition");
+        assertEquals(initialCount + 1, testReg.getAllDataTypes().size());
+        assertTrue(testReg.hasDataType("vo2_max"));
+
+        Optional<DataTypeDefinition> fetched = testReg.getDataType("vo2_max");
+        assertTrue(fetched.isPresent());
+        assertEquals("VO2 Max", fetched.get().getDisplayName());
+        assertEquals("v4", fetched.get().getEndpointVersion());
+        assertEquals("mL/kg/min", fetched.get().getUnit());
+        assertTrue(fetched.get().isWebhooksSupported());
+
+        // Test rejecting duplicate
+        boolean duplicateAdded = testReg.addDataType(vo2);
+        assertFalse(duplicateAdded, "addDataType should reject duplicate data type identifier");
+
+        // Verify fresh registry instance reading tempFile sees the persisted data type
+        DataTypeRegistry reloadedReg = new DataTypeRegistry(tempFile);
+        assertTrue(reloadedReg.hasDataType("vo2_max"));
+        assertEquals(initialCount + 1, reloadedReg.getAllDataTypes().size());
+
+        tempFile.deleteOnExit();
+    }
 }

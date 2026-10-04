@@ -362,3 +362,17 @@ dataTypes:
     maxValue: 500
     unit: "samples"
     sampleValueField: "electrocardiogram.classification"
+
+  - name: "blood_pressure"
+    displayName: "Blood Pressure"
+    endpointVersion: "v4"
+    scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+    endpointsSupported:
+      - "list"
+      - "get"
+      - "create"
+      - "batchDelete"
+    webhooksSupported: false
+    minValue: 0
+    maxValue: 300
+    unit: "mmHg"

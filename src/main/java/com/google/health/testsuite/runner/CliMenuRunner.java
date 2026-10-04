@@ -349,6 +349,66 @@ public class CliMenuRunner {
                     rangeStr,
                     String.join(", ", def.getEndpointsSupported()));
         }
+        System.out.println("------------------------------------------------------------------------");
+        System.out.print("Options: [A] Add New Data Type Setting  |  [ENTER] Return: ");
+        String action = scanner.nextLine().trim();
+        if ("a".equalsIgnoreCase(action)) {
+            promptAddNewDataType();
+        }
+    }
+
+    private void promptAddNewDataType() {
+        System.out.println(CYAN + BOLD + "\n--- Add Additional Data Type Setting ---" + RESET);
+        System.out.print("Enter Data Type Identifier (name, e.g. blood_pressure): ");
+        String name = scanner.nextLine().trim().toLowerCase();
+        if (name.isEmpty()) {
+            System.out.println(RED + "Name cannot be empty." + RESET);
+            return;
+        }
+
+        if (dataTypeRegistry.hasDataType(name)) {
+            System.out.println(RED + "Data type '" + name + "' already exists in registry." + RESET);
+            return;
+        }
+
+        System.out.print("Enter Display Name [default: " + name + "]: ");
+        String displayName = scanner.nextLine().trim();
+        if (displayName.isEmpty()) displayName = name;
+
+        System.out.print("Enter Endpoint Version [default: v4]: ");
+        String version = scanner.nextLine().trim();
+        if (version.isEmpty()) version = "v4";
+
+        System.out.print("Enter Measurement Unit (e.g. mmHg, count, bpm): ");
+        String unit = scanner.nextLine().trim();
+
+        System.out.print("Enter Minimum Valid Value [default: 0]: ");
+        String minStr = scanner.nextLine().trim();
+        Double minVal = minStr.isEmpty() ? 0.0 : Double.parseDouble(minStr);
+
+        System.out.print("Enter Maximum Valid Value [default: 1000]: ");
+        String maxStr = scanner.nextLine().trim();
+        Double maxVal = maxStr.isEmpty() ? 1000.0 : Double.parseDouble(maxStr);
+
+        System.out.print("Enter Read Scope [default: https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly]: ");
+        String scope = scanner.nextLine().trim();
+        if (scope.isEmpty()) {
+            scope = "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly";
+        }
+
+        System.out.print("Supports Webhooks? (y/N) [default: N]: ");
+        String wh = scanner.nextLine().trim();
+        boolean webhooks = "y".equalsIgnoreCase(wh) || "yes".equalsIgnoreCase(wh);
+
+        DataTypeDefinition newDef = new DataTypeDefinition(name, displayName, version, scope,
+                List.of("list", "get", "create", "batchDelete"), name + ".sample_time", webhooks, minVal, maxVal, unit);
+
+        boolean saved = dataTypeRegistry.addDataType(newDef);
+        if (saved) {
+            System.out.println(GREEN + BOLD + "Data type '" + name + "' successfully added to registry and config/datatypes.yaml!" + RESET);
+        } else {
+            System.out.println(RED + "Failed to add data type." + RESET);
+        }
     }
 
     private void runSingleDataTypeTest() {

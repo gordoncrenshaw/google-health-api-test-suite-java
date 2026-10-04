@@ -46,11 +46,7 @@
 
         <!-- Navigation Tabs -->
         <nav class="nav-tabs">
-            <button class="nav-tab active" data-tab="tab-settings" id="tab-btn-settings">
-                <svg viewBox="0 0 24 24" class="tab-icon"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-                Preferences & Auth
-            </button>
-            <button class="nav-tab" data-tab="tab-explorer" id="tab-btn-explorer">
+            <button class="nav-tab active" data-tab="tab-explorer" id="tab-btn-explorer">
                 <svg viewBox="0 0 24 24" class="tab-icon"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.4z"/></svg>
                 API Explorer
             </button>
@@ -66,13 +62,17 @@
                 <svg viewBox="0 0 24 24" class="tab-icon"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
                 Data Types Registry
             </button>
+            <button class="nav-tab" data-tab="tab-settings" id="tab-btn-settings">
+                <svg viewBox="0 0 24 24" class="tab-icon"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                Preferences & Auth
+            </button>
         </nav>
 
         <!-- Main Content Panes -->
         <main class="content-area">
 
-            <!-- TAB 2: INTERACTIVE API EXPLORER -->
-            <section id="tab-explorer" class="tab-pane">
+            <!-- TAB 1: INTERACTIVE API EXPLORER -->
+            <section id="tab-explorer" class="tab-pane active">
                 <div class="card glass-card mb-4">
                     <div class="card-header">
                         <h2 class="card-title">Standardized HTTP Request Builder</h2>
@@ -266,15 +266,119 @@
                 </div>
             </section>
 
-            <!-- TAB 5: DATA TYPES REGISTRY -->
+            <!-- TAB 4: DATA TYPES REGISTRY & SETTINGS -->
             <section id="tab-datatypes" class="tab-pane">
                 <div class="card glass-card mb-4">
-                    <div class="card-header">
-                        <h2 class="card-title">Google Health API (v4) Supported Data Types</h2>
-                        <span class="file-badge">config/datatypes.yaml</span>
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 class="card-title">Google Health API Data Types Registry</h2>
+                            <span class="file-badge">config/datatypes.yaml</span>
+                        </div>
+                        <button id="btn-toggle-add-datatype" class="btn btn-primary btn-sm">
+                            <svg class="btn-icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                            <span id="btn-toggle-add-datatype-text">+ Add Data Type Setting</span>
+                        </button>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted mb-4">All data types supported by the test suite are defined in a single file (<code>config/datatypes.yaml</code>). Adding a new data type is as simple as adding a new block to the YAML file.</p>
+                        <p class="text-muted mb-4">All data types supported by the test suite are defined and maintained in <code>config/datatypes.yaml</code>. You can query endpoints per data type or use the setting below to register additional data types.</p>
+
+                        <!-- Add Data Type Setting Form Panel -->
+                        <div id="add-datatype-card" class="card glass-card mb-4" style="display: none; border-color: rgba(56, 189, 248, 0.35); background: rgba(15, 23, 42, 0.85);">
+                            <div class="card-header">
+                                <h3 class="card-title" style="font-size: 16px;">Add Additional Data Type Setting</h3>
+                                <span class="pill-badge pill-cyan">New Entry</span>
+                            </div>
+                            <div class="card-body">
+                                <form id="form-add-datatype" onsubmit="return false;">
+                                    <div class="grid-3-col mb-3">
+                                        <div class="form-group">
+                                            <label for="new-dt-name">Data Type Identifier (name): *</label>
+                                            <input type="text" id="new-dt-name" class="form-control font-mono" placeholder="e.g. blood_pressure" required>
+                                            <small class="text-muted">Used in API URL path segment</small>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="new-dt-display-name">Display Name: *</label>
+                                            <input type="text" id="new-dt-display-name" class="form-control" placeholder="e.g. Blood Pressure" required>
+                                            <small class="text-muted">Human-readable label</small>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="new-dt-version">Endpoint Version: *</label>
+                                            <input type="text" id="new-dt-version" class="form-control font-mono" value="v4" placeholder="v4" required>
+                                            <small class="text-muted">Supported endpoint version (e.g. v4)</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid-3-col mb-3">
+                                        <div class="form-group">
+                                            <label for="new-dt-unit">Measurement Unit:</label>
+                                            <input type="text" id="new-dt-unit" class="form-control" placeholder="e.g. mmHg, count, bpm, %">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="new-dt-min-val">Minimum Valid Value:</label>
+                                            <input type="number" step="any" id="new-dt-min-val" class="form-control" placeholder="e.g. 0">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="new-dt-max-val">Maximum Valid Value:</label>
+                                            <input type="number" step="any" id="new-dt-max-val" class="form-control" placeholder="e.g. 300">
+                                        </div>
+                                    </div>
+
+                                    <div class="grid-2-col mb-3">
+                                        <div class="form-group">
+                                            <label for="new-dt-scope">Read Scope Required:</label>
+                                            <input type="text" id="new-dt-scope" class="form-control font-mono" placeholder="https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="new-dt-write-scope">Write Scope Required:</label>
+                                            <input type="text" id="new-dt-write-scope" class="form-control font-mono" placeholder="https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly">
+                                        </div>
+                                    </div>
+
+                                    <div class="grid-2-col mb-3">
+                                        <div class="form-group">
+                                            <label for="new-dt-filter-param">AIP-160 Filter Parameter:</label>
+                                            <input type="text" id="new-dt-filter-param" class="form-control font-mono" placeholder="e.g. blood_pressure.sample_time.physical_time">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="new-dt-sample-field">Sample Value Field Path:</label>
+                                            <input type="text" id="new-dt-sample-field" class="form-control font-mono" placeholder="e.g. bloodPressure.systolic">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        <label>Supported REST Operations:</label>
+                                        <div class="checkbox-group">
+                                            <label class="checkbox-label"><input type="checkbox" id="ep-list" value="list" checked> list</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="ep-get" value="get" checked> get</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="ep-create" value="create" checked> create</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="ep-batchdelete" value="batchDelete" checked> batchDelete</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="ep-rollup" value="rollUp"> rollUp</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="ep-dailyrollup" value="dailyRollUp"> dailyRollUp</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-4">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="new-dt-webhooks">
+                                            <span>Supports Webhooks / Subscriptions</span>
+                                        </label>
+                                    </div>
+
+                                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                                        <button id="btn-save-datatype" type="button" class="btn btn-primary">
+                                            <svg class="btn-icon" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                                            Save & Register Data Type
+                                        </button>
+                                        <button id="btn-cancel-add-datatype" type="button" class="btn btn-secondary">
+                                            Cancel
+                                        </button>
+                                        <span id="add-datatype-feedback" style="display: none; margin-left: 10px;"></span>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Data Types Table -->
                         <div class="table-responsive">
                             <table class="data-table" id="datatypes-table">
                                 <thead>
@@ -298,8 +402,8 @@
                 </div>
             </section>
 
-            <!-- TAB: PREFERENCES, AUTH & IDENTITY DASHBOARD -->
-            <section id="tab-settings" class="tab-pane active">
+            <!-- TAB 5: PREFERENCES, AUTH & IDENTITY DASHBOARD -->
+            <section id="tab-settings" class="tab-pane">
                 <div class="grid-2-col mb-4">
                     <!-- Authorization & Token Management Card -->
                     <div class="card glass-card">
