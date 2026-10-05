@@ -35,7 +35,8 @@ public class SuiteExecutionEngine {
      */
     public TestResult executeSingleTest(String dataTypeName, String endpoint,
                                         Map<String, String> queryParams, String requestBody) {
-        Optional<DataTypeDefinition> defOpt = dataTypeRegistry.getDataType(dataTypeName);
+        boolean enableAll = configManager.getPreferences().isEnableAllEndpoints();
+        Optional<DataTypeDefinition> defOpt = dataTypeRegistry.getDataType(dataTypeName, enableAll);
         if (defOpt.isEmpty()) {
             return TestResult.failure("Execute " + endpoint, dataTypeName, endpoint, null, null,
                     "Unknown data type: " + dataTypeName);
@@ -57,8 +58,17 @@ public class SuiteExecutionEngine {
                 case "dailyrollup" -> response = apiClient.dailyRollUpDataPoints(def, requestBody);
                 case "batchdelete" -> {
                     List<String> names = (queryParams != null && queryParams.containsKey("names")) ?
-                            Arrays.asList(queryParams.get("names").split(",")) : List.of("users/me/dataTypes/" + def.getName() + "/dataPoints/dp-1");
+                            Arrays.asList(queryParams.get("names").split(",")) : List.of("users/" + apiClient.getEffectiveUserId() + "/dataTypes/" + def.getName() + "/dataPoints/dp-1");
                     response = apiClient.batchDeleteDataPoints(def, names);
+                }
+                case "reconcile" -> response = apiClient.reconcileDataPoints(def, requestBody);
+                case "exportexercisetcx" -> {
+                    String dpId = (queryParams != null) ? queryParams.getOrDefault("dataPointId", "sample-dp-1") : "sample-dp-1";
+                    response = apiClient.exportExerciseTcx(def, dpId);
+                }
+                case "patch" -> {
+                    String dpId = (queryParams != null) ? queryParams.getOrDefault("dataPointId", "sample-dp-1") : "sample-dp-1";
+                    response = apiClient.patchDataPoint(def, dpId, requestBody);
                 }
                 default -> {
                     return TestResult.failure("Execute " + op, def.getName(), op, null, null,
@@ -70,9 +80,19 @@ public class SuiteExecutionEngine {
             boolean passed = response.isSuccess() && valResult.isValid();
             String msg;
             if (!response.isSuccess()) {
-                String statusMsg = response.getStatusMessage();
-                if (statusMsg != null && !statusMsg.isBlank() && !statusMsg.equals("HTTP " + response.getStatusCode())) {
-                    msg = "Failed: HTTP " + response.getStatusCode() + " - " + statusMsg;
+                String errorDetail = response.getErrorMessage();
+                if (errorDetail == null || errorDetail.isBlank()) {
+                    String statusMsg = response.getStatusMessage();
+                    if (statusMsg != null && !statusMsg.isBlank() && !statusMsg.equals("HTTP " + response.getStatusCode())) {
+                        errorDetail = statusMsg;
+                    }
+                }
+                if (errorDetail != null && !errorDetail.isBlank()) {
+                    if (errorDetail.startsWith("HTTP " + response.getStatusCode())) {
+                        msg = "Failed: " + errorDetail;
+                    } else {
+                        msg = "Failed: HTTP " + response.getStatusCode() + " - " + errorDetail;
+                    }
                 } else {
                     msg = "Failed: HTTP " + response.getStatusCode();
                 }
@@ -97,11 +117,12 @@ public class SuiteExecutionEngine {
      */
     public List<TestResult> executeAllDataTypesTest(String operation) {
         String op = (operation != null && !operation.isEmpty()) ? operation.toLowerCase().trim() : "list";
-        List<DataTypeDefinition> allTypes = dataTypeRegistry.getAllDataTypes();
+        boolean enableAll = configManager.getPreferences().isEnableAllEndpoints();
+        List<DataTypeDefinition> allTypes = dataTypeRegistry.getAllDataTypes(enableAll);
         List<TestResult> results = new ArrayList<>();
 
         for (DataTypeDefinition def : allTypes) {
-            if (def.supportsEndpoint(op)) {
+            if (enableAll || def.supportsEndpoint(op)) {
                 logger.info("Executing {} test for {}", op, def.getName());
                 TestResult res = executeSingleTest(def.getName(), op, null, null);
                 results.add(res);
@@ -118,7 +139,8 @@ public class SuiteExecutionEngine {
     public TestResult executeStep(TestStep step) {
         String action = step.getAction().toLowerCase().trim();
         String dtName = step.getDataType();
-        DataTypeDefinition def = (dtName != null) ? dataTypeRegistry.getDataType(dtName).orElse(null) : null;
+        boolean enableAll = configManager.getPreferences().isEnableAllEndpoints();
+        DataTypeDefinition def = (dtName != null) ? dataTypeRegistry.getDataType(dtName, enableAll).orElse(null) : null;
 
         ApiResponse response;
         try {
@@ -144,8 +166,48 @@ public class SuiteExecutionEngine {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
                     response = apiClient.dailyRollUpDataPoints(def, step.getBody());
                 }
-                case "profile", "get_profile" -> response = apiClient.getProfile(step.getUserId());
-                case "devices", "list_devices" -> response = apiClient.listPairedDevices(step.getUserId());
+                case "reconcile" -> {
+                    if (def == null) return errorResult(step, "Data type is required for action: " + action);
+                    response = apiClient.reconcileDataPoints(def, step.getBody());
+                }
+                case "exportexercisetcx", "export_exercise_tcx" -> {
+                    if (def == null) return errorResult(step, "Data type is required for action: " + action);
+                    String dpId = step.getDataPointId() != null ? step.getDataPointId() : "sample-dp-1";
+                    response = apiClient.exportExerciseTcx(def, dpId);
+                }
+                case "patch", "patch_datapoint" -> {
+                    if (def == null) return errorResult(step, "Data type is required for action: " + action);
+                    String dpId = step.getDataPointId() != null ? step.getDataPointId() : "sample-dp-1";
+                    response = apiClient.patchDataPoint(def, dpId, step.getBody());
+                }
+                case "profile", "get_profile" -> {
+                    String targetUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty() && !"auto".equalsIgnoreCase(step.getUserId())) ? step.getUserId() : null;
+                    response = apiClient.getProfile(targetUser);
+                }
+                case "update_profile", "patch_profile" -> {
+                    String targetUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty() && !"auto".equalsIgnoreCase(step.getUserId())) ? step.getUserId() : null;
+                    response = apiClient.updateProfile(targetUser, step.getBody());
+                }
+                case "irn_profile", "get_irn_profile", "irnprofile" -> {
+                    String targetUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty() && !"auto".equalsIgnoreCase(step.getUserId())) ? step.getUserId() : null;
+                    response = apiClient.getIrnProfile(targetUser);
+                }
+                case "settings", "get_settings" -> {
+                    String targetUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty() && !"auto".equalsIgnoreCase(step.getUserId())) ? step.getUserId() : null;
+                    response = apiClient.getSettings(targetUser);
+                }
+                case "update_settings", "patch_settings" -> {
+                    String targetUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty() && !"auto".equalsIgnoreCase(step.getUserId())) ? step.getUserId() : null;
+                    response = apiClient.updateSettings(targetUser, step.getBody());
+                }
+                case "devices", "list_devices" -> {
+                    String targetUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty() && !"auto".equalsIgnoreCase(step.getUserId())) ? step.getUserId() : null;
+                    response = apiClient.listPairedDevices(targetUser);
+                }
+                case "identity", "get_identity" -> {
+                    String targetUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty() && !"auto".equalsIgnoreCase(step.getUserId())) ? step.getUserId() : null;
+                    response = apiClient.getIdentity(targetUser);
+                }
                 case "check_auth" -> {
                     boolean hasTokens = configManager.getUserAuthorization().hasAccessToken() ||
                             configManager.getPreferences().isMockMode();
@@ -187,7 +249,17 @@ public class SuiteExecutionEngine {
             StringBuilder msg = new StringBuilder();
             if (!statusPassed) {
                 msg.append("Expected status ").append(step.getAssertStatus())
-                        .append(" but got ").append(response.getStatusCode()).append(". ");
+                        .append(" but got ").append(response.getStatusCode());
+                String errorDetail = response.getErrorMessage();
+                if (errorDetail != null && !errorDetail.isBlank()) {
+                    msg.append(" - ").append(errorDetail);
+                }
+                msg.append(". ");
+            } else if (!response.isSuccess() && !overallPassed) {
+                String errorDetail = response.getErrorMessage();
+                if (errorDetail != null && !errorDetail.isBlank()) {
+                    msg.append("HTTP ").append(response.getStatusCode()).append(" - ").append(errorDetail).append(". ");
+                }
             }
             if (!valResult.isValid()) {
                 msg.append(valResult.getMessage()).append(" ");

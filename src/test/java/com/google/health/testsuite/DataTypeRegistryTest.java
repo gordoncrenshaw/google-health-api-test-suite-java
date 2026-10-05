@@ -50,17 +50,21 @@ public class DataTypeRegistryTest {
 
     @Test
     void testHeartRateDataTypeDefinition() {
-        Optional<DataTypeDefinition> hrOpt = registry.getDataType("heart_rate");
-        assertTrue(hrOpt.isPresent(), "heart_rate data type must exist in registry");
+        Optional<DataTypeDefinition> hrOpt = registry.getDataType("heart-rate");
+        assertTrue(hrOpt.isPresent(), "heart-rate data type must exist in registry");
 
         DataTypeDefinition hr = hrOpt.get();
-        assertEquals("v4", hr.getEndpointVersion(), "heart_rate endpoint version must be v4");
+        assertEquals("heart-rate", hr.getName());
+        assertEquals("v4", hr.getEndpointVersion(), "heart-rate endpoint version must be v4");
         assertEquals(1.0, hr.getMinValue());
         assertEquals(300.0, hr.getMaxValue());
         assertEquals("bpm", hr.getUnit());
         assertTrue(hr.isWithinRange(75));
         assertFalse(hr.isWithinRange(0));
         assertFalse(hr.isWithinRange(350));
+
+        // Backward compatibility fallback
+        assertTrue(registry.getDataType("heart_rate").isPresent(), "heart_rate fallback must work");
     }
 
     @Test
@@ -191,4 +195,29 @@ public class DataTypeRegistryTest {
         assertFalse(sleep.getEndpointsSupported().get("exportExerciseTcx"));
         assertFalse(sleep.getEndpointsSupported().get("patch"));
     }
+
+    @Test
+    void testEnableAllEndpointsOverride() {
+        // Normal steps definition does not support patch or exportExerciseTcx
+        DataTypeDefinition stepsNormal = registry.getDataType("steps", false).orElseThrow();
+        assertFalse(stepsNormal.supportsEndpoint("exportExerciseTcx"));
+        assertFalse(stepsNormal.supportsEndpoint("patch"));
+
+        // With enableAllEndpoints = true, all endpoints are enabled
+        DataTypeDefinition stepsAll = registry.getDataType("steps", true).orElseThrow();
+        for (String ep : DataTypeDefinition.ALL_ENDPOINTS) {
+            assertTrue(stepsAll.supportsEndpoint(ep), "All endpoints must be supported when enableAll is true: " + ep);
+            assertTrue(stepsAll.getEndpointsSupported().get(ep));
+        }
+
+        // Verify getAllDataTypes(true) enables all endpoints across all datatypes
+        List<DataTypeDefinition> all = registry.getAllDataTypes(true);
+        assertFalse(all.isEmpty());
+        for (DataTypeDefinition dt : all) {
+            for (String ep : DataTypeDefinition.ALL_ENDPOINTS) {
+                assertTrue(dt.supportsEndpoint(ep), dt.getName() + " must support " + ep + " when enableAll is true");
+            }
+        }
+    }
 }
+

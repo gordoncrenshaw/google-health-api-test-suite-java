@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let dataTypes = [];
     let authStatus = null;
     let countdownInterval = null;
+    let currentPreferences = null;
 
     // Initialize UI
     initTabs();
@@ -57,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/auth/status');
             authStatus = await res.json();
             renderAuthStatus(authStatus);
+            updateExplorerCurlPreview();
         } catch (e) {
             console.error('Failed to load auth status:', e);
             document.getElementById('token-status-pill').textContent = 'Auth Check Failed';
@@ -107,6 +109,10 @@ document.addEventListener('DOMContentLoaded', () => {
             tokenPill.textContent = 'Token Valid';
             tokenPill.className = 'pill-badge pill-success';
             updateCountdownDisplay(status.remainingSeconds);
+        }
+
+        if (status.endpointUserId) {
+            syncEndpointUserSyntax(status.endpointUserId, false);
         }
     }
 
@@ -282,11 +288,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const rangeStr = `[${dt.minValue !== null ? dt.minValue : '0'}, ${dt.maxValue !== null ? dt.maxValue : '∞'}] ${dt.unit || ''}`;
         document.getElementById('dt-info-range').textContent = rangeStr;
 
-        // Filter supported endpoints
+        // Sort endpoints alphabetically and filter supported endpoints
         const endpointSelect = document.getElementById('explorer-endpoint-select');
+        const sortedOptions = Array.from(endpointSelect.options).sort((a, b) => a.value.localeCompare(b.value));
+        endpointSelect.innerHTML = '';
+        sortedOptions.forEach(opt => endpointSelect.appendChild(opt));
+
+        const allowAll = !!(currentPreferences && currentPreferences.enableAllEndpoints);
+
         Array.from(endpointSelect.options).forEach(opt => {
-            let isSupported = false;
-            if (dt.endpointsSupported) {
+            let isSupported = allowAll;
+            if (!isSupported && dt.endpointsSupported) {
                 if (Array.isArray(dt.endpointsSupported)) {
                     isSupported = dt.endpointsSupported.some(ep => ep.toLowerCase() === opt.value.toLowerCase());
                 } else if (typeof dt.endpointsSupported === 'object') {
@@ -308,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (firstValid) endpointSelect.value = firstValid.value;
         }
 
-        updateExplorerCurlPreview();
+        onExplorerEndpointChanged();
     }
 
     function onExplorerEndpointChanged() {
@@ -316,11 +328,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const payloadContainer = document.getElementById('explorer-payload-container');
         const payloadInput = document.getElementById('explorer-payload-input');
         const selName = document.getElementById('explorer-datatype-select').value;
+        const epLower = (ep || '').toLowerCase();
 
-        if (ep === 'create' || ep === 'rollup' || ep === 'dailyrollup') {
+        if (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'reconcile' || epLower === 'patch') {
             payloadContainer.style.display = 'block';
-            if (!payloadInput.value.trim()) {
-                payloadInput.value = generateSamplePayload(selName);
+            if (!payloadInput.value.trim() || payloadInput.dataset.forEp !== epLower) {
+                payloadInput.value = generateSamplePayload(selName, epLower);
+                payloadInput.dataset.forEp = epLower;
             }
         } else {
             payloadContainer.style.display = 'none';
@@ -329,7 +343,20 @@ document.addEventListener('DOMContentLoaded', () => {
         updateExplorerCurlPreview();
     }
 
-    function generateSamplePayload(dataType) {
+    function generateSamplePayload(dataType, endpoint = '') {
+        const epLower = endpoint.toLowerCase();
+        if (epLower === 'patch') {
+            return JSON.stringify({
+                dataPointId: "sample-dp-1",
+                value: 120
+            }, null, 2);
+        }
+        if (epLower === 'reconcile') {
+            return JSON.stringify({
+                startTime: new Date(Date.now() - 86400000).toISOString(),
+                endTime: new Date().toISOString()
+            }, null, 2);
+        }
         return JSON.stringify({
             startTime: new Date(Date.now() - 3600000).toISOString(),
             endTime: new Date().toISOString(),
@@ -338,20 +365,101 @@ document.addEventListener('DOMContentLoaded', () => {
         }, null, 2);
     }
 
+    function getPreferredEndpointUserSyntax() {
+        const epUserSelect = document.getElementById('pref-endpoint-user-id');
+        return (epUserSelect && epUserSelect.value === 'healthUserId') ? 'healthUserId' : 'me';
+    }
+
+    function getPreferredUserSegment() {
+        const syntax = getPreferredEndpointUserSyntax();
+        if (syntax === 'healthUserId') {
+            const healthUserEl = document.getElementById('pref-health-user-id');
+            const healthId = (healthUserEl && healthUserEl.value.trim()) ? healthUserEl.value.trim() : (authStatus?.healthUserID || 'healthUserId');
+            return healthId;
+        }
+        return 'me';
+    }
+
+    function syncEndpointUserSyntax(value, saveToBackend = false) {
+        const syntax = (value === 'healthUserId' ? 'healthUserId' : 'me');
+        const epUserSelect = document.getElementById('pref-endpoint-user-id');
+        const syntaxPill = document.getElementById('endpoint-syntax-pill');
+        const syntaxBadge = document.getElementById('explorer-syntax-badge');
+        const previewEl = document.getElementById('pref-effective-user-preview');
+        const healthUserEl = document.getElementById('pref-health-user-id');
+        const healthId = (healthUserEl && healthUserEl.value.trim()) ? healthUserEl.value.trim() : (authStatus?.healthUserID || '');
+
+        if (epUserSelect && epUserSelect.value !== syntax) epUserSelect.value = syntax;
+
+        const effectiveSegment = (syntax === 'healthUserId' ? (healthId || 'healthUserId') : 'me');
+
+        if (syntaxPill) {
+            syntaxPill.textContent = `Syntax: /users/${effectiveSegment}`;
+        }
+        if (syntaxBadge) {
+            syntaxBadge.textContent = `Syntax: /users/${effectiveSegment}`;
+        }
+        if (previewEl) {
+            previewEl.textContent = `Current active user in URLs: ${effectiveSegment}`;
+        }
+
+        updateExplorerCurlPreview();
+
+        if (saveToBackend) {
+            fetch('/api/preferences', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ endpointUserId: syntax, defaultUserId: syntax })
+            }).catch(e => console.warn('Failed to persist endpoint syntax preference:', e));
+        }
+    }
+
     function updateExplorerCurlPreview() {
-        const dtName = document.getElementById('explorer-datatype-select').value;
+        const dtSelect = document.getElementById('explorer-datatype-select');
+        if (!dtSelect || !dtSelect.value) return;
+        const dtName = dtSelect.value;
         const ep = document.getElementById('explorer-endpoint-select').value;
         const pageSize = document.getElementById('explorer-page-size').value;
-        const method = (ep === 'create' || ep === 'rollup' || ep === 'dailyrollup' || ep === 'batchdelete') ? 'POST' : 'GET';
+        const epLower = (ep || '').toLowerCase();
+
+        let method = 'GET';
+        if (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'batchdelete' || epLower === 'reconcile') {
+            method = 'POST';
+        } else if (epLower === 'patch') {
+            method = 'PATCH';
+        } else {
+            method = 'GET';
+        }
+
         const dt = dataTypes.find(d => d.name === dtName);
         const version = (dt && dt.endpointVersion) ? dt.endpointVersion : 'v4';
-        let path = `/${version}/users/me/dataTypes/${dtName}/dataPoints`;
-        if (ep === 'rollup') path += ':rollUp';
-        if (ep === 'dailyrollup') path += ':dailyRollUp';
-        if (ep === 'batchdelete') path += ':batchDelete';
-        if (ep === 'list') path += `?pageSize=${pageSize}`;
 
-        const curl = `curl -X ${method} "https://health.googleapis.com${path}" \\\n  -H "Authorization: Bearer ya29.***" \\\n  -H "Accept: application/json"`;
+        const userSegment = getPreferredUserSegment();
+
+        let path = `/${version}/users/${userSegment}/dataTypes/${dtName}/dataPoints`;
+        if (epLower === 'rollup') path += ':rollUp';
+        else if (epLower === 'dailyrollup') path += ':dailyRollUp';
+        else if (epLower === 'batchdelete') path += ':batchDelete';
+        else if (epLower === 'reconcile') path += ':reconcile';
+        else if (epLower === 'exportexercisetcx') path += '/sample-dp-1:exportExerciseTcx';
+        else if (epLower === 'get') path += '/sample-dp-1';
+        else if (epLower === 'patch') path += '/sample-dp-1';
+        else if (epLower === 'list') path += `?pageSize=${pageSize}`;
+
+        const token = (authStatus && authStatus.accessToken) ? authStatus.accessToken : 'ya29.YOUR_ACCESS_TOKEN';
+        let curl = `curl -X ${method} "https://health.googleapis.com${path}" \\\n  -H "Authorization: Bearer ${token}" \\\n  -H "Accept: application/json"`;
+
+        if (method === 'POST' || method === 'PATCH') {
+            if (epLower === 'batchdelete') {
+                const sampleBody = JSON.stringify({ names: [`users/${userSegment}/dataTypes/${dtName}/dataPoints/sample-dp-1`] }, null, 2);
+                curl += ` \\\n  -H "Content-Type: application/json" \\\n  -d '${sampleBody.replace(/'/g, "'\\''")}'`;
+            } else {
+                const payloadInput = document.getElementById('explorer-payload-input');
+                const body = (payloadInput && payloadInput.value.trim()) ? payloadInput.value.trim() : '{}';
+                curl += ` \\\n  -H "Content-Type: application/json" \\\n  -d '${body.replace(/'/g, "'\\''")}'`;
+            }
+        }
+
         document.getElementById('explorer-curl-command').textContent = curl;
         document.getElementById('explorer-request-url').textContent = `URL: https://health.googleapis.com${path}`;
     }
@@ -361,17 +469,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const ep = document.getElementById('explorer-endpoint-select').value;
         const pageSize = document.getElementById('explorer-page-size').value;
         const payload = document.getElementById('explorer-payload-input').value;
+        const syntax = getPreferredEndpointUserSyntax();
+        const epLower = (ep || '').toLowerCase();
 
         const btn = document.getElementById('btn-send-request');
         btn.disabled = true;
         btn.textContent = 'Sending...';
 
         try {
+            const hasBody = (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'reconcile' || epLower === 'patch');
             const reqBody = {
                 dataType: dtName,
                 endpoint: ep,
-                params: { pageSize: pageSize },
-                body: (ep === 'create' || ep === 'rollup' || ep === 'dailyrollup') ? payload : null
+                endpointUserId: syntax,
+                params: { pageSize: pageSize, dataPointId: 'sample-dp-1' },
+                body: hasBody ? payload : null
             };
 
             const res = await fetch('/api/test/single', {
@@ -432,8 +544,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const tr = document.createElement('tr');
             const rangeStr = `[${dt.minValue !== null ? dt.minValue : '0'}, ${dt.maxValue !== null ? dt.maxValue : '∞'}]`;
             
+            const allowAll = !!(currentPreferences && currentPreferences.enableAllEndpoints);
             let supportedEndpoints = [];
-            if (Array.isArray(dt.endpointsSupported)) {
+            if (allowAll) {
+                supportedEndpoints = ['batchDelete', 'create', 'dailyRollUp', 'exportExerciseTcx', 'get', 'list', 'patch', 'reconcile', 'rollUp'];
+            } else if (Array.isArray(dt.endpointsSupported)) {
                 supportedEndpoints = dt.endpointsSupported;
             } else if (dt.endpointsSupported && typeof dt.endpointsSupported === 'object') {
                 supportedEndpoints = Object.entries(dt.endpointsSupported)
@@ -442,7 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const endpointsHtml = supportedEndpoints.length > 0 
-                ? supportedEndpoints.join(', ')
+                ? (allowAll ? `<span class="pill-badge pill-success" style="font-size: 10px; margin-right: 4px;">ALL ENABLED</span> <span class="text-secondary">${supportedEndpoints.join(', ')}</span>` : supportedEndpoints.join(', '))
                 : '<span class="text-muted">None</span>';
 
             tr.innerHTML = `
@@ -492,6 +607,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     function renderSuiteResults(results) {
         const total = results.length;
         let passed = 0;
@@ -506,15 +631,72 @@ document.addEventListener('DOMContentLoaded', () => {
             else failed++;
             totalLatency += r.latencyMs;
 
-            const detailText = !r.passed ? r.message : (r.validationResult?.message || r.message);
+            let detailHtml = '';
+            if (r.passed) {
+                const passMsg = r.validationResult?.message || r.message || 'Validation passed';
+                detailHtml = `<span class="text-secondary" style="font-size: 12px;">${escapeHtml(passMsg)}</span>`;
+            } else {
+                const httpCode = r.statusCode || (r.apiResponse ? r.apiResponse.statusCode : 500);
+                let endpointError = '';
+
+                if (r.apiResponse?.errorMessage) {
+                    endpointError = r.apiResponse.errorMessage;
+                } else if (r.apiResponse?.body) {
+                    try {
+                        const parsed = typeof r.apiResponse.body === 'string' ? JSON.parse(r.apiResponse.body) : r.apiResponse.body;
+                        if (parsed?.error?.message) {
+                            endpointError = parsed.error.message;
+                        } else if (typeof parsed?.error === 'string') {
+                            endpointError = parsed.error;
+                        } else if (parsed?.message) {
+                            endpointError = parsed.message;
+                        } else if (parsed?.error_description) {
+                            endpointError = parsed.error_description;
+                        }
+                    } catch (e) {
+                        // Not JSON
+                    }
+                }
+
+                if (!endpointError && r.message) {
+                    const dashIdx = r.message.indexOf(' - ');
+                    if (dashIdx !== -1) {
+                        endpointError = r.message.substring(dashIdx + 3).trim();
+                    } else if (r.message.startsWith('Failed: HTTP ')) {
+                        const afterHttp = r.message.replace(/^Failed:\s*HTTP\s*\d+\s*:?\s*/i, '').trim();
+                        if (afterHttp) {
+                            endpointError = afterHttp;
+                        } else {
+                            endpointError = r.message;
+                        }
+                    } else {
+                        endpointError = r.message;
+                    }
+                }
+
+                if (!endpointError) {
+                    endpointError = 'Endpoint returned error';
+                }
+
+                detailHtml = `
+                    <div class="suite-error-cell">
+                        <span class="suite-error-code font-mono">
+                            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                            HTTP ${escapeHtml(String(httpCode))} Error
+                        </span>
+                        <span class="suite-error-msg font-mono">${escapeHtml(endpointError)}</span>
+                    </div>
+                `;
+            }
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><span class="pill-badge ${r.passed ? 'pill-success' : 'pill-danger'}">${r.passed ? 'PASS' : 'FAIL'}</span></td>
-                <td><strong>${r.dataType}</strong></td>
-                <td><span class="font-mono">${r.endpoint}</span></td>
-                <td><span class="font-mono ${r.statusCode === 200 ? 'text-success' : 'text-danger'}">HTTP ${r.statusCode}</span></td>
+                <td><strong>${escapeHtml(r.dataType)}</strong></td>
+                <td><span class="font-mono">${escapeHtml(r.endpoint)}</span></td>
+                <td><span class="pill-badge ${r.statusCode === 200 ? 'pill-success' : 'pill-danger'} font-mono font-semibold">HTTP ${r.statusCode}</span></td>
                 <td>${r.latencyMs} ms</td>
-                <td><span class="text-secondary" style="font-size: 12px;">${detailText}</span></td>
+                <td>${detailHtml}</td>
                 <td><span class="text-muted font-mono" style="font-size: 11px;">${new Date().toLocaleTimeString()}</span></td>
             `;
             tbody.appendChild(tr);
@@ -584,6 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch('/api/preferences');
             const prefs = await res.json();
+            currentPreferences = prefs;
             document.getElementById('pref-client-id').value = prefs.clientId || '';
             const healthUserField = document.getElementById('pref-health-user-id');
             if (healthUserField) {
@@ -592,7 +775,18 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('pref-redirect-uri').value = prefs.redirect_uri || prefs.redirectUri || 'http://localhost:8888/callback';
             document.getElementById('pref-api-base-url').value = prefs.apiBaseUrl || '';
             document.getElementById('pref-default-user').value = prefs.defaultUserId || '';
+            const syntax = (prefs.endpointUserId === 'healthUserId' ? 'healthUserId' : 'me');
+            syncEndpointUserSyntax(syntax, false);
             document.getElementById('pref-mock-mode').checked = !!prefs.mockMode;
+            const enableAllEl = document.getElementById('pref-enable-all-endpoints');
+            if (enableAllEl) {
+                enableAllEl.checked = !!prefs.enableAllEndpoints;
+            }
+            updateExplorerCurlPreview();
+            if (dataTypes && dataTypes.length > 0) {
+                onExplorerDataTypeChanged();
+                renderDataTypesTable(dataTypes);
+            }
         } catch (e) {
             console.error('Failed to load preferences:', e);
         }
@@ -603,15 +797,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const saveStatus = document.getElementById('pref-save-status');
 
         const healthUserEl = document.getElementById('pref-health-user-id');
+        const epUserSelect = document.getElementById('pref-endpoint-user-id');
+        const syntax = epUserSelect ? epUserSelect.value : 'me';
+        const enableAllEl = document.getElementById('pref-enable-all-endpoints');
+        const enableAllVal = enableAllEl ? enableAllEl.checked : false;
+
         const prefs = {
             clientId: document.getElementById('pref-client-id').value,
             clientSecret: document.getElementById('pref-client-secret').value,
             healthUserId: healthUserEl ? healthUserEl.value.trim() : '',
+            endpointUserId: syntax,
+            defaultUserId: syntax,
             redirect_uri: document.getElementById('pref-redirect-uri').value,
             redirectUri: document.getElementById('pref-redirect-uri').value,
             apiBaseUrl: document.getElementById('pref-api-base-url').value,
-            defaultUserId: document.getElementById('pref-default-user').value,
-            mockMode: document.getElementById('pref-mock-mode').checked
+            mockMode: document.getElementById('pref-mock-mode').checked,
+            enableAllEndpoints: enableAllVal
         };
 
         try {
@@ -624,7 +825,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.success) {
                 saveStatus.style.display = 'inline';
                 setTimeout(() => { saveStatus.style.display = 'none'; }, 3000);
+                if (currentPreferences) {
+                    currentPreferences.enableAllEndpoints = enableAllVal;
+                }
+                syncEndpointUserSyntax(syntax, false);
                 await loadAuthStatus();
+                await loadDataTypes();
+                onExplorerDataTypeChanged();
+                updateExplorerCurlPreview();
             }
         } catch (e) {
             alert('Failed to save preferences: ' + e.message);
@@ -634,24 +842,125 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================================
     // 7. Identity & Devices Endpoint Actions
     // ==========================================================================
-    async function executeQuickCall(endpoint, url) {
+    let currentPatchTarget = 'profile'; // 'profile' or 'settings'
+    const defaultPayloads = {
+        profile: JSON.stringify({
+            displayName: "Alex Tester",
+            locale: "en-US"
+        }, null, 2),
+        settings: JSON.stringify({
+            temperatureUnit: "CELSIUS",
+            timeZone: "America/New_York",
+            distanceUnit: "KILOMETERS",
+            weightUnit: "KILOGRAMS"
+        }, null, 2)
+    };
+
+    function openUserPatchPanel(target) {
+        currentPatchTarget = target;
+        const panel = document.getElementById('user-patch-panel');
+        const badge = document.getElementById('user-patch-badge');
+        const desc = document.getElementById('user-patch-desc');
+        const payloadArea = document.getElementById('user-patch-payload');
+        const submitText = document.getElementById('btn-submit-user-patch-text');
+
+        if (!panel) return;
+
+        panel.style.display = 'block';
+        if (target === 'profile') {
+            if (badge) badge.textContent = 'PATCH /profile';
+            if (desc) desc.textContent = 'Edit user profile attributes (e.g. displayName, locale):';
+            if (submitText) submitText.textContent = 'Send updateProfile PATCH';
+            if (payloadArea) payloadArea.value = defaultPayloads.profile;
+        } else {
+            if (badge) badge.textContent = 'PATCH /settings';
+            if (desc) desc.textContent = 'Edit user measurement preferences and timezone:';
+            if (submitText) submitText.textContent = 'Send updateSettings PATCH';
+            if (payloadArea) payloadArea.value = defaultPayloads.settings;
+        }
+
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (payloadArea) payloadArea.focus();
+    }
+
+    function initUserPatchPanel() {
+        const panel = document.getElementById('user-patch-panel');
+        const closeBtn = document.getElementById('btn-close-user-patch');
+        const resetBtn = document.getElementById('btn-reset-user-patch');
+        const submitBtn = document.getElementById('btn-submit-user-patch');
+        const payloadArea = document.getElementById('user-patch-payload');
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                if (panel) panel.style.display = 'none';
+            });
+        }
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                if (payloadArea && defaultPayloads[currentPatchTarget]) {
+                    payloadArea.value = defaultPayloads[currentPatchTarget];
+                }
+            });
+        }
+
+        if (submitBtn) {
+            submitBtn.addEventListener('click', async () => {
+                const text = payloadArea ? payloadArea.value.trim() : '';
+                if (!text) {
+                    alert('Please enter a valid JSON payload.');
+                    return;
+                }
+                try {
+                    JSON.parse(text); // validate JSON syntax
+                } catch (err) {
+                    alert('Invalid JSON payload syntax: ' + err.message);
+                    return;
+                }
+
+                if (currentPatchTarget === 'profile') {
+                    await executeQuickCall('updateProfile', '/api/health/profile', 'POST', text);
+                } else {
+                    await executeQuickCall('updateSettings', '/api/health/settings', 'POST', text);
+                }
+            });
+        }
+    }
+
+    async function executeQuickCall(endpoint, url, method = 'GET', body = null) {
         const statusEl = document.getElementById('quick-result-status');
         const latencyEl = document.getElementById('quick-result-latency');
         const bodyEl = document.getElementById('quick-result-body');
+        const urlEl = document.getElementById('quick-result-url');
         const saveBadge = document.getElementById('identity-save-badge');
         if (saveBadge) saveBadge.style.display = 'none';
 
         statusEl.textContent = 'Calling...';
         statusEl.className = 'pill-badge pill-warn';
         if (latencyEl) latencyEl.textContent = '';
+        if (urlEl) {
+            urlEl.textContent = '';
+            urlEl.style.display = 'none';
+        }
 
         try {
-            const res = await fetch(url);
+            const fetchOpts = { method: method };
+            if (body && (method === 'POST' || method === 'PATCH')) {
+                fetchOpts.headers = { 'Content-Type': 'application/json' };
+                fetchOpts.body = typeof body === 'string' ? body : JSON.stringify(body);
+            }
+
+            const res = await fetch(url, fetchOpts);
             const data = await res.json();
             statusEl.textContent = `HTTP ${data.statusCode || 200}`;
             statusEl.className = (data.statusCode >= 200 && data.statusCode < 300) ? 'pill-badge pill-success' : 'pill-badge pill-danger';
             if (latencyEl && data.latencyMs !== undefined) {
                 latencyEl.textContent = `${data.latencyMs}ms`;
+            }
+
+            if (urlEl && data.requestUrl) {
+                urlEl.textContent = `${method.toUpperCase()} Request URL: ${data.requestUrl}`;
+                urlEl.style.display = 'block';
             }
 
             // Always display response in pretty JSON format
@@ -702,16 +1011,62 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('explorer-datatype-select').addEventListener('change', onExplorerDataTypeChanged);
         document.getElementById('explorer-endpoint-select').addEventListener('change', onExplorerEndpointChanged);
         document.getElementById('explorer-page-size').addEventListener('input', updateExplorerCurlPreview);
+        const explorerPayloadInput = document.getElementById('explorer-payload-input');
+        if (explorerPayloadInput) {
+            explorerPayloadInput.addEventListener('input', updateExplorerCurlPreview);
+        }
         document.getElementById('btn-send-request').addEventListener('click', sendExplorerRequest);
 
-        document.getElementById('btn-copy-curl').addEventListener('click', () => {
+        document.getElementById('btn-copy-curl').addEventListener('click', async () => {
             const text = document.getElementById('explorer-curl-command').textContent;
-            navigator.clipboard.writeText(text).then(() => alert('cURL command copied to clipboard!'));
+            if (!text) return;
+            const btn = document.getElementById('btn-copy-curl');
+            const originalHtml = btn.innerHTML;
+
+            const copyToClipboard = async (str) => {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(str);
+                } else {
+                    const ta = document.createElement('textarea');
+                    ta.value = str;
+                    ta.style.position = 'fixed';
+                    ta.style.left = '-999999px';
+                    ta.style.top = '-999999px';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                }
+            };
+
+            try {
+                await copyToClipboard(text);
+                btn.innerHTML = `<svg viewBox="0 0 24 24" class="btn-icon" style="color: #4ade80;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Copied!`;
+                setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+            } catch (err) {
+                console.error('Failed to copy cURL command: ', err);
+                alert('cURL command copied to clipboard!');
+            }
         });
 
         document.getElementById('btn-run-full-suite').addEventListener('click', runFullTestSuite);
         document.getElementById('btn-run-script').addEventListener('click', executeSelectedScript);
         document.getElementById('preferences-form').addEventListener('submit', savePreferences);
+
+        const epUserSelect = document.getElementById('pref-endpoint-user-id');
+        if (epUserSelect) {
+            epUserSelect.addEventListener('change', (e) => {
+                syncEndpointUserSyntax(e.target.value, true);
+            });
+        }
+
+        const healthUserEl = document.getElementById('pref-health-user-id');
+        if (healthUserEl) {
+            healthUserEl.addEventListener('input', () => {
+                const current = epUserSelect ? epUserSelect.value : 'me';
+                syncEndpointUserSyntax(current, false);
+            });
+        }
 
         const getIdentityBtn = document.getElementById('btn-get-identity');
         if (getIdentityBtn) getIdentityBtn.addEventListener('click', () => executeQuickCall('getIdentity', '/api/health/identity'));
@@ -719,7 +1074,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (getDevicesBtn) getDevicesBtn.addEventListener('click', () => executeQuickCall('getDevices', '/api/health/devices'));
         const profileBtn = document.getElementById('btn-quick-profile');
         if (profileBtn) profileBtn.addEventListener('click', () => executeQuickCall('getProfile', '/api/health/profile'));
+        const updateProfileBtn = document.getElementById('btn-quick-update-profile');
+        if (updateProfileBtn) updateProfileBtn.addEventListener('click', () => openUserPatchPanel('profile'));
+        const irnProfileBtn = document.getElementById('btn-quick-irn-profile');
+        if (irnProfileBtn) irnProfileBtn.addEventListener('click', () => executeQuickCall('getIrnProfile', '/api/health/irnProfile'));
+        const settingsBtn = document.getElementById('btn-quick-settings');
+        if (settingsBtn) settingsBtn.addEventListener('click', () => executeQuickCall('getSettings', '/api/health/settings'));
+        const updateSettingsBtn = document.getElementById('btn-quick-update-settings');
+        if (updateSettingsBtn) updateSettingsBtn.addEventListener('click', () => openUserPatchPanel('settings'));
 
+        initUserPatchPanel();
         initAddDataTypeSetting();
     }
 

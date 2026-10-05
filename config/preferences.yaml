@@ -1,21 +1,13 @@
-joinedScopes: https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly
-  https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly
-  https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly
-  https://www.googleapis.com/auth/googlehealth.sleep.readonly https://www.googleapis.com/auth/googlehealth.sleep.writeonly
-  https://www.googleapis.com/auth/googlehealth.mindfulness.readonly https://www.googleapis.com/auth/googlehealth.mindfulness.writeonly
-  https://www.googleapis.com/auth/googlehealth.logged_symptoms.readonly https://www.googleapis.com/auth/googlehealth.reproductive_health.readonly
-  https://www.googleapis.com/auth/googlehealth.ecg.readonly https://www.googleapis.com/auth/googlehealth.location.readonly
-  https://www.googleapis.com/auth/googlehealth.profile.readonly https://www.googleapis.com/auth/googlehealth.settings.readonly
-configured: true
-clientId: 915464942867-jnuqqchamj2v0sm6jq8207chlje8vlgu.apps.googleusercontent.com
-clientSecret: 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
+endpointUserSyntax: me
 authUri: https://accounts.google.com/o/oauth2/v2/auth
 tokenUri: https://oauth2.googleapis.com/token
 redirect_uri: http://localhost:8888/callback
 apiBaseUrl: https://health.googleapis.com
 healthUserId: 7226778021918831098
 defaultUserId: me
+endpointUserId: me
 mockMode: false
+enableAllEndpoints: false
 scopes:
 - https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly
 - https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly

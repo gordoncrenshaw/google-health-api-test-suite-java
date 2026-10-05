@@ -22,13 +22,13 @@ steps:
 
   - name: "Regression: Heart Rate Query"
     action: "list"
-    dataType: "heart_rate"
+    dataType: "heart-rate"
     assertStatus: [200]
     validateRange: true
 
   - name: "Regression: Active Energy Burned Query"
     action: "list"
-    dataType: "active_energy_burned"
+    dataType: "active-energy-burned"
     assertStatus: [200]
     validateRange: true
 
@@ -52,12 +52,12 @@ steps:
 
   - name: "Regression: Blood Oxygen (SpO2) Query"
     action: "list"
-    dataType: "oxygen_saturation"
+    dataType: "oxygen-saturation"
     assertStatus: [200]
     validateRange: true
 
   - name: "Regression: Blood Glucose Query"
     action: "list"
-    dataType: "blood_glucose"
+    dataType: "blood-glucose"
     assertStatus: [200]
     validateRange: true

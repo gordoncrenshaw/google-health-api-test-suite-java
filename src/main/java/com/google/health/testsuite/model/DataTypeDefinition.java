@@ -115,6 +115,37 @@ public class DataTypeDefinition {
     }
 
     /**
+     * Generates a template map containing all canonical endpoints initialized to true.
+     */
+    public static Map<String, Boolean> createAllEnabledEndpointsMap() {
+        Map<String, Boolean> map = new LinkedHashMap<>();
+        for (String ep : ALL_ENDPOINTS) {
+            map.put(ep, true);
+        }
+        return map;
+    }
+
+    /**
+     * Returns a copy of this DataTypeDefinition with all endpoints enabled.
+     */
+    public DataTypeDefinition withAllEndpointsEnabled() {
+        DataTypeDefinition copy = new DataTypeDefinition();
+        copy.name = this.name;
+        copy.displayName = this.displayName;
+        copy.endpointVersion = this.endpointVersion;
+        copy.scopeRequired = this.scopeRequired;
+        copy.writeScopeRequired = this.writeScopeRequired;
+        copy.endpointsSupported = createAllEnabledEndpointsMap();
+        copy.filterParameterName = this.filterParameterName;
+        copy.webhooksSupported = this.webhooksSupported;
+        copy.minValue = this.minValue;
+        copy.maxValue = this.maxValue;
+        copy.unit = this.unit;
+        copy.sampleValueField = this.sampleValueField;
+        return copy;
+    }
+
+    /**
      * Checks if the given endpoint is supported (true). Case-insensitive.
      */
     public boolean supportsEndpoint(String endpoint) {

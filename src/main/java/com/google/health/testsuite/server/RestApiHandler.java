@@ -83,7 +83,15 @@ public class RestApiHandler implements HttpHandler {
                 case "/api/test/run-all" -> handleRunAllTests(exchange);
                 case "/api/test/script" -> handleRunScript(exchange);
                 case "/api/scripts" -> handleListScripts(exchange);
-                case "/api/health/profile" -> handleGetProfile(exchange);
+                case "/api/health/profile" -> {
+                    if ("POST".equals(method) || "PATCH".equals(method)) handleUpdateProfile(exchange);
+                    else handleGetProfile(exchange);
+                }
+                case "/api/health/irnProfile", "/api/health/getIrnProfile" -> handleGetIrnProfile(exchange);
+                case "/api/health/settings", "/api/health/getSettings" -> {
+                    if ("POST".equals(method) || "PATCH".equals(method)) handleUpdateSettings(exchange);
+                    else handleGetSettings(exchange);
+                }
                 case "/api/health/devices", "/api/health/getDevices" -> handleGetDevices(exchange);
                 case "/api/health/identity", "/api/health/getIdentity" -> handleGetIdentity(exchange);
                 default -> sendError(exchange, 404, "Endpoint not found: " + path);
@@ -95,7 +103,8 @@ public class RestApiHandler implements HttpHandler {
     }
 
     private void handleGetDataTypes(HttpExchange exchange) throws IOException {
-        List<DataTypeDefinition> list = dataTypeRegistry.getAllDataTypes();
+        boolean enableAll = configManager.getPreferences().isEnableAllEndpoints();
+        List<DataTypeDefinition> list = dataTypeRegistry.getAllDataTypes(enableAll);
         sendJson(exchange, 200, jsonMapper.writeValueAsString(list));
     }
 
@@ -147,6 +156,12 @@ public class RestApiHandler implements HttpHandler {
     private void handleGetPreferences(HttpExchange exchange) throws IOException {
         Preferences prefs = configManager.getPreferences();
         ObjectNode node = jsonMapper.valueToTree(prefs);
+        node.put("clientId", prefs.getClientId());
+        node.put("endpointUserId", prefs.getEndpointUserId());
+        node.put("endpointUserSyntax", prefs.getEndpointUserId());
+        node.put("effectiveUserId", engine.getApiClient().getEffectiveUserId());
+        node.put("useHealthUserId", prefs.isUseHealthUserId());
+        node.put("enableAllEndpoints", prefs.isEnableAllEndpoints());
         // Mask client secret for security
         String secret = prefs.getClientSecret();
         if (secret != null && secret.length() > 4) {
@@ -162,11 +177,20 @@ public class RestApiHandler implements HttpHandler {
         Preferences incoming = jsonMapper.readValue(body, Preferences.class);
         Preferences current = configManager.getPreferences();
 
-        if (incoming.getClientId() != null && !incoming.getClientId().trim().isEmpty()) {
-            current.setClientId(incoming.getClientId());
+        boolean credsChanged = false;
+        if (incoming.getClientId() != null && !incoming.getClientId().trim().isEmpty() &&
+                !incoming.getClientId().trim().equals(current.getClientId())) {
+            current.setClientId(incoming.getClientId().trim());
+            credsChanged = true;
         }
-        if (incoming.getClientSecret() != null && !incoming.getClientSecret().trim().isEmpty() && !incoming.getClientSecret().contains("****")) {
+        if (incoming.getClientSecret() != null && !incoming.getClientSecret().trim().isEmpty() &&
+                !incoming.getClientSecret().contains("****") &&
+                !incoming.getClientSecret().trim().equals(current.getClientSecret())) {
             current.setClientSecret(incoming.getClientSecret().trim());
+            credsChanged = true;
+        }
+        if (credsChanged) {
+            configManager.saveClientSecret(current.getClientId(), current.getClientSecret());
         }
         if (incoming.getRedirectUri() != null && !incoming.getRedirectUri().trim().isEmpty()) {
             current.setRedirectUri(incoming.getRedirectUri());
@@ -180,7 +204,11 @@ public class RestApiHandler implements HttpHandler {
         if (incoming.getDefaultUserId() != null && !incoming.getDefaultUserId().trim().isEmpty()) {
             current.setDefaultUserId(incoming.getDefaultUserId());
         }
+        if (incoming.getEndpointUserId() != null && !incoming.getEndpointUserId().trim().isEmpty()) {
+            current.setEndpointUserId(incoming.getEndpointUserId().trim());
+        }
         current.setMockMode(incoming.isMockMode());
+        current.setEnableAllEndpoints(incoming.isEnableAllEndpoints());
         if (incoming.getScopes() != null && !incoming.getScopes().isEmpty()) {
             current.setScopes(incoming.getScopes());
         }
@@ -203,6 +231,12 @@ public class RestApiHandler implements HttpHandler {
         node.put("updatedAt", auth.getUpdatedAt());
         node.put("scope", auth.getScope());
         node.put("mockMode", prefs.isMockMode());
+        node.put("enableAllEndpoints", prefs.isEnableAllEndpoints());
+        node.put("endpointUserId", prefs.getEndpointUserId());
+        node.put("endpointUserSyntax", prefs.getEndpointUserId());
+        node.put("effectiveUserId", engine.getApiClient().getEffectiveUserId());
+        node.put("useHealthUserId", prefs.isUseHealthUserId());
+        node.put("accessToken", auth.getAccessToken() != null ? auth.getAccessToken() : "");
 
         sendJson(exchange, 200, node.toPrettyString());
     }
@@ -214,6 +248,7 @@ public class RestApiHandler implements HttpHandler {
         ObjectNode resp = jsonMapper.createObjectNode();
         resp.put("success", ok);
         resp.put("message", ok ? "Token refreshed successfully." : "Token refresh failed.");
+        resp.put("accessToken", auth.getAccessToken() != null ? auth.getAccessToken() : "");
         resp.put("remainingSeconds", auth.getRemainingSeconds());
         resp.put("updatedAt", auth.getUpdatedAt());
 
@@ -292,6 +327,10 @@ public class RestApiHandler implements HttpHandler {
         String endpoint = json.path("endpoint").asText("list");
         String requestBody = json.has("body") ? json.path("body").asText(null) : null;
 
+        if (json.has("endpointUserId") && !json.path("endpointUserId").asText().trim().isEmpty()) {
+            configManager.getPreferences().setEndpointUserId(json.path("endpointUserId").asText().trim());
+        }
+
         Map<String, String> params = new HashMap<>();
         if (json.has("params") && json.get("params").isObject()) {
             json.get("params").fields().forEachRemaining(entry -> params.put(entry.getKey(), entry.getValue().asText()));
@@ -360,6 +399,28 @@ public class RestApiHandler implements HttpHandler {
         sendApiResponse(exchange, resp);
     }
 
+    private void handleGetIrnProfile(HttpExchange exchange) throws IOException {
+        ApiResponse resp = engine.getApiClient().getIrnProfile(null);
+        sendApiResponse(exchange, resp);
+    }
+
+    private void handleGetSettings(HttpExchange exchange) throws IOException {
+        ApiResponse resp = engine.getApiClient().getSettings(null);
+        sendApiResponse(exchange, resp);
+    }
+
+    private void handleUpdateProfile(HttpExchange exchange) throws IOException {
+        String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        ApiResponse resp = engine.getApiClient().updateProfile(null, body);
+        sendApiResponse(exchange, resp);
+    }
+
+    private void handleUpdateSettings(HttpExchange exchange) throws IOException {
+        String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        ApiResponse resp = engine.getApiClient().updateSettings(null, body);
+        sendApiResponse(exchange, resp);
+    }
+
     private void handleGetDevices(HttpExchange exchange) throws IOException {
         ApiResponse resp = engine.getApiClient().listPairedDevices(null);
         sendApiResponse(exchange, resp);
@@ -376,6 +437,7 @@ public class RestApiHandler implements HttpHandler {
         node.put("curlCommand", resp.getCurlCommand());
         node.put("body", resp.getBody());
         node.put("healthUserId", prefs.getHealthUserId());
+        node.put("endpointUserId", engine.getApiClient().getEffectiveUserId());
         sendJson(exchange, 200, node.toPrettyString());
     }
 
@@ -386,6 +448,7 @@ public class RestApiHandler implements HttpHandler {
         node.put("latencyMs", resp.getLatencyMs());
         node.put("requestUrl", resp.getRequestUrl());
         node.put("curlCommand", resp.getCurlCommand());
+        node.put("endpointUserId", engine.getApiClient().getEffectiveUserId());
         node.put("body", resp.getBody());
         sendJson(exchange, 200, node.toPrettyString());
     }

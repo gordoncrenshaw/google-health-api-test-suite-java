@@ -42,7 +42,43 @@ public class MockHealthBackend {
                 profile.put("healthUserId", "gh-user-" + UUID.randomUUID().toString().substring(0, 8));
                 profile.put("displayName", "Test Health User");
                 profile.put("locale", "en-US");
+                if ("PATCH".equalsIgnoreCase(httpMethod) && requestBody != null && !requestBody.trim().isEmpty()) {
+                    try {
+                        JsonNode patchNode = jsonMapper.readTree(requestBody);
+                        if (patchNode.has("displayName")) profile.put("displayName", patchNode.path("displayName").asText());
+                        if (patchNode.has("locale")) profile.put("locale", patchNode.path("locale").asText());
+                    } catch (Exception ignored) {}
+                }
                 responseBody = profile.toPrettyString();
+
+            } else if (path.contains("/irnProfile")) {
+                ObjectNode irn = jsonMapper.createObjectNode();
+                irn.put("name", "users/" + effectiveUser + "/irnProfile");
+                irn.put("enrollmentStatus", "ENROLLED");
+                irn.put("onboardingStatus", "ONBOARDING_COMPLETED");
+                irn.put("lastDataAnalyzedTime", Instant.now().minus(2, ChronoUnit.HOURS).toString());
+                responseBody = irn.toPrettyString();
+
+            } else if (path.contains("/settings")) {
+                ObjectNode settings = jsonMapper.createObjectNode();
+                settings.put("name", "users/" + effectiveUser + "/settings");
+                settings.put("distanceUnit", "KILOMETERS");
+                settings.put("weightUnit", "KILOGRAMS");
+                settings.put("heightUnit", "CENTIMETERS");
+                settings.put("temperatureUnit", "CELSIUS");
+                settings.put("timezone", "America/New_York");
+                if ("PATCH".equalsIgnoreCase(httpMethod) && requestBody != null && !requestBody.trim().isEmpty()) {
+                    try {
+                        JsonNode patchNode = jsonMapper.readTree(requestBody);
+                        if (patchNode.has("timezone")) settings.put("timezone", patchNode.path("timezone").asText());
+                        if (patchNode.has("timeZone")) settings.put("timezone", patchNode.path("timeZone").asText());
+                        if (patchNode.has("temperatureUnit")) settings.put("temperatureUnit", patchNode.path("temperatureUnit").asText());
+                        if (patchNode.has("distanceUnit")) settings.put("distanceUnit", patchNode.path("distanceUnit").asText());
+                        if (patchNode.has("weightUnit")) settings.put("weightUnit", patchNode.path("weightUnit").asText());
+                        if (patchNode.has("heightUnit")) settings.put("heightUnit", patchNode.path("heightUnit").asText());
+                    } catch (Exception ignored) {}
+                }
+                responseBody = settings.toPrettyString();
 
             } else if (path.contains("/pairedDevices")) {
                 ObjectNode devList = jsonMapper.createObjectNode();
@@ -77,6 +113,16 @@ public class MockHealthBackend {
                 op.put("done", true);
                 responseBody = op.toPrettyString();
 
+            } else if (path.contains(":reconcile")) {
+                ObjectNode reconcile = jsonMapper.createObjectNode();
+                reconcile.put("reconcileToken", "rec-token-" + System.currentTimeMillis());
+                ArrayNode dataPoints = reconcile.putArray("dataPoints");
+                dataPoints.add(generateSampleDataPointNode(def, effectiveUser, 0));
+                responseBody = reconcile.toPrettyString();
+
+            } else if (path.contains(":exportExerciseTcx")) {
+                responseBody = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TrainingCenterDatabase xmlns=\"http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2\">\n  <Activities>\n    <Activity Sport=\"Running\">\n      <Id>" + Instant.now().toString() + "</Id>\n    </Activity>\n  </Activities>\n</TrainingCenterDatabase>";
+
             } else if (path.contains(":rollUp") || path.contains(":dailyRollUp")) {
                 ObjectNode rollup = jsonMapper.createObjectNode();
                 ArrayNode dataPoints = rollup.putArray("dataPoints");
@@ -90,6 +136,16 @@ public class MockHealthBackend {
                     typeNode.put("value", sampleVal);
                 }
                 responseBody = rollup.toPrettyString();
+
+            } else if ("PATCH".equalsIgnoreCase(httpMethod)) {
+                // Patch DataPoint
+                if (requestBody != null && !requestBody.trim().isEmpty()) {
+                    responseBody = requestBody;
+                } else {
+                    responseBody = generateSampleDataPointJson(def, effectiveUser);
+                }
+                statusCode = 200;
+                statusMessage = "OK";
 
             } else if ("POST".equalsIgnoreCase(httpMethod)) {
                 // Create DataPoint
@@ -150,25 +206,29 @@ public class MockHealthBackend {
         String fieldName = toCamelCase(dtName);
         ObjectNode typeNode = dp.putObject(fieldName);
 
-        if ("steps".equals(dtName) || "floors".equals(dtName)) {
+        String normName = dtName != null ? dtName.replace('_', '-') : "";
+        if ("steps".equals(normName) || "floors".equals(normName)) {
             typeNode.put("count", (long) sampleVal);
-        } else if ("heart_rate".equals(dtName) || "daily_resting_heart_rate".equals(dtName)) {
+        } else if ("heart-rate".equals(normName) || "daily-resting-heart-rate".equals(normName) || "heart-rate-variability".equals(normName)) {
             typeNode.put("beatsPerMinute", (long) sampleVal);
-        } else if ("distance".equals(dtName)) {
+        } else if ("distance".equals(normName)) {
             typeNode.put("millimeters", (long) sampleVal);
-        } else if ("weight".equals(dtName)) {
+        } else if ("weight".equals(normName)) {
             typeNode.put("weightGrams", sampleVal);
-        } else if ("height".equals(dtName)) {
+        } else if ("height".equals(normName)) {
             typeNode.put("heightMillimeters", sampleVal);
-        } else if ("oxygen_saturation".equals(dtName) || "body_fat".equals(dtName)) {
+        } else if ("oxygen-saturation".equals(normName) || "body-fat".equals(normName)) {
             typeNode.put("percentage", sampleVal);
-        } else if ("blood_glucose".equals(dtName)) {
+        } else if ("blood-glucose".equals(normName)) {
             typeNode.put("bloodGlucoseMilligramsPerDeciliter", sampleVal);
-        } else if ("active_energy_burned".equals(dtName) || "basal_energy_burned".equals(dtName)) {
+        } else if ("blood-pressure".equals(normName)) {
+            typeNode.put("systolic", (long) sampleVal);
+            typeNode.put("diastolic", 80L);
+        } else if ("active-energy-burned".equals(normName) || "basal-energy-burned".equals(normName)) {
             typeNode.put("kcal", sampleVal);
-        } else if ("active_zone_minutes".equals(dtName)) {
+        } else if ("active-zone-minutes".equals(normName)) {
             typeNode.put("activeZoneMinutes", (int) sampleVal);
-        } else if ("sleep".equals(dtName) || "exercise".equals(dtName) || "mindfulness".equals(dtName)) {
+        } else if ("sleep".equals(normName) || "exercise".equals(normName) || "mindfulness".equals(normName)) {
             typeNode.put("durationSeconds", (long) sampleVal);
         } else {
             typeNode.put("value", sampleVal);
@@ -186,29 +246,30 @@ public class MockHealthBackend {
         double min = def.getMinValue() != null ? def.getMinValue() : 0.0;
         double max = def.getMaxValue() != null ? def.getMaxValue() : 1000.0;
 
+        String normDefName = def.getName() != null ? def.getName().replace('_', '-') : "";
         // Choose a realistic healthy value within min and max
-        if ("steps".equals(def.getName())) return 4500.0 + (offset * 150.0);
-        if ("heart_rate".equals(def.getName())) return 72.0 + (offset * 2.0);
-        if ("distance".equals(def.getName())) return 3200000.0 + (offset * 50000.0); // 3.2 km in mm
-        if ("weight".equals(def.getName())) return 75000.0; // 75 kg in grams
-        if ("height".equals(def.getName())) return 1780.0; // 178 cm in mm
-        if ("oxygen_saturation".equals(def.getName())) return 98.0;
-        if ("blood_glucose".equals(def.getName())) return 95.0;
-        if ("body_fat".equals(def.getName())) return 18.5;
-        if ("active_energy_burned".equals(def.getName())) return 350.0;
-        if ("sleep".equals(def.getName())) return 28800.0; // 8 hours in seconds
+        if ("steps".equals(normDefName)) return 4500.0 + (offset * 150.0);
+        if ("heart-rate".equals(normDefName)) return 72.0 + (offset * 2.0);
+        if ("distance".equals(normDefName)) return 3200000.0 + (offset * 50000.0); // 3.2 km in mm
+        if ("weight".equals(normDefName)) return 75000.0; // 75 kg in grams
+        if ("height".equals(normDefName)) return 1780.0; // 178 cm in mm
+        if ("oxygen-saturation".equals(normDefName)) return 98.0;
+        if ("blood-glucose".equals(normDefName)) return 95.0;
+        if ("body-fat".equals(normDefName)) return 18.5;
+        if ("active-energy-burned".equals(normDefName)) return 350.0;
+        if ("sleep".equals(normDefName)) return 28800.0; // 8 hours in seconds
 
         return Math.max(min, Math.min(max, (min + max) / 2.0));
     }
 
-    private static String toCamelCase(String snake) {
-        if (snake == null || !snake.contains("_")) {
-            return snake;
+    private static String toCamelCase(String name) {
+        if (name == null || (!name.contains("_") && !name.contains("-"))) {
+            return name;
         }
         StringBuilder sb = new StringBuilder();
         boolean upper = false;
-        for (char c : snake.toCharArray()) {
-            if (c == '_') {
+        for (char c : name.toCharArray()) {
+            if (c == '_' || c == '-') {
                 upper = true;
             } else if (upper) {
                 sb.append(Character.toUpperCase(c));

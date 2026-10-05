@@ -102,14 +102,14 @@ public class CliMenuRunner {
                 (auth.hasAccessToken() ? (auth.isExpired() ? RED + "EXPIRED" : GREEN + "VALID") : RED + "NONE") + RESET,
                 auth.getRemainingSeconds());
         System.out.println("------------------------------------------------------------------------");
-        System.out.println(" 1. Preferences & Auth Menu (Dashboard, Auth, getIdentity, getDevices)");
+        System.out.println(" 1. Preferences & Auth Menu (Dashboard, Auth, Identity, Profile & Settings)");
         System.out.println(" 2. View Authorization & Token Details");
         System.out.println(" 3. Authorize with Google (OAuth 2.0 Web Callback / Manual Code)");
         System.out.println(" 4. Refresh Access Token Now (Automatic Rotation & Save)");
         System.out.println(" 5. List Supported Data Types (From datatypes.yaml)");
         System.out.println(" 6. Run Single Data Type API Test (List, Get, Create, Rollup)");
         System.out.println(" 7. Run Comprehensive Test Suite Across All Data Types");
-        System.out.println(" 8. Test Identity, Profile & Paired Devices Endpoints");
+        System.out.println(" 8. Test Identity, Profile, Settings & Paired Devices Endpoints");
         System.out.println(" 9. Run a Test Script File (Mode 3 Script Runner)");
         System.out.printf(" 10. Toggle Mock/Live Mode (Current: %s)\n", prefs.isMockMode() ? "MOCK" : "LIVE");
         System.out.println(" 0. Exit");
@@ -132,7 +132,9 @@ public class CliMenuRunner {
             System.out.println(" Redirect URI:   " + prefs.getRedirectUri());
             System.out.println(" API Base URL:   " + prefs.getApiBaseUrl());
             System.out.println(" Default User:   " + prefs.getDefaultUserId());
+            System.out.println(" Endpoint User:  " + (prefs.isUseHealthUserId() ? CYAN + "healthUserId (" + (prefs.getHealthUserId().isEmpty() ? "not set - falls back to me" : prefs.getHealthUserId()) + ")" + RESET : GREEN + "me" + RESET));
             System.out.println(" Mock Mode:      " + (prefs.isMockMode() ? YELLOW + "ENABLED" : GREEN + "DISABLED (Live API)") + RESET);
+            System.out.println(" All Endpoints:  " + (prefs.isEnableAllEndpoints() ? GREEN + "ENABLED (All endpoints active for each datatype)" : YELLOW + "DISABLED (Respects datatypes.yaml)") + RESET);
 
             System.out.println(BOLD + "\n[ User Authorization Status (config/userAuthorization.yaml) ]" + RESET);
             System.out.println(" Health User ID: " + auth.getHealthUserID());
@@ -146,11 +148,16 @@ public class CliMenuRunner {
             System.out.println(" 3. Call getIdentity Endpoint (GET /v4/users/{userId}/identity)");
             System.out.println(" 4. Call getDevices Endpoint (GET /v4/users/{userId}/pairedDevices)");
             System.out.println(" 5. Call getProfile Endpoint (GET /v4/users/{userId}/profile)");
-            System.out.println(" 6. Edit Preferences (Client ID, Secret, Health User ID, Redirect URI)");
-            System.out.println(" 7. View Stored Scopes");
+            System.out.println(" 6. Call getIrnProfile Endpoint (GET /v4/users/{userId}/irnProfile)");
+            System.out.println(" 7. Call getSettings Endpoint (GET /v4/users/{userId}/settings)");
+            System.out.println(" 8. Call updateProfile Endpoint (PATCH /v4/users/{userId}/profile)");
+            System.out.println(" 9. Call updateSettings Endpoint (PATCH /v4/users/{userId}/settings)");
+            System.out.println(" 10. Edit Preferences (Client ID, Secret, Health User ID, Redirect URI)");
+            System.out.println(" 11. View Stored Scopes");
+            System.out.println(" 12. Toggle Enable All Endpoints for Each Datatype");
             System.out.println(" 0. Return to Main Menu");
             System.out.println("------------------------------------------------------------------------");
-            System.out.print(BOLD + "Select option [0-7]: " + RESET);
+            System.out.print(BOLD + "Select option [0-12]: " + RESET);
             String opt = scanner.nextLine().trim();
 
             switch (opt) {
@@ -159,10 +166,20 @@ public class CliMenuRunner {
                 case "3" -> callGetIdentityEndpoint();
                 case "4" -> callGetDevicesEndpoint();
                 case "5" -> callGetProfileEndpoint();
-                case "6" -> editPreferencesPrompt();
-                case "7" -> {
+                case "6" -> callGetIrnProfileEndpoint();
+                case "7" -> callGetSettingsEndpoint();
+                case "8" -> callUpdateProfileEndpoint();
+                case "9" -> callUpdateSettingsEndpoint();
+                case "10" -> editPreferencesPrompt();
+                case "11" -> {
                     System.out.println(CYAN + "\nConfigured OAuth Scopes (" + prefs.getScopes().size() + "):" + RESET);
                     for (String s : prefs.getScopes()) System.out.println(" - " + s);
+                }
+                case "12" -> {
+                    boolean newSetting = !prefs.isEnableAllEndpoints();
+                    prefs.setEnableAllEndpoints(newSetting);
+                    configManager.savePreferences(prefs);
+                    System.out.println(GREEN + BOLD + "Enable All Endpoints for each datatype is now: " + (newSetting ? "ENABLED" : "DISABLED") + RESET);
                 }
                 case "0", "back", "exit" -> inPrefs = false;
                 default -> System.out.println(RED + "Invalid option." + RESET);
@@ -177,8 +194,7 @@ public class CliMenuRunner {
 
     private void callGetIdentityEndpoint() {
         System.out.println(CYAN + BOLD + "\n--- Calling getIdentity Endpoint (GET /v4/users/{userId}/identity) ---" + RESET);
-        Preferences prefs = configManager.getPreferences();
-        String target = !prefs.getHealthUserId().isEmpty() ? prefs.getHealthUserId() : "me";
+        String target = engine.getApiClient().getEffectiveUserId();
         System.out.println("Target user: " + target);
 
         ApiResponse resp = engine.getApiClient().getIdentity(null);
@@ -217,22 +233,91 @@ public class CliMenuRunner {
         System.out.println(resp.getBody());
     }
 
+    private void callGetIrnProfileEndpoint() {
+        System.out.println(CYAN + BOLD + "\n--- Calling getIrnProfile Endpoint (GET /v4/users/{userId}/irnProfile) ---" + RESET);
+        ApiResponse resp = engine.getApiClient().getIrnProfile(null);
+
+        System.out.println("\nHTTP Status: " + (resp.isSuccess() ? GREEN : RED) + resp.getStatusCode() + " " + resp.getStatusMessage() + RESET +
+                " (" + resp.getLatencyMs() + "ms)");
+        System.out.println("cURL:\n" + YELLOW + resp.getCurlCommand() + RESET);
+        System.out.println("\nResponse Body (Pretty JSON):");
+        System.out.println(resp.getBody());
+    }
+
+    private void callGetSettingsEndpoint() {
+        System.out.println(CYAN + BOLD + "\n--- Calling getSettings Endpoint (GET /v4/users/{userId}/settings) ---" + RESET);
+        ApiResponse resp = engine.getApiClient().getSettings(null);
+
+        System.out.println("\nHTTP Status: " + (resp.isSuccess() ? GREEN : RED) + resp.getStatusCode() + " " + resp.getStatusMessage() + RESET +
+                " (" + resp.getLatencyMs() + "ms)");
+        System.out.println("cURL:\n" + YELLOW + resp.getCurlCommand() + RESET);
+        System.out.println("\nResponse Body (Pretty JSON):");
+        System.out.println(resp.getBody());
+    }
+
+    private void callUpdateProfileEndpoint() {
+        System.out.println(CYAN + BOLD + "\n--- Calling updateProfile Endpoint (PATCH /v4/users/{userId}/profile) ---" + RESET);
+        String defaultJson = "{\n  \"displayName\": \"Alex Tester\",\n  \"locale\": \"en-US\"\n}";
+        System.out.println("Enter JSON payload to update user profile (Press ENTER for default):");
+        System.out.println(YELLOW + defaultJson + RESET);
+        System.out.print(BOLD + "JSON payload: " + RESET);
+        String input = scanner.nextLine().trim();
+        String payload = input.isEmpty() ? defaultJson : input;
+
+        ApiResponse resp = engine.getApiClient().updateProfile(null, payload);
+
+        System.out.println("\nHTTP Status: " + (resp.isSuccess() ? GREEN : RED) + resp.getStatusCode() + " " + resp.getStatusMessage() + RESET +
+                " (" + resp.getLatencyMs() + "ms)");
+        System.out.println("cURL:\n" + YELLOW + resp.getCurlCommand() + RESET);
+        System.out.println("\nResponse Body (Pretty JSON):");
+        System.out.println(resp.getBody());
+    }
+
+    private void callUpdateSettingsEndpoint() {
+        System.out.println(CYAN + BOLD + "\n--- Calling updateSettings Endpoint (PATCH /v4/users/{userId}/settings) ---" + RESET);
+        String defaultJson = "{\n  \"temperatureUnit\": \"CELSIUS\",\n  \"timezone\": \"America/New_York\"\n}";
+        System.out.println("Enter JSON payload to update settings (Press ENTER for default):");
+        System.out.println(YELLOW + defaultJson + RESET);
+        System.out.print(BOLD + "JSON payload: " + RESET);
+        String input = scanner.nextLine().trim();
+        String payload = input.isEmpty() ? defaultJson : input;
+
+        ApiResponse resp = engine.getApiClient().updateSettings(null, payload);
+
+        System.out.println("\nHTTP Status: " + (resp.isSuccess() ? GREEN : RED) + resp.getStatusCode() + " " + resp.getStatusMessage() + RESET +
+                " (" + resp.getLatencyMs() + "ms)");
+        System.out.println("cURL:\n" + YELLOW + resp.getCurlCommand() + RESET);
+        System.out.println("\nResponse Body (Pretty JSON):");
+        System.out.println(resp.getBody());
+    }
+
     private void editPreferencesPrompt() {
         Preferences prefs = configManager.getPreferences();
         System.out.println(CYAN + BOLD + "\n--- Edit Preferences ---" + RESET);
         System.out.println("(Press ENTER to leave current value unchanged)\n");
 
-        System.out.print("Client ID [" + prefs.getClientId() + "]: ");
+        System.out.println("OAuth Client Credentials source: config/client_secret.json");
+        System.out.print("Client ID [" + (prefs.getClientId().isEmpty() ? "Not set" : prefs.getClientId()) + "]: ");
         String cid = scanner.nextLine().trim();
-        if (!cid.isEmpty()) prefs.setClientId(cid);
+        if (!cid.isEmpty()) {
+            prefs.setClientId(cid);
+            configManager.saveClientSecret(cid, prefs.getClientSecret());
+        }
 
         System.out.print("Client Secret [leave blank to keep unchanged]: ");
         String sec = scanner.nextLine().trim();
-        if (!sec.isEmpty()) prefs.setClientSecret(sec);
+        if (!sec.isEmpty()) {
+            prefs.setClientSecret(sec);
+            configManager.saveClientSecret(prefs.getClientId(), sec);
+        }
 
         System.out.print("Health User ID [" + prefs.getHealthUserId() + "]: ");
         String hid = scanner.nextLine().trim();
         if (!hid.isEmpty()) prefs.setHealthUserId(hid);
+
+        System.out.print("Endpoint User ID Syntax ('me' or 'healthUserId') [" + prefs.getEndpointUserId() + "]: ");
+        String euser = scanner.nextLine().trim();
+        if (!euser.isEmpty()) prefs.setEndpointUserId(euser);
 
         System.out.print("Redirect URI [" + prefs.getRedirectUri() + "]: ");
         String ruri = scanner.nextLine().trim();
@@ -241,6 +326,12 @@ public class CliMenuRunner {
         System.out.print("API Base URL [" + prefs.getApiBaseUrl() + "]: ");
         String url = scanner.nextLine().trim();
         if (!url.isEmpty()) prefs.setApiBaseUrl(url);
+
+        System.out.print("Enable all endpoints for each datatype? (y/n) [" + (prefs.isEnableAllEndpoints() ? "y" : "n") + "]: ");
+        String enableAllStr = scanner.nextLine().trim();
+        if (!enableAllStr.isEmpty()) {
+            prefs.setEnableAllEndpoints("y".equalsIgnoreCase(enableAllStr) || "yes".equalsIgnoreCase(enableAllStr) || "true".equalsIgnoreCase(enableAllStr));
+        }
 
         configManager.savePreferences(prefs);
         System.out.println(GREEN + BOLD + "Preferences saved successfully to config/preferences.yaml!" + RESET);
@@ -359,7 +450,7 @@ public class CliMenuRunner {
 
     private void promptAddNewDataType() {
         System.out.println(CYAN + BOLD + "\n--- Add Additional Data Type Setting ---" + RESET);
-        System.out.print("Enter Data Type Identifier (name, e.g. blood_pressure): ");
+        System.out.print("Enter Data Type Identifier (name, e.g. blood-pressure): ");
         String name = scanner.nextLine().trim().toLowerCase();
         if (name.isEmpty()) {
             System.out.println(RED + "Name cannot be empty." + RESET);
@@ -427,10 +518,11 @@ public class CliMenuRunner {
                 return;
             }
             String chosenType = names.get(idx);
-            DataTypeDefinition def = dataTypeRegistry.getDataType(chosenType).orElseThrow();
+            boolean enableAll = configManager.getPreferences().isEnableAllEndpoints();
+            DataTypeDefinition def = dataTypeRegistry.getDataType(chosenType, enableAll).orElseThrow();
 
             System.out.println("\nSelected: " + BOLD + def.getName() + RESET + " (Version: " + CYAN + def.getEndpointVersion() + RESET + ")");
-            System.out.println("Supported endpoints: " + String.join(", ", def.getSupportedEndpointNames()));
+            System.out.println("Supported endpoints: " + (enableAll ? "ALL (override enabled via preferences)" : String.join(", ", def.getSupportedEndpointNames())));
             System.out.print("Enter operation (list/get/create/rollup/dailyrollup) [default: list]: ");
             String ep = scanner.nextLine().trim();
             if (ep.isEmpty()) ep = "list";
@@ -481,6 +573,38 @@ public class CliMenuRunner {
                 devResp.isSuccess() ? GREEN + "OK" + RESET : RED + "FAILED" + RESET);
         if (!devResp.getBody().isEmpty()) {
             System.out.println("   Response: " + truncate(devResp.getBody(), 150));
+        }
+
+        System.out.println("\n3. Testing GET /v4/users/{userId}/irnProfile ...");
+        ApiResponse irnResp = engine.getApiClient().getIrnProfile(null);
+        System.out.printf("   HTTP %d (%dms): %s\n", irnResp.getStatusCode(), irnResp.getLatencyMs(),
+                irnResp.isSuccess() ? GREEN + "OK" + RESET : RED + "FAILED" + RESET);
+        if (!irnResp.getBody().isEmpty()) {
+            System.out.println("   Response: " + truncate(irnResp.getBody(), 150));
+        }
+
+        System.out.println("\n4. Testing GET /v4/users/{userId}/settings ...");
+        ApiResponse setResp = engine.getApiClient().getSettings(null);
+        System.out.printf("   HTTP %d (%dms): %s\n", setResp.getStatusCode(), setResp.getLatencyMs(),
+                setResp.isSuccess() ? GREEN + "OK" + RESET : RED + "FAILED" + RESET);
+        if (!setResp.getBody().isEmpty()) {
+            System.out.println("   Response: " + truncate(setResp.getBody(), 150));
+        }
+
+        System.out.println("\n5. Testing PATCH /v4/users/{userId}/profile ...");
+        ApiResponse updateProfileResp = engine.getApiClient().updateProfile(null, "{\"displayName\": \"TestSuite QA User\", \"locale\": \"en-US\"}");
+        System.out.printf("   HTTP %d (%dms): %s\n", updateProfileResp.getStatusCode(), updateProfileResp.getLatencyMs(),
+                updateProfileResp.isSuccess() ? GREEN + "OK" + RESET : RED + "FAILED" + RESET);
+        if (!updateProfileResp.getBody().isEmpty()) {
+            System.out.println("   Response: " + truncate(updateProfileResp.getBody(), 150));
+        }
+
+        System.out.println("\n6. Testing PATCH /v4/users/{userId}/settings ...");
+        ApiResponse updateSettingsResp = engine.getApiClient().updateSettings(null, "{\"temperatureUnit\": \"CELSIUS\", \"timeZone\": \"America/New_York\"}");
+        System.out.printf("   HTTP %d (%dms): %s\n", updateSettingsResp.getStatusCode(), updateSettingsResp.getLatencyMs(),
+                updateSettingsResp.isSuccess() ? GREEN + "OK" + RESET : RED + "FAILED" + RESET);
+        if (!updateSettingsResp.getBody().isEmpty()) {
+            System.out.println("   Response: " + truncate(updateSettingsResp.getBody(), 150));
         }
     }
 

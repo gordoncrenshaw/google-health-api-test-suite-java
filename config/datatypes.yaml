@@ -79,7 +79,7 @@ dataTypes:
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
     endpointsSupported:
-      list: true
+      list: false
       get: true
       create: true
       batchDelete: true
@@ -117,7 +117,7 @@ dataTypes:
     unit: "meters"
     sampleValueField: "altitude.gainMeters"
 
-  - name: "active_energy_burned"
+  - name: "active-energy-burned"
     displayName: "Active Calories Burned"
     endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
@@ -139,7 +139,7 @@ dataTypes:
     unit: "kcal"
     sampleValueField: "activeEnergyBurned.kcal"
 
-  - name: "basal_energy_burned"
+  - name: "basal-energy-burned"
     displayName: "Basal Calories Burned"
     endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
@@ -161,7 +161,7 @@ dataTypes:
     unit: "kcal"
     sampleValueField: "basalEnergyBurned.kcal"
 
-  - name: "active_zone_minutes"
+  - name: "active-zone-minutes"
     displayName: "Active Zone Minutes"
     endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
@@ -183,7 +183,7 @@ dataTypes:
     unit: "minutes"
     sampleValueField: "activeZoneMinutes.activeZoneMinutes"
 
-  - name: "heart_rate"
+  - name: "heart-rate"
     displayName: "Heart Rate"
     endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
@@ -205,7 +205,7 @@ dataTypes:
     unit: "bpm"
     sampleValueField: "heartRate.beatsPerMinute"
 
-  - name: "daily_resting_heart_rate"
+  - name: "daily-resting-heart-rate"
     displayName: "Daily Resting Heart Rate"
     endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
@@ -227,7 +227,7 @@ dataTypes:
     unit: "bpm"
     sampleValueField: "dailyRestingHeartRate.beatsPerMinute"
 
-  - name: "heart_rate_variability"
+  - name: "heart-rate-variability"
     displayName: "Heart Rate Variability (HRV)"
     endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
@@ -293,7 +293,7 @@ dataTypes:
     unit: "millimeters"
     sampleValueField: "height.heightMillimeters"
 
-  - name: "body_fat"
+  - name: "body-fat"
     displayName: "Body Fat Percentage"
     endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
@@ -315,7 +315,7 @@ dataTypes:
     unit: "percentage"
     sampleValueField: "bodyFat.percentage"
 
-  - name: "oxygen_saturation"
+  - name: "oxygen-saturation"
     displayName: "Blood Oxygen (SpO2)"
     endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
@@ -337,7 +337,7 @@ dataTypes:
     unit: "percentage"
     sampleValueField: "oxygenSaturation.percentage"
 
-  - name: "blood_glucose"
+  - name: "blood-glucose"
     displayName: "Blood Glucose"
     endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
@@ -380,28 +380,6 @@ dataTypes:
     maxValue: 86400
     unit: "seconds"
     sampleValueField: "sleep.durationSeconds"
-
-  - name: "mindfulness"
-    displayName: "Mindfulness Sessions"
-    endpointVersion: "v4"
-    scopeRequired: "https://www.googleapis.com/auth/googlehealth.mindfulness.readonly"
-    writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.mindfulness.writeonly"
-    endpointsSupported:
-      list: true
-      get: true
-      create: true
-      batchDelete: true
-      rollUp: false
-      dailyRollUp: false
-      exportExerciseTcx: false
-      reconcile: false
-      patch: false
-    filterParameterName: "mindfulness.interval.start_time"
-    webhooksSupported: false
-    minValue: 0
-    maxValue: 86400
-    unit: "seconds"
-    sampleValueField: "mindfulness.durationSeconds"
 
   - name: "exercise"
     displayName: "Exercise Workouts"
@@ -446,25 +424,6 @@ dataTypes:
     maxValue: 500
     unit: "samples"
     sampleValueField: "electrocardiogram.classification"
-
-  - name: "blood_pressure"
-    displayName: "Blood Pressure"
-    endpointVersion: "v4"
-    scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
-    endpointsSupported:
-      list: true
-      get: true
-      create: true
-      batchDelete: true
-      rollUp: false
-      dailyRollUp: false
-      exportExerciseTcx: false
-      reconcile: false
-      patch: false
-    webhooksSupported: false
-    minValue: 0
-    maxValue: 300
-    unit: "mmHg"
 
   - name: "skin-temperature-sensors"
     displayName: "Skin Temperature Sensors"

@@ -7,10 +7,13 @@ import com.google.health.testsuite.config.DataTypeRegistry;
 import com.google.health.testsuite.config.Preferences;
 import com.google.health.testsuite.model.ApiResponse;
 import com.google.health.testsuite.model.DataTypeDefinition;
+import com.google.health.testsuite.model.TestResult;
+import com.google.health.testsuite.runner.SuiteExecutionEngine;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -138,4 +141,204 @@ public class HealthApiClientTest {
         ApiResponse batchDelResp = client.batchDeleteDataPoints(customDef, java.util.List.of("dp-1"));
         assertTrue(batchDelResp.getRequestUrl().contains("/v5/users/"), "batchDeleteDataPoints must query v5 version");
     }
+
+    @Test
+    void testEndpointHonorsEndpointUserIdSetting() {
+        DataTypeDefinition steps = registry.getDataType("steps").orElseThrow();
+        Preferences prefs = configManager.getPreferences();
+        prefs.setHealthUserId("8677373576871223311");
+
+        // 1. Setting "me" -> endpoint URL must use /v4/users/me/
+        prefs.setEndpointUserId("me");
+        configManager.savePreferences(prefs);
+
+        assertEquals("me", client.getEffectiveUserId());
+        assertFalse(prefs.isUseHealthUserId());
+
+        ApiResponse respMe = client.listDataPoints(steps, null);
+        assertTrue(respMe.getRequestUrl().contains("/v4/users/me/dataTypes/steps/dataPoints"),
+                "URL must use 'me' when endpointUserId setting is 'me'");
+        assertTrue(respMe.getCurlCommand().contains("/v4/users/me/dataTypes/steps/dataPoints"));
+
+        ApiResponse getMe = client.getDataPoint(steps, "sample-123");
+        assertTrue(getMe.getRequestUrl().contains("/v4/users/me/dataTypes/steps/dataPoints/sample-123"));
+
+        ApiResponse createMe = client.createDataPoint(steps, "{}");
+        assertTrue(createMe.getRequestUrl().contains("/v4/users/me/dataTypes/steps/dataPoints"));
+
+        ApiResponse rollupMe = client.rollUpDataPoints(steps, "{}");
+        assertTrue(rollupMe.getRequestUrl().contains("/v4/users/me/dataTypes/steps/dataPoints:rollUp"));
+
+        ApiResponse dailyRollupMe = client.dailyRollUpDataPoints(steps, "{}");
+        assertTrue(dailyRollupMe.getRequestUrl().contains("/v4/users/me/dataTypes/steps/dataPoints:dailyRollUp"));
+
+        ApiResponse batchDelMe = client.batchDeleteDataPoints(steps, java.util.List.of("dp-1"));
+        assertTrue(batchDelMe.getRequestUrl().contains("/v4/users/me/dataTypes/steps/dataPoints:batchDelete"));
+
+        ApiResponse profileMe = client.getProfile(null);
+        assertTrue(profileMe.getRequestUrl().contains("/v4/users/me/profile"));
+
+        ApiResponse identityMe = client.getIdentity(null);
+        assertTrue(identityMe.getRequestUrl().contains("/v4/users/me/identity"));
+
+        ApiResponse devicesMe = client.listPairedDevices(null);
+        assertTrue(devicesMe.getRequestUrl().contains("/v4/users/me/pairedDevices"));
+
+        // 2. Setting "healthUserId" -> endpoint URL must use /v4/users/8677373576871223311/
+        prefs.setEndpointUserId("healthUserId");
+        configManager.savePreferences(prefs);
+
+        assertEquals("8677373576871223311", client.getEffectiveUserId());
+        assertTrue(prefs.isUseHealthUserId());
+
+        ApiResponse respHealthUser = client.listDataPoints(steps, null);
+        assertTrue(respHealthUser.getRequestUrl().contains("/v4/users/8677373576871223311/dataTypes/steps/dataPoints"),
+                "URL must use healthUserId when endpointUserId setting is 'healthUserId'");
+        assertTrue(respHealthUser.getCurlCommand().contains("/v4/users/8677373576871223311/dataTypes/steps/dataPoints"));
+
+        ApiResponse getHealthUser = client.getDataPoint(steps, "sample-123");
+        assertTrue(getHealthUser.getRequestUrl().contains("/v4/users/8677373576871223311/dataTypes/steps/dataPoints/sample-123"));
+
+        ApiResponse createHealthUser = client.createDataPoint(steps, "{}");
+        assertTrue(createHealthUser.getRequestUrl().contains("/v4/users/8677373576871223311/dataTypes/steps/dataPoints"));
+
+        ApiResponse rollupHealthUser = client.rollUpDataPoints(steps, "{}");
+        assertTrue(rollupHealthUser.getRequestUrl().contains("/v4/users/8677373576871223311/dataTypes/steps/dataPoints:rollUp"));
+
+        ApiResponse dailyRollupHealthUser = client.dailyRollUpDataPoints(steps, "{}");
+        assertTrue(dailyRollupHealthUser.getRequestUrl().contains("/v4/users/8677373576871223311/dataTypes/steps/dataPoints:dailyRollUp"));
+
+        ApiResponse batchDelHealthUser = client.batchDeleteDataPoints(steps, java.util.List.of("dp-1"));
+        assertTrue(batchDelHealthUser.getRequestUrl().contains("/v4/users/8677373576871223311/dataTypes/steps/dataPoints:batchDelete"));
+
+        ApiResponse profileHealthUser = client.getProfile(null);
+        assertTrue(profileHealthUser.getRequestUrl().contains("/v4/users/8677373576871223311/profile"));
+
+        ApiResponse identityHealthUser = client.getIdentity(null);
+        assertTrue(identityHealthUser.getRequestUrl().contains("/v4/users/8677373576871223311/identity"));
+
+        ApiResponse devicesHealthUser = client.listPairedDevices(null);
+        assertTrue(devicesHealthUser.getRequestUrl().contains("/v4/users/8677373576871223311/pairedDevices"));
+
+        // 3. Test alias setters
+        prefs.setUseHealthUserId(false);
+        assertEquals("me", client.getEffectiveUserId());
+
+        prefs.setUseHealthUserId(true);
+        assertEquals("8677373576871223311", client.getEffectiveUserId());
+
+        prefs.setEndpointUserSyntax("me");
+        assertEquals("me", client.getEffectiveUserId());
+    }
+
+    @Test
+    void testExtractErrorMessageFromGoogleCloudPayload() {
+        String googleErrorJson = "{\n" +
+                "  \"error\": {\n" +
+                "    \"code\": 400,\n" +
+                "    \"message\": \"List is not supported for data type floors, but the following actions are supported: reconcile, rollup, dailyRollup\",\n" +
+                "    \"status\": \"INVALID_ARGUMENT\"\n" +
+                "  }\n" +
+                "}";
+
+        String extracted = ApiResponse.extractErrorMessage(googleErrorJson, 400);
+        assertEquals("List is not supported for data type floors, but the following actions are supported: reconcile, rollup, dailyRollup",
+                extracted);
+
+        ApiResponse resp = new ApiResponse(400, "HTTP 400", null, googleErrorJson, 50, "http://example.com", "GET", null, "curl");
+        assertEquals("List is not supported for data type floors, but the following actions are supported: reconcile, rollup, dailyRollup",
+                resp.getErrorMessage());
+    }
+
+    @Test
+    void testExtractErrorMessageOAuthAndPlainFormats() {
+        String oauthErrorJson = "{\"error\": \"invalid_grant\", \"error_description\": \"Token has been expired or revoked.\"}";
+        String extractedOAuth = ApiResponse.extractErrorMessage(oauthErrorJson, 401);
+        assertEquals("invalid_grant: Token has been expired or revoked.", extractedOAuth);
+
+        String simpleJson = "{\"message\": \"Resource not found\"}";
+        String extractedSimple = ApiResponse.extractErrorMessage(simpleJson, 404);
+        assertEquals("Resource not found", extractedSimple);
+
+        // Success responses shouldn't have error messages
+        assertNull(ApiResponse.extractErrorMessage("{\"steps\": 100}", 200));
+    }
+
+    @Test
+    void testReconcileExportExerciseTcxAndPatchEndpoints() {
+        DataTypeDefinition steps = registry.getDataType("steps").orElseThrow();
+        DataTypeDefinition exercise = registry.getDataType("exercise").orElseThrow();
+
+        // 1. Reconcile
+        ApiResponse recResp = client.reconcileDataPoints(steps, "{}");
+        assertNotNull(recResp);
+        assertTrue(recResp.getRequestUrl().contains("/dataPoints:reconcile"));
+        assertTrue(recResp.getCurlCommand().contains(":reconcile"));
+
+        // 2. ExportExerciseTcx
+        ApiResponse exportResp = client.exportExerciseTcx(exercise, "exercise-dp-1");
+        assertNotNull(exportResp);
+        assertTrue(exportResp.getRequestUrl().contains("/dataPoints/exercise-dp-1:exportExerciseTcx"));
+        assertTrue(exportResp.getCurlCommand().contains(":exportExerciseTcx"));
+
+        // 3. Patch
+        ApiResponse patchResp = client.patchDataPoint(steps, "steps-dp-1", "{\"value\": 500}");
+        assertNotNull(patchResp);
+        assertTrue(patchResp.getRequestUrl().contains("/dataPoints/steps-dp-1"));
+        assertTrue(patchResp.getCurlCommand().contains("-X PATCH"));
+    }
+
+    @Test
+    void testIrnProfileAndSettingsEndpoints() {
+        // 1. GET /v4/users/{userId}/irnProfile
+        ApiResponse irnResp = client.getIrnProfile(null);
+        assertNotNull(irnResp);
+        assertEquals(200, irnResp.getStatusCode());
+        assertTrue(irnResp.getRequestUrl().contains("/users/me/irnProfile"));
+        assertTrue(irnResp.getBody().contains("irnProfile"));
+        assertTrue(irnResp.getBody().contains("enrollmentStatus"));
+
+        // 2. GET /v4/users/{userId}/settings
+        ApiResponse settingsResp = client.getSettings(null);
+        assertNotNull(settingsResp);
+        assertEquals(200, settingsResp.getStatusCode());
+        assertTrue(settingsResp.getRequestUrl().contains("/users/me/settings"));
+        assertTrue(settingsResp.getBody().contains("settings"));
+        assertTrue(settingsResp.getBody().contains("timezone"));
+
+        // 3. PATCH /v4/users/{userId}/profile (updateProfile)
+        ApiResponse updateProfileResp = client.updateProfile(null, "{\"displayName\": \"Updated User\"}");
+        assertNotNull(updateProfileResp);
+        assertEquals(200, updateProfileResp.getStatusCode());
+        assertTrue(updateProfileResp.getCurlCommand().contains("-X PATCH"));
+        assertTrue(updateProfileResp.getBody().contains("Updated User"));
+
+        // 4. PATCH /v4/users/{userId}/settings (updateSettings)
+        ApiResponse updateSettingsResp = client.updateSettings(null, "{\"timezone\": \"America/Chicago\"}");
+        assertNotNull(updateSettingsResp);
+        assertEquals(200, updateSettingsResp.getStatusCode());
+        assertTrue(updateSettingsResp.getCurlCommand().contains("-X PATCH"));
+        assertTrue(updateSettingsResp.getBody().contains("America/Chicago"));
+    }
+
+
+    @Test
+    void testSuiteExecutionEngineEnableAllEndpoints() {
+        SuiteExecutionEngine engine = new SuiteExecutionEngine(configManager, registry, client);
+
+        // When enableAllEndpoints is false, patch is not supported by any datatype
+        configManager.getPreferences().setEnableAllEndpoints(false);
+        List<TestResult> resultsDisabled = engine.executeAllDataTypesTest("patch");
+        assertEquals(0, resultsDisabled.size(), "No datatypes support patch by default");
+
+        // When enableAllEndpoints is true, all datatypes must run patch test
+        configManager.getPreferences().setEnableAllEndpoints(true);
+        List<TestResult> resultsEnabled = engine.executeAllDataTypesTest("patch");
+        assertEquals(registry.getAllDataTypes().size(), resultsEnabled.size(),
+                "All datatypes must be tested when enableAllEndpoints is true");
+        for (TestResult r : resultsEnabled) {
+            assertEquals("patch", r.getEndpoint());
+        }
+    }
 }
+

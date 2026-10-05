@@ -1,8 +1,10 @@
 package com.google.health.testsuite.config;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,10 +14,10 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Preferences {
 
-    @JsonProperty("clientId")
+    @JsonProperty(value = "clientId", access = JsonProperty.Access.WRITE_ONLY)
     private String clientId = "";
 
-    @JsonProperty("clientSecret")
+    @JsonProperty(value = "clientSecret", access = JsonProperty.Access.WRITE_ONLY)
     private String clientSecret = "";
 
     @JsonProperty("authUri")
@@ -38,15 +40,25 @@ public class Preferences {
     @JsonProperty("defaultUserId")
     private String defaultUserId = "me";
 
+    @JsonProperty("endpointUserId")
+    @JsonAlias({"userIdMode", "endpointUserSyntax", "endpointSyntax", "userSyntax", "endpointUserIdSetting", "useHealthUserId", "use_health_user_id"})
+    private String endpointUserId = "me";
+
     @JsonProperty("mockMode")
     private boolean mockMode = false;
+
+    @JsonProperty("enableAllEndpoints")
+    @JsonAlias({"enable_all_endpoints", "enableAllEndpointsForEachDatatype", "enableAllEndpoints"})
+    private boolean enableAllEndpoints = false;
 
     @JsonProperty("scopes")
     private List<String> scopes = new ArrayList<>();
 
+
     public Preferences() {
     }
 
+    @JsonIgnore
     public boolean isConfigured() {
         return clientId != null && !clientId.trim().isEmpty() &&
                 !clientId.contains("YOUR_GOOGLE_CLIENT_ID") &&
@@ -55,18 +67,22 @@ public class Preferences {
     }
 
     // Getters and Setters
+    @JsonIgnore
     public String getClientId() {
         return clientId;
     }
 
+    @JsonProperty("clientId")
     public void setClientId(String clientId) {
         this.clientId = clientId;
     }
 
+    @JsonIgnore
     public String getClientSecret() {
         return clientSecret;
     }
 
+    @JsonProperty("clientSecret")
     public void setClientSecret(String clientSecret) {
         this.clientSecret = clientSecret;
     }
@@ -119,12 +135,66 @@ public class Preferences {
         this.defaultUserId = defaultUserId;
     }
 
+    public String getEndpointUserId() {
+        if ("true".equalsIgnoreCase(endpointUserId)) {
+            return "healthUserId";
+        }
+        if ("false".equalsIgnoreCase(endpointUserId)) {
+            return "me";
+        }
+        return endpointUserId != null && !endpointUserId.trim().isEmpty() ? endpointUserId : "me";
+    }
+
+    public void setEndpointUserId(String endpointUserId) {
+        if (endpointUserId == null || endpointUserId.trim().isEmpty()) {
+            this.endpointUserId = "me";
+        } else if ("true".equalsIgnoreCase(endpointUserId.trim())) {
+            this.endpointUserId = "healthUserId";
+        } else if ("false".equalsIgnoreCase(endpointUserId.trim())) {
+            this.endpointUserId = "me";
+        } else {
+            this.endpointUserId = endpointUserId.trim();
+        }
+    }
+
+    public String getEndpointUserSyntax() {
+        return getEndpointUserId();
+    }
+
+    public void setEndpointUserSyntax(String endpointUserSyntax) {
+        setEndpointUserId(endpointUserSyntax);
+    }
+
+    @JsonIgnore
+    public boolean isUseHealthUserId() {
+        String mode = getEndpointUserId();
+        return "healthUserId".equalsIgnoreCase(mode) ||
+               "health_user_id".equalsIgnoreCase(mode) ||
+               "healthUserID".equalsIgnoreCase(mode) ||
+               "true".equalsIgnoreCase(mode);
+    }
+
+    @JsonSetter("useHealthUserId")
+    public void setUseHealthUserId(Boolean useHealthUserId) {
+        if (useHealthUserId != null) {
+            this.endpointUserId = useHealthUserId ? "healthUserId" : "me";
+        }
+    }
+
     public boolean isMockMode() {
         return mockMode;
     }
 
     public void setMockMode(boolean mockMode) {
         this.mockMode = mockMode;
+    }
+
+    public boolean isEnableAllEndpoints() {
+        return enableAllEndpoints;
+    }
+
+    public void setEnableAllEndpoints(boolean enableAllEndpoints) {
+        this.enableAllEndpoints = enableAllEndpoints;
     }
 
     public List<String> getScopes() {
@@ -135,6 +205,7 @@ public class Preferences {
         this.scopes = scopes != null ? scopes : new ArrayList<>();
     }
 
+    @JsonIgnore
     public String getJoinedScopes() {
         return scopes != null ? String.join(" ", scopes) : "";
     }

@@ -141,14 +141,14 @@ public class ValidationEngine {
         return null;
     }
 
-    private static String toCamelCase(String snake) {
-        if (snake == null || !snake.contains("_")) {
-            return snake;
+    private static String toCamelCase(String name) {
+        if (name == null || (!name.contains("_") && !name.contains("-"))) {
+            return name;
         }
         StringBuilder sb = new StringBuilder();
         boolean upper = false;
-        for (char c : snake.toCharArray()) {
-            if (c == '_') {
+        for (char c : name.toCharArray()) {
+            if (c == '_' || c == '-') {
                 upper = true;
             } else if (upper) {
                 sb.append(Character.toUpperCase(c));

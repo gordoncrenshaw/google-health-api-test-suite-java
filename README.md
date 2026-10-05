@@ -17,14 +17,16 @@ Official Google Health API Documentation: [https://developers.google.com/health]
   - Reusable execution methods across all data types (`list`, `get`, `create`, `rollUp`, `dailyRollUp`, `batchDelete`, `profile`, `pairedDevices`, `subscriptions`).
   - Auto-captures latency, response headers, status codes, formatted JSON payloads, and reproducible `curl` commands.
 - **Single File Data Types Catalog (`config/datatypes.yaml`)**:
-  - Declares all supported Google Health API data types (`steps`, `heart_rate`, `distance`, `weight`, `height`, `sleep`, `blood_glucose`, `oxygen_saturation`, etc.).
+  - Declares all supported Google Health API data types (`steps`, `heart-rate`, `distance`, `weight`, `height`, `sleep`, `blood-glucose`, `oxygen-saturation`, etc.).
   - Specifies required OAuth scopes, supported endpoints, AIP-160 filter parameter names, webhook support flags, and numerical minimum/maximum value limits.
   - Simple structure: adding new data types is effortless and consistent.
 - **Automated Token Expiration & Refresh Persistence (`config/userAuthorization.yaml`)**:
   - Stores `healthUserID`, `accessToken`, `refreshToken`, and expiration epoch timestamps.
   - Automatically detects token expiration (prior to requests or upon receiving HTTP 401 Unauthorized), calls Google's OAuth token endpoint to rotate credentials, and immediately updates and saves `userAuthorization.yaml` to disk.
+- **OAuth 2.0 Client Credentials (`config/client_secret.json`)**:
+  - Automatically reads `client_id` and `client_secret` from standard Google Cloud OAuth client secret JSON.
 - **Application Preferences (`config/preferences.yaml`)**:
-  - Stores OAuth 2.0 `clientId`, `clientSecret`, `redirectUri`, `authUri`, `tokenUri`, `apiBaseUrl`, and list of scopes to request.
+  - Stores `redirectUri`, `authUri`, `tokenUri`, `apiBaseUrl`, `healthUserId`, `endpointUserId`, `mockMode`, and list of scopes to request.
 - **Dual Live & Mock/Simulation Modes**:
   - Full simulation mode allows testing all 3 modes immediately without active Google Cloud credentials.
   - Seamlessly switch between Mock Mode and Live Google Health API mode with a single toggle or `--mock` flag.
@@ -110,14 +112,14 @@ java -jar target/health-api-testsuite.jar --menu
 [ MAIN MENU ]
  Mode: LIVE GOOGLE API | HealthUserID: 8677373576871223311 | Token: VALID (3450s remaining)
 ------------------------------------------------------------------------
- 1. Preferences & Auth Menu (Dashboard, Auth, getIdentity, getDevices)
+ 1. Preferences & Auth Menu (Dashboard, Auth, Identity, Profile & Settings)
  2. View Authorization & Token Details
  3. Authorize with Google (OAuth 2.0 Web Callback / Manual Code)
  4. Refresh Access Token Now (Automatic Rotation & Save)
  5. List Supported Data Types (From datatypes.yaml)
  6. Run Single Data Type API Test (List, Get, Create, Rollup)
  7. Run Comprehensive Test Suite Across All Data Types
- 8. Test Identity, Profile & Paired Devices Endpoints
+ 8. Test Identity, Profile, Settings & Paired Devices Endpoints
  9. Run a Test Script File (Mode 3 Script Runner)
  10. Toggle Mock/Live Mode
  0. Exit
@@ -157,11 +159,16 @@ Open your browser to: **`http://localhost:8080`**
    - **"+ Add Data Type Setting"**: In-app setting to register additional data types with endpoint version, valid ranges, units, scopes, and supported endpoints. Changes are saved directly to `config/datatypes.yaml` and hot-reloaded into the running test suite immediately.
 5. **Preferences & Auth**:
    - **Live Token & Auth Status**: Live countdown timer for the access token, authorization status pills, and one-click **"Force Token Refresh"** and **"Authorize with Google"** buttons.
-   - **Identity & Devices Endpoints**:
+   - **Identity, Profile & Settings Endpoints**:
      - **`getIdentity`** (`GET /v4/users/{userId}/identity`): Queries Google Health identity mapping. If `healthUserId` is missing in `config/preferences.yaml`, it automatically stores the discovered user ID into `preferences.yaml`.
      - **`getDevices`** (`GET /v4/users/{userId}/pairedDevices`): Retrieves connected smartwatches, fitness trackers, and devices.
-     - **Pretty JSON Viewer**: Displays API responses with latency and HTTP status in formatted, indented JSON.
-   - **Configuration Form**: Edit OAuth Client ID, Secret, Health User ID (`healthUserId`), Redirect URI, API Base URL, and Mock Mode with instant persistence.
+     - **`getProfile`** (`GET /v4/users/{userId}/profile`): Retrieves user profile details.
+     - **`updateProfile`** (`PATCH /v4/users/{userId}/profile`): Updates user profile attributes (such as `displayName` or `locale`) with custom JSON payloads.
+     - **`getIrnProfile`** (`GET /v4/users/{userId}/irnProfile`): Retrieves Irregular Rhythm Notifications (IRN) AFib detection status.
+     - **`getSettings`** (`GET /v4/users/{userId}/settings`): Retrieves user measurement units, locale, and timezone settings.
+     - **`updateSettings`** (`PATCH /v4/users/{userId}/settings`): Updates user measurement units, locale, and timezone settings with custom JSON payloads.
+     - **Pretty JSON Viewer & In-App Payload Editor**: Displays API responses with latency and HTTP status in formatted, indented JSON with interactive JSON payload inputs.
+   - **Configuration Form**: Edit OAuth Client ID, Secret, Health User ID (`healthUserId`), Redirect URI, API Base URL, Mock Mode, and **"Enable All Endpoints for Each Datatype"** (overrides datatype endpoint definitions to enable all endpoints across the test suite) with instant persistence.
 
 ---
 
@@ -233,7 +240,7 @@ steps:
 
   - name: "Query Heart Rate"
     action: "list"
-    dataType: "heart_rate"
+    dataType: "heart-rate"
     queryParams:
       pageSize: "25"
     assertStatus: [200]
@@ -280,22 +287,21 @@ All data types supported by the Google Health API are declared and maintained in
 | `distance` | `v4` | millimeters | ✅ Yes | [0, 1,000,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
 | `floors` | `v4` | count | ✅ Yes | [0, 1,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
 | `altitude` | `v4` | meters | ✅ Yes | [-500, 9,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `active_energy_burned` | `v4` | kcal | ❌ No | [0, 1,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `basal_energy_burned` | `v4` | kcal | ❌ No | [0, 1,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `active_zone_minutes` | `v4` | minutes | ❌ No | [0, 1,440] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `heart_rate` | `v4` | bpm | ❌ No | [1, 300] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `daily_resting_heart_rate`| `v4` | bpm | ❌ No | [20, 250] | list, get, dailyRollUp |
-| `heart_rate_variability`| `v4` | ms | ❌ No | [0, 500] | list, get, create, batchDelete |
+| `active-energy-burned` | `v4` | kcal | ❌ No | [0, 1,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `basal-energy-burned` | `v4` | kcal | ❌ No | [0, 1,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `active-zone-minutes` | `v4` | minutes | ❌ No | [0, 1,440] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `heart-rate` | `v4` | bpm | ❌ No | [1, 300] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `daily-resting-heart-rate`| `v4` | bpm | ❌ No | [20, 250] | list, get, dailyRollUp |
+| `heart-rate-variability`| `v4` | ms | ❌ No | [0, 500] | list, get, create, batchDelete |
 | `weight` | `v4` | grams | ✅ Yes | [0, 1,000,000] | list, get, create, batchDelete, rollUp, dailyRollUp |
 | `height` | `v4` | millimeters | ❌ No | [0, 3,000] | list, get, create, batchDelete |
-| `body_fat` | `v4` | percentage | ❌ No | [0, 100] | list, get, create, batchDelete, rollUp, dailyRollUp |
-| `oxygen_saturation` | `v4` | percentage | ❌ No | [0, 100] | list, get, create, batchDelete |
-| `blood_glucose` | `v4` | mg/dL | ❌ No | [0, 900] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `body-fat` | `v4` | percentage | ❌ No | [0, 100] | list, get, create, batchDelete, rollUp, dailyRollUp |
+| `oxygen-saturation` | `v4` | percentage | ❌ No | [0, 100] | list, get, create, batchDelete |
+| `blood-glucose` | `v4` | mg/dL | ❌ No | [0, 900] | list, get, create, batchDelete, rollUp, dailyRollUp |
 | `sleep` | `v4` | seconds | ✅ Yes | [0, 86,400] | list, get, create, batchDelete, reconcile |
-| `mindfulness` | `v4` | seconds | ❌ No | [0, 86,400] | list, get, create, batchDelete |
 | `exercise` | `v4` | seconds | ❌ No | [0, 86,400] | list, get, exportExerciseTcx |
 | `electrocardiogram` | `v4` | samples | ❌ No | [0, 500] | list, get |
-| `blood_pressure` | `v4` | mmHg | ❌ No | [0, 300] | list, get, create, batchDelete |
+| `skin-temperature-sensors` | `v4beta` | celcius | ❌ No | - | list |
 
 ### Adding Additional Data Types:
 
@@ -373,20 +379,39 @@ This command:
 
 ---
 
-## ⚙️ Application Preferences (`config/preferences.yaml`)
+## ⚙️ Application Configuration & Credentials
 
-Stores your Google Cloud OAuth 2.0 credentials and requested scopes:
+### 1. OAuth 2.0 Client Credentials (`config/client_secret.json`)
+
+Client credentials are automatically loaded from Google Cloud Console's downloaded JSON client secrets file:
+
+```json
+{
+  "web": {
+    "client_id": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+    "client_secret": "YOUR_CLIENT_SECRET",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "redirect_uris": ["http://localhost:8888/callback"]
+  }
+}
+```
+
+### 2. Application Preferences (`config/preferences.yaml`)
+
+Stores your runtime settings, endpoint syntax, and requested scopes:
 
 ```yaml
-clientId: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-clientSecret: "YOUR_GOOGLE_CLIENT_SECRET"
+endpointUserSyntax: me
 authUri: "https://accounts.google.com/o/oauth2/v2/auth"
 tokenUri: "https://oauth2.googleapis.com/token"
 redirect_uri: "http://localhost:8888/callback"
 apiBaseUrl: "https://health.googleapis.com"
 healthUserId: "8677373576871223311" # Populated automatically by getIdentity
 defaultUserId: "me"
+endpointUserId: "me" # Syntax setting: "me" (uses /users/me/...) or "healthUserId" (uses /users/{healthUserId}/...)
 mockMode: false
+enableAllEndpoints: false
 
 scopes:
   - "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
@@ -403,6 +428,13 @@ scopes:
   - "https://www.googleapis.com/auth/googlehealth.profile.readonly"
   - "https://www.googleapis.com/auth/googlehealth.settings.readonly"
 ```
+
+### 👤 Endpoint User ID Syntax (`endpointUserId`)
+The `endpointUserId` preference specifies which user identifier is inserted into Google Health API request URLs:
+- **`me`** (*Recommended for personal user credentials*): Formats endpoints as `/{version}/users/me/...` (e.g. `/v4beta/users/me/dataTypes/skin-temperature-sensors/dataPoints`).
+- **`healthUserId`**: Formats endpoints using the user's numeric ID discovered via `getIdentity` as `/{version}/users/{healthUserId}/...` (e.g. `/v4/users/8677373576871223311/...`).
+
+All three execution modes (Web UX, CLI Menu, and Script Runner) honor this setting when formulating API requests.
 
 ---
 

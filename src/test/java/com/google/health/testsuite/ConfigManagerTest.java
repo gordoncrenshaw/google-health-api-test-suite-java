@@ -15,39 +15,56 @@ public class ConfigManagerTest {
 
     private File tempPrefFile;
     private File tempAuthFile;
+    private File tempSecretJsonFile;
     private ConfigManager configManager;
 
     @BeforeEach
     void setUp() throws Exception {
         tempPrefFile = File.createTempFile("test_preferences", ".yaml");
         tempAuthFile = File.createTempFile("test_user_auth", ".yaml");
-        configManager = new ConfigManager(tempPrefFile, tempAuthFile);
+        tempSecretJsonFile = File.createTempFile("client_secret", ".json");
+        java.nio.file.Files.writeString(tempSecretJsonFile.toPath(),
+                "{\"web\":{\"client_id\":\"json-client-123.apps.googleusercontent.com\",\"client_secret\":\"json-secret-456\"}}");
+        configManager = new ConfigManager(tempPrefFile, tempAuthFile, tempSecretJsonFile);
     }
 
     @AfterEach
     void tearDown() {
         if (tempPrefFile.exists()) tempPrefFile.delete();
         if (tempAuthFile.exists()) tempAuthFile.delete();
+        if (tempSecretJsonFile.exists()) tempSecretJsonFile.delete();
     }
 
     @Test
-    void testSaveAndLoadPreferences() {
+    void testSaveAndLoadPreferences() throws Exception {
         Preferences prefs = new Preferences();
-        prefs.setClientId("test-client-id-123.apps.googleusercontent.com");
-        prefs.setClientSecret("test-secret-456");
         prefs.setDefaultUserId("user-789");
         prefs.setMockMode(true);
+        prefs.setEnableAllEndpoints(true);
 
         configManager.savePreferences(prefs);
 
+        // Verify preferences.yaml file does NOT contain clientId or clientSecret
+        String yamlContent = java.nio.file.Files.readString(tempPrefFile.toPath());
+        assertFalse(yamlContent.contains("clientId"));
+        assertFalse(yamlContent.contains("clientSecret"));
+
         // Reload
-        ConfigManager reloadMgr = new ConfigManager(tempPrefFile, tempAuthFile);
+        ConfigManager reloadMgr = new ConfigManager(tempPrefFile, tempAuthFile, tempSecretJsonFile);
         Preferences loaded = reloadMgr.getPreferences();
 
-        assertEquals("test-client-id-123.apps.googleusercontent.com", loaded.getClientId());
-        assertEquals("test-secret-456", loaded.getClientSecret());
+        assertEquals("json-client-123.apps.googleusercontent.com", loaded.getClientId());
+        assertEquals("json-secret-456", loaded.getClientSecret());
         assertEquals("user-789", loaded.getDefaultUserId());
         assertTrue(loaded.isMockMode());
+        assertTrue(loaded.isEnableAllEndpoints());
+    }
+
+    @Test
+    void testLoadClientSecretFromJson() {
+        Preferences prefs = configManager.getPreferences();
+        assertEquals("json-client-123.apps.googleusercontent.com", prefs.getClientId());
+        assertEquals("json-secret-456", prefs.getClientSecret());
     }
 
     @Test

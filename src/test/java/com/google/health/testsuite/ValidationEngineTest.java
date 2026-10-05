@@ -24,7 +24,7 @@ public class ValidationEngineTest {
                 0.0, 1000000.0, "count");
         stepsDef.setSampleValueField("steps.count");
 
-        heartRateDef = new DataTypeDefinition("heart_rate", "Heart Rate", "scope.metrics",
+        heartRateDef = new DataTypeDefinition("heart-rate", "Heart Rate", "scope.metrics",
                 List.of("list", "create"), "heart_rate.sample_time.physical_time", false,
                 1.0, 300.0, "bpm");
         heartRateDef.setSampleValueField("heartRate.beatsPerMinute");
@@ -74,7 +74,7 @@ public class ValidationEngineTest {
     void testValidateHeartRateWithinRange() {
         String json = """
                 {
-                  "name": "users/me/dataTypes/heart_rate/dataPoints/dp-1",
+                  "name": "users/me/dataTypes/heart-rate/dataPoints/dp-1",
                   "heartRate": { "beatsPerMinute": 72 }
                 }
                 """;
@@ -87,7 +87,7 @@ public class ValidationEngineTest {
     void testValidateHeartRateAboveMax() {
         String json = """
                 {
-                  "name": "users/me/dataTypes/heart_rate/dataPoints/dp-1",
+                  "name": "users/me/dataTypes/heart-rate/dataPoints/dp-1",
                   "heartRate": { "beatsPerMinute": 350 }
                 }
                 """;

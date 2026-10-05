@@ -1,13 +1,14 @@
 # Example Preferences File Template
-clientId: "1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com"
-clientSecret: "GOCSPX-xxxxxxxxxxxxxxxxxxxxxxxx"
+# Note: OAuth 2.0 clientId and clientSecret are read from config/client_secret.json
 authUri: "https://accounts.google.com/o/oauth2/v2/auth"
 tokenUri: "https://oauth2.googleapis.com/token"
 redirect_uri: "http://localhost:8888/callback"
 apiBaseUrl: "https://health.googleapis.com"
 healthUserId: ""
 defaultUserId: "me"
+endpointUserId: "me" # Endpoint user ID syntax: "me" or "healthUserId"
 mockMode: false
+enableAllEndpoints: false # When true, enables all endpoints regardless of datatype support
 
 scopes:
   - "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"

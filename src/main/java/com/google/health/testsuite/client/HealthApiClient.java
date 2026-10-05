@@ -55,7 +55,7 @@ public class HealthApiClient {
                                String body, DataTypeDefinition def) {
         Preferences prefs = configManager.getPreferences();
         UserAuthorization userAuth = configManager.getUserAuthorization();
-        String effectiveUser = userAuth.getHealthUserID();
+        String effectiveUser = getEffectiveUserId();
 
         // 1. Check if mock mode is active
         if (prefs.isMockMode()) {
@@ -150,14 +150,21 @@ public class HealthApiClient {
             long latency = System.currentTimeMillis() - startTime;
             String prettyBody = formatPrettyJson(httpResponse.body());
 
-            return new ApiResponse(httpResponse.statusCode(), "HTTP " + httpResponse.statusCode(),
-                    httpResponse.headers().map(), prettyBody, latency, fullUrl, method, body, curl);
+            String extractedError = (httpResponse.statusCode() >= 400)
+                    ? ApiResponse.extractErrorMessage(prettyBody, httpResponse.statusCode())
+                    : null;
+            String statusMsg = (extractedError != null && !extractedError.isBlank())
+                    ? "HTTP " + httpResponse.statusCode() + " (" + extractedError + ")"
+                    : "HTTP " + httpResponse.statusCode();
+
+            return new ApiResponse(httpResponse.statusCode(), statusMsg,
+                    httpResponse.headers().map(), prettyBody, latency, fullUrl, method, body, curl, extractedError);
 
         } catch (Exception e) {
             long latency = System.currentTimeMillis() - startTime;
             logger.error("HTTP request error for {} {}: {}", method, fullUrl, e.getMessage());
             return new ApiResponse(500, "Connection Error: " + e.getMessage(), Collections.emptyMap(),
-                    "{\n  \"error\": \"" + e.getMessage() + "\"\n}", latency, fullUrl, method, body, curl);
+                    "{\n  \"error\": \"" + e.getMessage() + "\"\n}", latency, fullUrl, method, body, curl, e.getMessage());
         }
     }
 
@@ -184,18 +191,39 @@ public class HealthApiClient {
     }
 
     /**
-     * Resolves the effective health user ID from preferences or authorization.
+     * Resolves the effective health user ID based on preferences configuration.
+     * Honors the setting for using "me" or the healthUserID in the endpoint syntax.
      */
     public String getEffectiveUserId() {
         Preferences prefs = configManager.getPreferences();
-        if (prefs != null && prefs.getHealthUserId() != null && !prefs.getHealthUserId().trim().isEmpty()) {
-            return prefs.getHealthUserId().trim();
+        if (prefs == null) {
+            return "me";
         }
-        UserAuthorization userAuth = configManager.getUserAuthorization();
-        if (userAuth != null && userAuth.getHealthUserID() != null &&
-                !userAuth.getHealthUserID().trim().isEmpty() &&
-                !"me".equalsIgnoreCase(userAuth.getHealthUserID().trim())) {
-            return userAuth.getHealthUserID().trim();
+
+        if (prefs.isUseHealthUserId()) {
+            if (prefs.getHealthUserId() != null && !prefs.getHealthUserId().trim().isEmpty()) {
+                return prefs.getHealthUserId().trim();
+            }
+            UserAuthorization userAuth = configManager.getUserAuthorization();
+            if (userAuth != null && userAuth.getHealthUserID() != null &&
+                    !userAuth.getHealthUserID().trim().isEmpty() &&
+                    !"me".equalsIgnoreCase(userAuth.getHealthUserID().trim())) {
+                return userAuth.getHealthUserID().trim();
+            }
+            logger.warn("Endpoint user ID setting is 'healthUserId', but no healthUserId is configured. Falling back to 'me'.");
+            return "me";
+        }
+
+        // Setting is "me" (or explicit numeric/custom user ID)
+        String custom = prefs.getEndpointUserId();
+        if (custom != null && !custom.equalsIgnoreCase("me") &&
+                !custom.equalsIgnoreCase("healthUserId") &&
+                !custom.equalsIgnoreCase("health_user_id") &&
+                !custom.equalsIgnoreCase("healthUserID") &&
+                !custom.equalsIgnoreCase("true") &&
+                !custom.equalsIgnoreCase("false") &&
+                !custom.trim().isEmpty()) {
+            return custom.trim();
         }
         return "me";
     }
@@ -274,6 +302,41 @@ public class HealthApiClient {
     }
 
     /**
+     * Standard Reconcile Data Points request.
+     * Syntax: POST /{version}/users/{userId}/dataTypes/{dataType}/dataPoints:reconcile
+     */
+    public ApiResponse reconcileDataPoints(DataTypeDefinition def, String jsonBody) {
+        String version = getEffectiveVersion(def);
+        String userId = getEffectiveUserId();
+        String path = "/" + version + "/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints:reconcile";
+        return execute("POST", path, null, jsonBody != null ? jsonBody : "{}", def);
+    }
+
+    /**
+     * Standard Export Exercise TCX request.
+     * Syntax: GET /{version}/users/{userId}/dataTypes/{dataType}/dataPoints/{dataPointId}:exportExerciseTcx
+     */
+    public ApiResponse exportExerciseTcx(DataTypeDefinition def, String dataPointId) {
+        String version = getEffectiveVersion(def);
+        String userId = getEffectiveUserId();
+        String dpId = (dataPointId != null && !dataPointId.trim().isEmpty()) ? dataPointId.trim() : "sample-dp-1";
+        String path = "/" + version + "/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints/" + dpId + ":exportExerciseTcx";
+        return execute("GET", path, null, null, def);
+    }
+
+    /**
+     * Standard Patch Single Data Point request.
+     * Syntax: PATCH /{version}/users/{userId}/dataTypes/{dataType}/dataPoints/{dataPointId}
+     */
+    public ApiResponse patchDataPoint(DataTypeDefinition def, String dataPointId, String jsonBody) {
+        String version = getEffectiveVersion(def);
+        String userId = getEffectiveUserId();
+        String dpId = (dataPointId != null && !dataPointId.trim().isEmpty()) ? dataPointId.trim() : "sample-dp-1";
+        String path = "/" + version + "/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints/" + dpId;
+        return execute("PATCH", path, null, jsonBody != null ? jsonBody : "{}", def);
+    }
+
+    /**
      * Standard Get User Profile request.
      * Syntax: GET /v4/users/{userId}/profile
      */
@@ -281,6 +344,46 @@ public class HealthApiClient {
         String effectiveUser = (userId != null && !userId.trim().isEmpty()) ? userId.trim() : getEffectiveUserId();
         String path = "/v4/users/" + effectiveUser + "/profile";
         return execute("GET", path, null, null, null);
+    }
+
+    /**
+     * Standard Get Irregular Rhythm Notifications (IRN) Profile request.
+     * Syntax: GET /v4/users/{userId}/irnProfile
+     */
+    public ApiResponse getIrnProfile(String userId) {
+        String effectiveUser = (userId != null && !userId.trim().isEmpty()) ? userId.trim() : getEffectiveUserId();
+        String path = "/v4/users/" + effectiveUser + "/irnProfile";
+        return execute("GET", path, null, null, null);
+    }
+
+    /**
+     * Standard Get User Settings request.
+     * Syntax: GET /v4/users/{userId}/settings
+     */
+    public ApiResponse getSettings(String userId) {
+        String effectiveUser = (userId != null && !userId.trim().isEmpty()) ? userId.trim() : getEffectiveUserId();
+        String path = "/v4/users/" + effectiveUser + "/settings";
+        return execute("GET", path, null, null, null);
+    }
+
+    /**
+     * Standard Update User Profile request.
+     * Syntax: PATCH /v4/users/{userId}/profile
+     */
+    public ApiResponse updateProfile(String userId, String jsonBody) {
+        String effectiveUser = (userId != null && !userId.trim().isEmpty()) ? userId.trim() : getEffectiveUserId();
+        String path = "/v4/users/" + effectiveUser + "/profile";
+        return execute("PATCH", path, null, jsonBody != null ? jsonBody : "{}", null);
+    }
+
+    /**
+     * Standard Update User Settings request.
+     * Syntax: PATCH /v4/users/{userId}/settings
+     */
+    public ApiResponse updateSettings(String userId, String jsonBody) {
+        String effectiveUser = (userId != null && !userId.trim().isEmpty()) ? userId.trim() : getEffectiveUserId();
+        String path = "/v4/users/" + effectiveUser + "/settings";
+        return execute("PATCH", path, null, jsonBody != null ? jsonBody : "{}", null);
     }
 
     /**
@@ -373,7 +476,7 @@ public class HealthApiClient {
     private String buildCurlCommand(String method, String url, String body, String token) {
         StringBuilder sb = new StringBuilder("curl -X ").append(method).append(" \"").append(url).append("\"");
         if (token != null && !token.isEmpty()) {
-            sb.append(" \\\n  -H \"Authorization: Bearer ").append(maskToken(token)).append("\"");
+            sb.append(" \\\n  -H \"Authorization: Bearer ").append(token).append("\"");
         }
         sb.append(" \\\n  -H \"Accept: application/json\"");
         if (body != null && !body.trim().isEmpty() && !("GET".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method))) {

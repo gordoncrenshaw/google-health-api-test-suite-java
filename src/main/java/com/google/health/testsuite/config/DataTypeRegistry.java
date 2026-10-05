@@ -59,14 +59,40 @@ public class DataTypeRegistry {
     }
 
     public Optional<DataTypeDefinition> getDataType(String name) {
+        return getDataType(name, false);
+    }
+
+    public Optional<DataTypeDefinition> getDataType(String name, boolean enableAllEndpoints) {
         if (name == null) {
             return Optional.empty();
         }
-        return Optional.ofNullable(dataTypesMap.get(name.trim().toLowerCase()));
+        String clean = name.trim().toLowerCase();
+        DataTypeDefinition def = dataTypesMap.get(clean);
+        if (def == null && clean.contains("_")) {
+            def = dataTypesMap.get(clean.replace('_', '-'));
+        }
+        if (def == null && clean.contains("-")) {
+            def = dataTypesMap.get(clean.replace('-', '_'));
+        }
+        if (def != null && enableAllEndpoints) {
+            return Optional.of(def.withAllEndpointsEnabled());
+        }
+        return Optional.ofNullable(def);
     }
 
     public List<DataTypeDefinition> getAllDataTypes() {
-        return new ArrayList<>(dataTypesMap.values());
+        return getAllDataTypes(false);
+    }
+
+    public List<DataTypeDefinition> getAllDataTypes(boolean enableAllEndpoints) {
+        if (!enableAllEndpoints) {
+            return new ArrayList<>(dataTypesMap.values());
+        }
+        List<DataTypeDefinition> list = new ArrayList<>();
+        for (DataTypeDefinition def : dataTypesMap.values()) {
+            list.add(def.withAllEndpointsEnabled());
+        }
+        return list;
     }
 
     public List<DataTypeDefinition> getWebhooksSupportedDataTypes() {
@@ -80,7 +106,7 @@ public class DataTypeRegistry {
     }
 
     public boolean hasDataType(String name) {
-        return name != null && dataTypesMap.containsKey(name.trim().toLowerCase());
+        return name != null && getDataType(name).isPresent();
     }
 
     public synchronized boolean addDataType(DataTypeDefinition newDef) {

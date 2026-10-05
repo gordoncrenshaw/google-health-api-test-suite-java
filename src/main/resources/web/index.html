@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20261004_6">
 </head>
 <body>
     <div class="app-container">
@@ -37,6 +37,7 @@
             <div class="header-right">
                 <div id="mode-badge" class="pill-badge pill-live">LIVE API</div>
                 <div id="token-status-pill" class="pill-badge pill-warn">Checking Auth...</div>
+                <div id="endpoint-syntax-pill" class="pill-badge pill-cyan" title="Active Endpoint User ID Syntax: 'me' vs 'healthUserId'">Syntax: /users/me</div>
                 <button id="btn-quick-refresh" class="btn btn-secondary btn-sm" title="Refresh Access Token Now">
                     <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
                     Refresh Token
@@ -76,7 +77,7 @@
                 <div class="card glass-card mb-4">
                     <div class="card-header">
                         <h2 class="card-title">Standardized HTTP Request Builder</h2>
-                        <span class="file-badge" id="explorer-syntax-badge">Syntax: Reusable across all data types</span>
+                        <span class="file-badge" id="explorer-syntax-badge">Syntax: /users/me</span>
                     </div>
                     <div class="card-body">
                         <div class="form-grid">
@@ -90,12 +91,15 @@
                             <div class="form-group">
                                 <label for="explorer-endpoint-select">Operation / Endpoint:</label>
                                 <select id="explorer-endpoint-select" class="form-control">
-                                    <option value="list">list (GET /dataPoints)</option>
-                                    <option value="get">get (GET /dataPoints/{id})</option>
-                                    <option value="create">create (POST /dataPoints)</option>
-                                    <option value="rollup">rollUp (POST /dataPoints:rollUp)</option>
-                                    <option value="dailyrollup">dailyRollUp (POST /dataPoints:dailyRollUp)</option>
-                                    <option value="batchdelete">batchDelete (POST /dataPoints:batchDelete)</option>
+                                    <option value="batchDelete">batchDelete</option>
+                                    <option value="create">create</option>
+                                    <option value="dailyRollUp">dailyRollUp</option>
+                                    <option value="exportExerciseTcx">exportExerciseTcx</option>
+                                    <option value="get">get</option>
+                                    <option value="list">list</option>
+                                    <option value="patch">patch</option>
+                                    <option value="reconcile">reconcile</option>
+                                    <option value="rollUp">rollUp</option>
                                 </select>
                             </div>
 
@@ -293,7 +297,7 @@
                                     <div class="grid-3-col mb-3">
                                         <div class="form-group">
                                             <label for="new-dt-name">Data Type Identifier (name): *</label>
-                                            <input type="text" id="new-dt-name" class="form-control font-mono" placeholder="e.g. blood_pressure" required>
+                                            <input type="text" id="new-dt-name" class="form-control font-mono" placeholder="e.g. blood-pressure" required>
                                             <small class="text-muted">Used in API URL path segment</small>
                                         </div>
                                         <div class="form-group">
@@ -449,14 +453,14 @@
                         </div>
                     </div>
 
-                    <!-- User Identity & Paired Devices Endpoints Card -->
+                    <!-- User Identity, Profile & Settings Endpoints Card -->
                     <div class="card glass-card">
                         <div class="card-header">
-                            <h2 class="card-title">Identity & Paired Devices Endpoints</h2>
-                            <span class="file-badge">GET /v4/users/...</span>
+                            <h2 class="card-title">Identity, Profile & Settings Endpoints</h2>
+                            <span class="file-badge">GET / PATCH /v4/users/...</span>
                         </div>
                         <div class="card-body">
-                            <p class="text-muted mb-3">Execute identity mapping and device queries. Responses are displayed in pretty JSON format.</p>
+                            <p class="text-muted mb-3">Execute identity mapping, user profile, settings, and device queries or updates. Responses are displayed in pretty JSON format.</p>
                             <div class="button-stack">
                                 <button id="btn-get-identity" class="btn btn-secondary btn-block">
                                     <span><strong>getIdentity:</strong> GET /v4/users/{userId}/identity</span>
@@ -470,6 +474,41 @@
                                     <span><strong>getProfile:</strong> GET /v4/users/{userId}/profile</span>
                                     <span class="btn-arrow">&rarr;</span>
                                 </button>
+                                <button id="btn-quick-update-profile" class="btn btn-secondary btn-block" style="border-left: 3px solid #38bdf8;">
+                                    <span><strong>updateProfile:</strong> PATCH /v4/users/{userId}/profile</span>
+                                    <span class="btn-arrow">&rarr;</span>
+                                </button>
+                                <button id="btn-quick-irn-profile" class="btn btn-secondary btn-block">
+                                    <span><strong>getIrnProfile:</strong> GET /v4/users/{userId}/irnProfile</span>
+                                    <span class="btn-arrow">&rarr;</span>
+                                </button>
+                                <button id="btn-quick-settings" class="btn btn-secondary btn-block">
+                                    <span><strong>getSettings:</strong> GET /v4/users/{userId}/settings</span>
+                                    <span class="btn-arrow">&rarr;</span>
+                                </button>
+                                <button id="btn-quick-update-settings" class="btn btn-secondary btn-block" style="border-left: 3px solid #38bdf8;">
+                                    <span><strong>updateSettings:</strong> PATCH /v4/users/{userId}/settings</span>
+                                    <span class="btn-arrow">&rarr;</span>
+                                </button>
+                            </div>
+
+                            <!-- In-App JSON Payload Editor Panel for updateProfile / updateSettings -->
+                            <div id="user-patch-panel" class="mt-3 p-3 rounded" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; display: none;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span id="user-patch-badge" class="pill-badge pill-cyan">PATCH /profile</span>
+                                        <span id="user-patch-title" class="font-mono text-sm" style="font-weight: 600; color: #f1f5f9;">Payload Editor</span>
+                                    </div>
+                                    <button id="btn-close-user-patch" type="button" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">&times; Close</button>
+                                </div>
+                                <p id="user-patch-desc" class="text-muted" style="font-size: 0.8rem; margin-bottom: 8px;">Edit JSON payload to send with the PATCH request:</p>
+                                <textarea id="user-patch-payload" class="form-control font-mono" rows="4" style="font-size: 0.85rem; width: 100%; resize: vertical; margin-bottom: 10px;"></textarea>
+                                <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                                    <button id="btn-reset-user-patch" type="button" class="btn btn-secondary btn-sm" style="font-size: 0.8rem;">Reset Default Payload</button>
+                                    <button id="btn-submit-user-patch" type="button" class="btn btn-primary btn-sm" style="font-size: 0.8rem;">
+                                        <span id="btn-submit-user-patch-text">Send PATCH Request</span> &rarr;
+                                    </button>
+                                </div>
                             </div>
 
                             <div class="quick-result-box mt-3">
@@ -481,7 +520,8 @@
                                     </div>
                                     <span id="quick-result-latency" class="text-muted font-mono" style="font-size: 0.8rem;"></span>
                                 </div>
-                                <pre id="quick-result-body" class="code-preview font-mono" style="max-height: 220px; overflow-y: auto;">// Click 'getIdentity' or 'getDevices' above to inspect pretty JSON</pre>
+                                <div id="quick-result-url" class="font-mono mt-2" style="font-size: 0.8rem; color: #38bdf8; word-break: break-all; display: none;"></div>
+                                <pre id="quick-result-body" class="code-preview font-mono" style="max-height: 220px; overflow-y: auto;">// Click any endpoint button above to inspect pretty JSON response</pre>
                             </div>
                         </div>
                     </div>
@@ -498,12 +538,14 @@
                             <div class="grid-2-col">
                                 <div class="form-group">
                                     <label for="pref-client-id">OAuth 2.0 Client ID:</label>
-                                    <input type="text" id="pref-client-id" class="form-control font-mono" placeholder="your-client-id.apps.googleusercontent.com">
+                                    <input type="text" id="pref-client-id" class="form-control font-mono" placeholder="Loaded from config/client_secret.json">
+                                    <small class="text-muted" style="display: block; margin-top: 4px; font-size: 0.8rem;">Read from <code>config/client_secret.json</code></small>
                                 </div>
 
                                 <div class="form-group">
                                     <label for="pref-client-secret">OAuth 2.0 Client Secret:</label>
-                                    <input type="password" id="pref-client-secret" class="form-control font-mono" placeholder="Enter new secret or leave blank to keep unchanged">
+                                    <input type="password" id="pref-client-secret" class="form-control font-mono" placeholder="Loaded from config/client_secret.json">
+                                    <small class="text-muted" style="display: block; margin-top: 4px; font-size: 0.8rem;">Read from <code>config/client_secret.json</code></small>
                                 </div>
 
                                 <div class="form-group">
@@ -513,9 +555,15 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="pref-default-user">Default User Alias:</label>
-                                    <input type="text" id="pref-default-user" class="form-control font-mono" value="me">
+                                    <label for="pref-endpoint-user-id">Endpoint User ID Syntax:</label>
+                                    <select id="pref-endpoint-user-id" class="form-control font-mono">
+                                        <option value="me">me</option>
+                                        <option value="healthUserId">healthUserId</option>
+                                    </select>
+                                    <small class="text-muted" style="display: block; margin-top: 4px; font-size: 0.8rem;">Controls whether API endpoint requests use "me" or the healthUserID in the URL syntax.</small>
+                                    <div id="pref-effective-user-preview" class="font-mono mt-1" style="font-size: 0.8rem; color: #38bdf8;">Current active user in URLs: me</div>
                                 </div>
+                                <input type="hidden" id="pref-default-user" value="me">
 
                                 <div class="form-group">
                                     <label for="pref-redirect-uri">Redirect URI:</label>
@@ -535,6 +583,13 @@
                                 </label>
                             </div>
 
+                            <div class="form-group mt-2">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="pref-enable-all-endpoints">
+                                    <span class="checkbox-label"><strong>Enable All Endpoints for Each Datatype</strong> (The test suite will enable all endpoints no matter if they are supported by the datatype or not)</span>
+                                </label>
+                            </div>
+
                             <div class="action-buttons mt-4">
                                 <button type="submit" id="btn-save-preferences" class="btn btn-primary">
                                     Save Preferences
@@ -548,6 +603,6 @@
         </main>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=20261004_7"></script>
 </body>
 </html>

@@ -412,11 +412,17 @@ body {
 /* Forms */
 .form-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr 150px;
+    grid-template-columns: 1fr 1fr 160px;
     gap: 16px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+    .form-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 600px) {
     .form-grid {
         grid-template-columns: 1fr;
     }
@@ -600,6 +606,8 @@ textarea.form-control {
     color: #a5b4fc;
     border: 1px solid var(--border-color);
     white-space: pre-wrap;
+    word-break: break-all;
+    overflow-wrap: anywhere;
 }
 
 /* Tables */
@@ -663,3 +671,32 @@ textarea.form-control {
 .p-0 { padding: 0 !important; }
 .text-center { text-align: center; }
 .py-4 { padding-top: 24px; padding-bottom: 24px; }
+
+/* Suite Error Details */
+.suite-error-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    line-height: 1.4;
+    max-width: 480px;
+}
+
+.suite-error-code {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--danger);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.suite-error-msg {
+    color: #fca5a5;
+    font-size: 12px;
+    word-break: break-word;
+    background: rgba(239, 68, 68, 0.08);
+    border-left: 2px solid var(--danger);
+    padding: 4px 8px;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}

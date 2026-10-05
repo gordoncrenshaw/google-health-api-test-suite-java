@@ -18,16 +18,36 @@ steps:
   # Step 2: Query User Profile
   - name: "Fetch User Profile Identity"
     action: "profile"
-    userId: "me"
     assertStatus: [200]
 
-  # Step 3: List Paired Wearables and Trackers
+  # Step 3: Update User Profile
+  - name: "Update User Profile Details"
+    action: "update_profile"
+    body: '{"displayName": "TestSuite QA User", "locale": "en-US"}'
+    assertStatus: [200]
+
+  # Step 4: Query User Settings
+  - name: "Fetch User Settings"
+    action: "settings"
+    assertStatus: [200]
+
+  # Step 5: Update User Settings
+  - name: "Update User Settings"
+    action: "update_settings"
+    body: '{"temperatureUnit": "CELSIUS", "timeZone": "America/New_York"}'
+    assertStatus: [200]
+
+  # Step 6: Query Irregular Rhythm Notifications Profile
+  - name: "Fetch Irregular Rhythm Notifications Profile"
+    action: "irn_profile"
+    assertStatus: [200]
+
+  # Step 7: List Paired Wearables and Trackers
   - name: "List Paired Devices"
     action: "devices"
-    userId: "me"
     assertStatus: [200]
 
-  # Step 4: Query Step Count with Range Validation
+  # Step 8: Query Step Count with Range Validation
   - name: "Query Steps DataPoints"
     action: "list"
     dataType: "steps"
@@ -36,16 +56,16 @@ steps:
     assertStatus: [200]
     validateRange: true
 
-  # Step 5: Query Heart Rate Samples with Range Validation (1-300 bpm)
+  # Step 9: Query Heart Rate Samples with Range Validation (1-300 bpm)
   - name: "Query Heart Rate Samples"
     action: "list"
-    dataType: "heart_rate"
+    dataType: "heart-rate"
     queryParams:
       pageSize: "25"
     assertStatus: [200]
     validateRange: true
 
-  # Step 6: Query Distance Millimeters
+  # Step 10: Query Distance Millimeters
   - name: "Query Distance DataPoints"
     action: "list"
     dataType: "distance"
@@ -54,7 +74,7 @@ steps:
     assertStatus: [200]
     validateRange: true
 
-  # Step 7: Query Body Weight in Grams
+  # Step 11: Query Body Weight in Grams
   - name: "Query Weight Measurements"
     action: "list"
     dataType: "weight"
@@ -63,7 +83,7 @@ steps:
     assertStatus: [200]
     validateRange: true
 
-  # Step 8: Physical Rollup for Steps
+  # Step 12: Physical Rollup for Steps
   - name: "RollUp Steps Aggregation"
     action: "rollup"
     dataType: "steps"
