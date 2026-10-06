@@ -34,7 +34,7 @@ public class DataTypeRegistry {
         load();
     }
 
-    public synchronized void load() {
+    public final synchronized void load() {
         dataTypesMap.clear();
         if (!dataTypesFile.exists()) {
             logger.warn("Data types configuration file does not exist at: {}", dataTypesFile.getAbsolutePath());

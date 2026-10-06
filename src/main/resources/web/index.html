@@ -65,7 +65,7 @@
             </button>
             <button class="nav-tab" data-tab="tab-settings" id="tab-btn-settings">
                 <svg viewBox="0 0 24 24" class="tab-icon"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-                Preferences & Auth
+                Preferences & OAuth
             </button>
         </nav>
 
@@ -522,6 +522,58 @@
                                 </div>
                                 <div id="quick-result-url" class="font-mono mt-2" style="font-size: 0.8rem; color: #38bdf8; word-break: break-all; display: none;"></div>
                                 <pre id="quick-result-body" class="code-preview font-mono" style="max-height: 220px; overflow-y: auto;">// Click any endpoint button above to inspect pretty JSON response</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Available OAuth Scopes Selection Card -->
+                <div class="card glass-card mb-4" id="oauth-scopes-card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <h2 class="card-title">Google Health OAuth Scopes Selection</h2>
+                            <span class="file-badge">config/preferences.yaml</span>
+                        </div>
+                        <div class="scopes-actions" style="display: flex; align-items: center; gap: 8px;">
+                            <span id="selected-scopes-count" class="pill-badge pill-neutral">0 of 0 Selected</span>
+                            <button type="button" id="btn-scopes-select-all" class="btn btn-secondary btn-sm" title="Select all available scopes">
+                                <svg viewBox="0 0 24 24" class="btn-icon" style="width: 14px; height: 14px;"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z"/></svg>
+                                Select All
+                            </button>
+                            <button type="button" id="btn-scopes-deselect-all" class="btn btn-secondary btn-sm" title="Deselect all scopes">
+                                <svg viewBox="0 0 24 24" class="btn-icon" style="width: 14px; height: 14px;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                                Deselect All
+                            </button>
+                            <button type="button" id="btn-scopes-reload" class="btn btn-secondary btn-sm" title="Reload scopes from config/preferences.yaml">
+                                <svg viewBox="0 0 24 24" class="btn-icon" style="width: 14px; height: 14px;"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                                Reload Scopes
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3" style="font-size: 0.9rem;">
+                            Select the specific Google Health API scopes to include in the authorization string. Scopes are loaded dynamically from <code>config/preferences.yaml</code>. 
+                            Add new scopes to that file at any time to automatically display them here. 
+                            <em>(By default, all scopes are deselected)</em>.
+                        </p>
+
+                        <div id="scopes-list-container" class="scopes-checkbox-grid">
+                            <div class="text-muted font-mono" style="padding: 16px;">Loading available scopes from config/preferences.yaml...</div>
+                        </div>
+
+                        <!-- Live Scopes URL Preview & Action bar -->
+                        <div class="scopes-footer-bar mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <div style="flex: 1; min-width: 280px;">
+                                <div style="font-size: 0.8rem; font-weight: 600; color: #94a3b8; margin-bottom: 4px;">Authorization Scope Parameter String Preview:</div>
+                                <div id="scopes-parameter-preview" class="font-mono text-xs" style="background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 6px 10px; color: #38bdf8; word-break: break-all; min-height: 28px;">
+                                    (No scopes selected - click checkboxes or 'Select All')
+                                </div>
+                            </div>
+                            <div>
+                                <button type="button" id="btn-start-auth-scopes" class="btn btn-primary">
+                                    <svg viewBox="0 0 24 24" class="btn-icon"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                                    Authorize with Selected Scopes
+                                </button>
                             </div>
                         </div>
                     </div>

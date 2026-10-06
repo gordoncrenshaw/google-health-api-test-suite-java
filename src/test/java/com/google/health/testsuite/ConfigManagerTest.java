@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.Comparator;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -115,5 +116,35 @@ public class ConfigManagerTest {
 
         Credential refreshedCred = oAuthService.getCredential();
         assertNotNull(refreshedCred.getAccessToken());
+    }
+
+    @Test
+    void testAvailableScopesLoadingAndDynamicUpdates() throws Exception {
+        // Initial scopes loaded should contain default scopes
+        List<String> scopes = configManager.getAvailableScopes();
+        assertNotNull(scopes);
+        assertFalse(scopes.isEmpty());
+        assertTrue(scopes.contains("https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"));
+
+        // Save a customized list of scopes to preferences.yaml
+        List<String> customScopes = List.of(
+                "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
+                "https://www.googleapis.com/auth/googlehealth.custom_scope.readwrite"
+        );
+        configManager.saveAvailableScopes(customScopes);
+
+        // Reload scopes from file and verify the new custom scope is present
+        List<String> reloaded = configManager.getAvailableScopes();
+        assertEquals(2, reloaded.size());
+        assertTrue(reloaded.contains("https://www.googleapis.com/auth/googlehealth.custom_scope.readwrite"));
+
+        // Append a new scope directly to the preferences file to simulate manual file editing
+        File prefFile = configManager.getPreferencesFile();
+        Files.writeString(prefFile.toPath(),
+                Files.readString(prefFile.toPath()) + "  - \"https://www.googleapis.com/auth/googlehealth.new_scope.read\"\n");
+
+        List<String> dynamicallyLoaded = configManager.getAvailableScopes();
+        assertEquals(3, dynamicallyLoaded.size());
+        assertTrue(dynamicallyLoaded.contains("https://www.googleapis.com/auth/googlehealth.new_scope.read"));
     }
 }

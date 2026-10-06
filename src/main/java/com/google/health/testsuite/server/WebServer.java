@@ -91,6 +91,11 @@ public class WebServer {
                     String notFound = "<html><body><h1>404 Not Found</h1><p>Resource " + path + " not found.</p></body></html>";
                     byte[] bytes = notFound.getBytes(StandardCharsets.UTF_8);
                     exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
+                    if ("HEAD".equalsIgnoreCase(exchange.getRequestMethod())) {
+                        exchange.getResponseHeaders().set("Content-Length", String.valueOf(bytes.length));
+                        exchange.sendResponseHeaders(404, -1);
+                        return;
+                    }
                     exchange.sendResponseHeaders(404, bytes.length);
                     try (OutputStream os = exchange.getResponseBody()) {
                         os.write(bytes);
@@ -102,6 +107,11 @@ public class WebServer {
             String contentType = determineContentType(path);
             exchange.getResponseHeaders().set("Content-Type", contentType);
             exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-store, must-revalidate");
+            if ("HEAD".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.getResponseHeaders().set("Content-Length", String.valueOf(content.length));
+                exchange.sendResponseHeaders(200, -1);
+                return;
+            }
             exchange.sendResponseHeaders(200, content.length);
             try (OutputStream os = exchange.getResponseBody()) {
                 os.write(content);

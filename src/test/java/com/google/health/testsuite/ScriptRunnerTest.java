@@ -21,8 +21,7 @@ public class ScriptRunnerTest {
     @BeforeEach
     void setUp() throws Exception {
         File tempPref = File.createTempFile("pref_test", ".yaml");
-        File tempAuth = File.createTempFile("auth_test", ".yaml");
-        ConfigManager configManager = new ConfigManager(tempPref, tempAuth);
+        ConfigManager configManager = new ConfigManager(tempPref);
 
         Preferences prefs = configManager.getPreferences();
         prefs.setMockMode(true); // Mock mode for offline unit testing

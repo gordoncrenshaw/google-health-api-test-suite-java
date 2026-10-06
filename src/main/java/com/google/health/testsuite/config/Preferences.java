@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +13,18 @@ import java.util.List;
  * Stores OAuth 2.0 client credentials, scopes, and API settings.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonPropertyOrder({
+        "authUri",
+        "tokenUri",
+        "redirect_uri",
+        "apiBaseUrl",
+        "healthUserId",
+        "defaultUserId",
+        "endpointUserId",
+        "mockMode",
+        "enableAllEndpoints",
+        "scopes"
+})
 public class Preferences {
 
     @JsonProperty(value = "clientId", access = JsonProperty.Access.WRITE_ONLY)
@@ -157,6 +170,7 @@ public class Preferences {
         }
     }
 
+    @JsonIgnore
     public String getEndpointUserSyntax() {
         return getEndpointUserId();
     }

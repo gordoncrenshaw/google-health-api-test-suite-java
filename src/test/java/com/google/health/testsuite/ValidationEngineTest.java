@@ -17,7 +17,7 @@ public class ValidationEngineTest {
     private DataTypeDefinition heartRateDef;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         validationEngine = new ValidationEngine();
         stepsDef = new DataTypeDefinition("steps", "Steps", "scope.fitness",
                 List.of("list", "create"), "steps.interval.start_time", true,

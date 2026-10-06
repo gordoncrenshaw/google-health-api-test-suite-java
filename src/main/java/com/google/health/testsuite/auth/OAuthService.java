@@ -39,7 +39,7 @@ import java.util.UUID;
  * Manages Google OAuth 2.0 authorization, credential persistence,
  * and automatic token refreshing using com.google.api.client.auth.oauth2.Credential.
  */
-public class OAuthService {
+public final class OAuthService {
 
     private static final Logger logger = LoggerFactory.getLogger(OAuthService.class);
     private static final String DEFAULT_CREDENTIALS_DIR = "tokens";
@@ -201,16 +201,29 @@ public class OAuthService {
     }
 
     /**
-     * Builds the Google OAuth 2.0 authorization URL.
+     * Builds the Google OAuth 2.0 authorization URL using default configured scopes.
      */
     public String buildAuthorizationUrl(String state) {
+        return buildAuthorizationUrl(state, null);
+    }
+
+    /**
+     * Builds the Google OAuth 2.0 authorization URL with explicitly specified scopes.
+     * If scopes is null, uses the flow's configured scopes.
+     * If scopes is provided, the authorization URL will request only those scopes.
+     */
+    public String buildAuthorizationUrl(String state, List<String> scopes) {
         Preferences prefs = configManager != null ? configManager.getPreferences() : new Preferences();
         String stateParam = (state != null && !state.isEmpty()) ? state : UUID.randomUUID().toString();
 
-        return flow.newAuthorizationUrl()
+        var authUrl = flow.newAuthorizationUrl()
                 .setRedirectUri(prefs.getRedirectUri())
-                .setState(stateParam)
-                .build();
+                .setState(stateParam);
+
+        if (scopes != null) {
+            authUrl.setScopes(scopes);
+        }
+        return authUrl.build();
     }
 
     /**

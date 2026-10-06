@@ -80,12 +80,12 @@ public class CliMenuRunner {
     private void printBanner() {
         System.out.println(CYAN + BOLD + """
                 ========================================================================
-                   ____                   _         _   _            _ _   _     
-                  / ___| ___   ___   __ _| | ___   | | | | ___  __ _| | |_| |__  
-                 | |  _ / _ \\ / _ \\ / _` | |/ _ \\  | |_| |/ _ \\/ _` | | __| '_ \\ 
+                   ____                   _         _   _            _ _   _
+                  / ___| ___   ___   __ _| | ___   | | | | ___  __ _| | |_| |__
+                 | |  _ / _ \\ / _ \\ / _` | |/ _ \\  | |_| |/ _ \\/ _` | | __| '_ \\
                  | |_| | (_) | (_) | (_| | |  __/  |  _  |  __/ (_| | | |_| | | |
                   \\____|\\___/ \\___/ \\__, |_|\\___|  |_| |_|\\___|\\__,_|_|\\__|_| |_|
-                                    |___/        API TEST SUITE (v4)             
+                                    |___/        API TEST SUITE (v4)
                 ========================================================================
                 """ + RESET);
     }
@@ -123,7 +123,7 @@ public class CliMenuRunner {
             UserAuthorization auth = configManager.getUserAuthorization();
 
             System.out.println(CYAN + BOLD + "\n========================================================================" + RESET);
-            System.out.println(CYAN + BOLD + "             PREFERENCES & AUTHORIZATION DASHBOARD                      " + RESET);
+            System.out.println(CYAN + BOLD + "                 PREFERENCES & OAUTH DASHBOARD                          " + RESET);
             System.out.println(CYAN + BOLD + "========================================================================" + RESET);
             System.out.println(BOLD + "[ Preferences Configuration (config/preferences.yaml) ]" + RESET);
             System.out.println(" Client ID:      " + (prefs.getClientId().isEmpty() ? "(Not configured)" : prefs.getClientId()));
@@ -153,7 +153,7 @@ public class CliMenuRunner {
             System.out.println(" 8. Call updateProfile Endpoint (PATCH /v4/users/{userId}/profile)");
             System.out.println(" 9. Call updateSettings Endpoint (PATCH /v4/users/{userId}/settings)");
             System.out.println(" 10. Edit Preferences (Client ID, Secret, Health User ID, Redirect URI)");
-            System.out.println(" 11. View Stored Scopes");
+            System.out.println(" 11. View Stored Scopes (config/preferences.yaml)");
             System.out.println(" 12. Toggle Enable All Endpoints for Each Datatype");
             System.out.println(" 0. Return to Main Menu");
             System.out.println("------------------------------------------------------------------------");
@@ -172,8 +172,9 @@ public class CliMenuRunner {
                 case "9" -> callUpdateSettingsEndpoint();
                 case "10" -> editPreferencesPrompt();
                 case "11" -> {
-                    System.out.println(CYAN + "\nConfigured OAuth Scopes (" + prefs.getScopes().size() + "):" + RESET);
-                    for (String s : prefs.getScopes()) System.out.println(" - " + s);
+                    List<String> avail = configManager.getAvailableScopes();
+                    System.out.println(CYAN + "\nAvailable OAuth Scopes in config/preferences.yaml (" + avail.size() + "):" + RESET);
+                    for (String s : avail) System.out.println(" - " + s);
                 }
                 case "12" -> {
                     boolean newSetting = !prefs.isEnableAllEndpoints();
@@ -366,7 +367,76 @@ public class CliMenuRunner {
             }
         }
 
-        String authUrl = oAuthService.buildAuthorizationUrl("cli_state_" + System.currentTimeMillis());
+        // Scope selection from config/preferences.yaml
+        List<String> availableScopes = configManager.getAvailableScopes();
+        Set<String> selectedScopes = new LinkedHashSet<>(); // Default: all scopes deselected
+
+        boolean selectingScopes = true;
+        while (selectingScopes) {
+            System.out.println(CYAN + BOLD + "\n--- Select OAuth Scopes (Loaded from config/preferences.yaml) ---" + RESET);
+            System.out.println("Default: All scopes deselected. Current selection: " +
+                    (selectedScopes.isEmpty() ? YELLOW + "None (0 of " + availableScopes.size() + ")" : GREEN + selectedScopes.size() + " of " + availableScopes.size() + " selected") + RESET);
+            for (int i = 0; i < availableScopes.size(); i++) {
+                String sc = availableScopes.get(i);
+                boolean isSel = selectedScopes.contains(sc);
+                System.out.printf(" [%s] %2d. %s\n", (isSel ? GREEN + "X" + RESET : " "), (i + 1), sc);
+            }
+            System.out.println("------------------------------------------------------------------------");
+            System.out.println("Commands:");
+            System.out.println("  [1-" + availableScopes.size() + "] Enter scope number(s) to toggle (e.g. '1 3 5' or '1,2')");
+            System.out.println("  'all'  Select all scopes");
+            System.out.println("  'none' Deselect all scopes");
+            System.out.println("  'done' Proceed with current selection (or press ENTER)");
+            System.out.print(BOLD + "Select scope command: " + RESET);
+            String input = scanner.nextLine().trim();
+
+            if (input.equalsIgnoreCase("done") || input.isEmpty()) {
+                if (selectedScopes.isEmpty()) {
+                    System.out.print(YELLOW + "No scopes selected! Continue anyway? [y/N]: " + RESET);
+                    String confirm = scanner.nextLine().trim();
+                    if (confirm.equalsIgnoreCase("y")) {
+                        selectingScopes = false;
+                    }
+                } else {
+                    selectingScopes = false;
+                }
+            } else if (input.equalsIgnoreCase("all")) {
+                selectedScopes.addAll(availableScopes);
+                System.out.println(GREEN + "All " + availableScopes.size() + " scopes selected." + RESET);
+            } else if (input.equalsIgnoreCase("none") || input.equalsIgnoreCase("clear")) {
+                selectedScopes.clear();
+                System.out.println(YELLOW + "All scopes deselected." + RESET);
+            } else {
+                String[] tokens = input.split("[,\\s]+");
+                for (String t : tokens) {
+                    try {
+                        int idx = Integer.parseInt(t) - 1;
+                        if (idx >= 0 && idx < availableScopes.size()) {
+                            String chosen = availableScopes.get(idx);
+                            if (selectedScopes.contains(chosen)) {
+                                selectedScopes.remove(chosen);
+                                System.out.println("Deselected: " + chosen);
+                            } else {
+                                selectedScopes.add(chosen);
+                                System.out.println(GREEN + "Selected: " + chosen + RESET);
+                            }
+                        } else {
+                            System.out.println(RED + "Invalid scope number: " + t + RESET);
+                        }
+                    } catch (NumberFormatException nfe) {
+                        System.out.println(RED + "Unrecognized command: " + t + RESET);
+                    }
+                }
+            }
+        }
+
+        List<String> scopeList = new ArrayList<>(selectedScopes);
+        if (!scopeList.isEmpty()) {
+            prefs.setScopes(scopeList);
+            configManager.savePreferences(prefs);
+        }
+
+        String authUrl = oAuthService.buildAuthorizationUrl("cli_state_" + System.currentTimeMillis(), scopeList);
         System.out.println("\nOpen this URL in your browser to authorize access to Google Health API:");
         System.out.println(BLUE + authUrl + RESET);
 

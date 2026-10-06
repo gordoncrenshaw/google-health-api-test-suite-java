@@ -27,8 +27,7 @@ public class HealthApiClientTest {
     @BeforeEach
     void setUp() throws Exception {
         File tempPref = File.createTempFile("pref_test", ".yaml");
-        File tempAuth = File.createTempFile("auth_test", ".yaml");
-        configManager = new ConfigManager(tempPref, tempAuth);
+        configManager = new ConfigManager(tempPref);
 
         Preferences prefs = configManager.getPreferences();
         prefs.setMockMode(true); // Run in mock mode for unit test

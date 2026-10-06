@@ -157,8 +157,14 @@ Open your browser to: **`http://localhost:8080`**
 4. **Data Types Registry**:
    - Complete searchable and filterable catalog of all Google Health API data types.
    - **"+ Add Data Type Setting"**: In-app setting to register additional data types with endpoint version, valid ranges, units, scopes, and supported endpoints. Changes are saved directly to `config/datatypes.yaml` and hot-reloaded into the running test suite immediately.
-5. **Preferences & Auth**:
-   - **Live Token & Auth Status**: Live countdown timer for the access token, authorization status pills, and one-click **"Force Token Refresh"** and **"Authorize with Google"** buttons.
+5. **Preferences & OAuth**:
+   - **OAuth Scope Selector & Dynamic File Storage**:
+     - All available scopes are defined in [`config/preferences.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/config/preferences.yaml). Adding new scopes to `preferences.yaml` dynamically presents them in the UI without restarting.
+     - Interactive multi-select grid with individual selection, **"Select All"**, and **"Deselect All"** buttons.
+     - Defaults to **all scopes deselected**.
+     - Live preview of the generated OAuth `scope` query parameter string.
+     - **"Authorize with Google"** / **"Authorize with Selected Scopes"** initiates the Google OAuth consent flow using exactly the selected scopes.
+   - **Live Token & Auth Status**: Live countdown timer for the access token, authorization status pills, and one-click **"Force Token Refresh"** button.
    - **Identity, Profile & Settings Endpoints**:
      - **`getIdentity`** (`GET /v4/users/{userId}/identity`): Queries Google Health identity mapping. If `healthUserId` is missing in `config/preferences.yaml`, it automatically stores the discovered user ID into `preferences.yaml`.
      - **`getDevices`** (`GET /v4/users/{userId}/pairedDevices`): Retrieves connected smartwatches, fitness trackers, and devices.

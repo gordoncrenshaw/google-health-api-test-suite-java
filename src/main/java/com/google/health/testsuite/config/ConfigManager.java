@@ -15,18 +15,44 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Manages reading and saving of preferences.yaml, resolving OAuth client credentials
  * from client_secret.json, and coordinating with OAuthService for Credential management.
  */
-public class ConfigManager {
+public final class ConfigManager {
 
     private static final Logger logger = LoggerFactory.getLogger(ConfigManager.class);
 
     private static final String DEFAULT_CONFIG_DIR = "config";
     private static final String PREFERENCES_FILE_NAME = "preferences.yaml";
     private static final String CLIENT_SECRET_FILE_NAME = "client_secret.json";
+
+    public static final List<String> DEFAULT_AVAILABLE_SCOPES = List.of(
+            "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
+            "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly",
+            "https://www.googleapis.com/auth/googlehealth.ecg.readonly",
+            "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly",
+            "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly",
+            "https://www.googleapis.com/auth/googlehealth.irn.readonly",
+            "https://www.googleapis.com/auth/googlehealth.location.readonly",
+            "https://www.googleapis.com/auth/googlehealth.logged_symptoms.readonly",
+            "https://www.googleapis.com/auth/googlehealth.logged_symptoms.writeonly",
+            "https://www.googleapis.com/auth/googlehealth.mindfulness.readonly",
+            "https://www.googleapis.com/auth/googlehealth.mindfulness.writeonly",
+            "https://www.googleapis.com/auth/googlehealth.profile.readonly",
+            "https://www.googleapis.com/auth/googlehealth.profile.writeonly",
+            "https://www.googleapis.com/auth/googlehealth.reproductive_health.readonly",
+            "https://www.googleapis.com/auth/googlehealth.reproductive_health.writeonly",
+            "https://www.googleapis.com/auth/googlehealth.settings.readonly",
+            "https://www.googleapis.com/auth/googlehealth.settings.writeonly",
+            "https://www.googleapis.com/auth/googlehealth.sleep.readonly",
+            "https://www.googleapis.com/auth/googlehealth.sleep.writeonly"
+    );
 
     private final File preferencesFile;
     private final File clientSecretFile;
@@ -56,7 +82,8 @@ public class ConfigManager {
 
         YAMLFactory yamlFactory = new YAMLFactory()
                 .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
-                .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES);
+                .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
+                .enable(YAMLGenerator.Feature.INDENT_ARRAYS_WITH_INDICATOR);
         this.yamlMapper = new ObjectMapper(yamlFactory);
 
         ensureDirectories();
@@ -64,13 +91,12 @@ public class ConfigManager {
     }
 
     /**
-     * Backward-compatible constructor for existing callers and tests.
-     * The second argument (legacy userAuthFile) is ignored because credentials
-     * are now managed via com.google.api.client.auth.oauth2.Credential.
+     * Backward-compatible constructor for callers passing an optional third file argument.
      */
-    public ConfigManager(File preferencesFile, File ignoredUserAuthFile, File clientSecretFile) {
-        this(preferencesFile, clientSecretFile);
+    public ConfigManager(File preferencesFile, File secondFile, File ignoredThirdFile) {
+        this(preferencesFile, secondFile);
     }
+
 
     private void ensureDirectories() {
         File parentPref = preferencesFile.getParentFile();
@@ -181,10 +207,11 @@ public class ConfigManager {
         }
     }
 
-    public synchronized Preferences loadPreferences() {
-        if (!preferencesFile.exists()) {
-            logger.info("Preferences file {} does not exist, creating default.", preferencesFile.getAbsolutePath());
+    public final synchronized Preferences loadPreferences() {
+        if (!preferencesFile.exists() || preferencesFile.length() == 0) {
+            logger.info("Preferences file {} does not exist or is empty, creating default.", preferencesFile.getAbsolutePath());
             preferences = new Preferences();
+            preferences.setScopes(new ArrayList<>(DEFAULT_AVAILABLE_SCOPES));
             loadClientSecret(preferences);
             savePreferences(preferences);
             return preferences;
@@ -192,10 +219,14 @@ public class ConfigManager {
 
         try {
             preferences = yamlMapper.readValue(preferencesFile, Preferences.class);
+            if (preferences.getScopes() == null || preferences.getScopes().isEmpty()) {
+                preferences.setScopes(new ArrayList<>(DEFAULT_AVAILABLE_SCOPES));
+            }
             logger.debug("Successfully loaded preferences from {}", preferencesFile.getAbsolutePath());
         } catch (IOException e) {
             logger.error("Failed to read preferences from {}: {}", preferencesFile.getAbsolutePath(), e.getMessage());
             preferences = new Preferences();
+            preferences.setScopes(new ArrayList<>(DEFAULT_AVAILABLE_SCOPES));
         }
 
         loadClientSecret(preferences);
@@ -288,5 +319,31 @@ public class ConfigManager {
 
     public File getPreferencesFile() {
         return preferencesFile;
+    }
+
+    public File getScopesFile() {
+        return preferencesFile;
+    }
+
+    public synchronized List<String> getAvailableScopes() {
+        loadPreferences();
+        if (preferences != null && preferences.getScopes() != null && !preferences.getScopes().isEmpty()) {
+            return new ArrayList<>(preferences.getScopes());
+        }
+        if (preferences != null) {
+            preferences.setScopes(new ArrayList<>(DEFAULT_AVAILABLE_SCOPES));
+            savePreferences(preferences);
+        }
+        return new ArrayList<>(DEFAULT_AVAILABLE_SCOPES);
+    }
+
+    public synchronized void saveAvailableScopes(List<String> scopes) {
+        if (preferences == null) {
+            preferences = new Preferences();
+        }
+        preferences.setScopes(scopes != null ? scopes : new ArrayList<>());
+        savePreferences(preferences);
+        logger.info("Saved {} available scopes to preferences file {}",
+                (scopes != null ? scopes.size() : 0), preferencesFile.getAbsolutePath());
     }
 }

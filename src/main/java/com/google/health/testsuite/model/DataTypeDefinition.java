@@ -207,7 +207,7 @@ public class DataTypeDefinition {
         return endpointsSupported;
     }
 
-    public void setEndpointsSupported(Map<String, Boolean> endpointsSupported) {
+    public final void setEndpointsSupported(Map<String, Boolean> endpointsSupported) {
         this.endpointsSupported = createDefaultEndpointsMap();
         if (endpointsSupported != null) {
             for (Map.Entry<String, Boolean> entry : endpointsSupported.entrySet()) {
@@ -216,7 +216,7 @@ public class DataTypeDefinition {
         }
     }
 
-    public void setEndpointsSupportedFromList(List<String> endpoints) {
+    public final void setEndpointsSupportedFromList(List<String> endpoints) {
         this.endpointsSupported = createDefaultEndpointsMap();
         if (endpoints != null) {
             for (String ep : endpoints) {

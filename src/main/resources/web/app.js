@@ -8,12 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let authStatus = null;
     let countdownInterval = null;
     let currentPreferences = null;
+    let availableScopes = [];
+    let selectedScopes = new Set(); // Default: all scopes deselected
 
     // Initialize UI
     initTabs();
     loadAuthStatus();
     loadDataTypes();
     loadPreferences();
+    loadAvailableScopes();
     loadScriptsList();
     bindEvents();
 
@@ -173,21 +176,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function startAuthorization() {
+        if (!selectedScopes || selectedScopes.size === 0) {
+            alert('Please select at least one scope to provide in the authorization string before authorizing.');
+            return;
+        }
+
         const btn = document.getElementById('btn-start-auth');
+        const btnScopes = document.getElementById('btn-start-auth-scopes');
         const originalText = btn ? btn.innerHTML : '';
+        const originalScopesText = btnScopes ? btnScopes.innerHTML : '';
+
         if (btn) {
             btn.innerHTML = '<span class="spinner"></span> Starting Auth...';
             btn.disabled = true;
         }
+        if (btnScopes) {
+            btnScopes.innerHTML = '<span class="spinner"></span> Starting Auth...';
+            btnScopes.disabled = true;
+        }
+
+        const restoreButtons = () => {
+            if (btn) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+            if (btnScopes) {
+                btnScopes.innerHTML = originalScopesText;
+                btnScopes.disabled = false;
+            }
+        };
 
         try {
-            const res = await fetch('/api/auth/start', { method: 'POST' });
+            const requestedScopes = Array.from(selectedScopes);
+            const res = await fetch('/api/auth/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ scopes: requestedScopes })
+            });
             const data = await res.json();
             if (data.success) {
                 if (!data.browserOpened && data.authUrl) {
                     window.open(data.authUrl, '_blank');
                 }
-                alert('Authorization flow initiated!\n\n' +
+                alert('Authorization flow initiated with ' + requestedScopes.length + ' selected scope(s)!\n\n' +
                       '1. Local receiver is listening on ' + data.redirectUri + '\n' +
                       '2. Approve the consent screen in your browser.\n\n' +
                       'The application will automatically detect your tokens once granted.');
@@ -202,17 +233,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (status.hasAccessToken && !status.isExpired) {
                             clearInterval(pollTimer);
                             renderAuthStatus(status);
-                            if (btn) {
-                                btn.innerHTML = originalText;
-                                btn.disabled = false;
-                            }
+                            restoreButtons();
                             alert('Success! Google Health API credentials received and saved into Credential store.');
                         } else if (attempts >= 72) {
                             clearInterval(pollTimer);
-                            if (btn) {
-                                btn.innerHTML = originalText;
-                                btn.disabled = false;
-                            }
+                            restoreButtons();
                         }
                     } catch (e) {
                         // ignore polling error
@@ -220,18 +245,139 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 2500);
             } else {
                 alert('Authorization error: ' + (data.message || 'Unknown error'));
-                if (btn) {
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                }
+                restoreButtons();
             }
         } catch (e) {
             alert('Failed to initiate authorization: ' + e.message);
-            if (btn) {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+            restoreButtons();
+        }
+    }
+
+    // ==========================================================================
+    // OAuth Scopes Selection Management (Loaded from config/preferences.yaml)
+    // ==========================================================================
+    async function loadAvailableScopes() {
+        const container = document.getElementById('scopes-list-container');
+        try {
+            const res = await fetch('/api/scopes');
+            const data = await res.json();
+            availableScopes = data.scopes || [];
+            // By default: all scopes deselected
+            selectedScopes.clear();
+            renderScopesList();
+        } catch (e) {
+            console.error('Failed to load scopes from /api/scopes:', e);
+            if (container) {
+                container.innerHTML = `<div class="text-danger font-mono" style="padding: 16px;">Failed to load scopes: ${e.message}</div>`;
             }
         }
+    }
+
+    function renderScopesList() {
+        const container = document.getElementById('scopes-list-container');
+        if (!container) return;
+
+        if (!availableScopes || availableScopes.length === 0) {
+            container.innerHTML = '<div class="text-muted font-mono" style="padding: 16px;">No scopes found in config/preferences.yaml</div>';
+            updateScopesCountAndPreview();
+            return;
+        }
+
+        container.innerHTML = '';
+        availableScopes.forEach((scope, index) => {
+            const item = document.createElement('label');
+            const isSelected = selectedScopes.has(scope);
+            item.className = `scope-checkbox-item ${isSelected ? 'selected' : ''}`;
+            item.setAttribute('for', `scope-cb-${index}`);
+
+            item.title = scope;
+
+            // Parse readable display name
+            let shortName = scope;
+            if (scope.includes('.auth/googlehealth.')) {
+                shortName = scope.split('.auth/googlehealth.')[1];
+            } else if (scope.includes('.auth/')) {
+                shortName = scope.split('.auth/')[1];
+            }
+
+            const isRead = shortName.endsWith('.readonly');
+            const isWrite = shortName.endsWith('.writeonly');
+            const badgeHtml = isRead 
+                ? '<span class="scope-badge-read">READ</span>' 
+                : (isWrite ? '<span class="scope-badge-write">WRITE</span>' : '<span class="pill-badge pill-neutral font-mono" style="font-size: 9.5px; padding: 1px 6px;">SCOPE</span>');
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `scope-cb-${index}`;
+            checkbox.value = scope;
+            checkbox.checked = isSelected;
+
+            checkbox.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    selectedScopes.add(scope);
+                    item.classList.add('selected');
+                } else {
+                    selectedScopes.delete(scope);
+                    item.classList.remove('selected');
+                }
+                updateScopesCountAndPreview();
+            });
+
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'scope-info';
+            infoDiv.innerHTML = `
+                <span class="scope-short-name">${escapeHtml(shortName)}</span>
+                ${badgeHtml}
+            `;
+
+            item.appendChild(checkbox);
+            item.appendChild(infoDiv);
+            container.appendChild(item);
+        });
+
+        updateScopesCountAndPreview();
+    }
+
+    function updateScopesCountAndPreview() {
+        const countBadge = document.getElementById('selected-scopes-count');
+        if (countBadge) {
+            countBadge.textContent = `${selectedScopes.size} of ${availableScopes.length} Selected`;
+            if (selectedScopes.size > 0) {
+                countBadge.className = 'pill-badge pill-success';
+            } else {
+                countBadge.className = 'pill-badge pill-neutral';
+            }
+        }
+
+        const previewEl = document.getElementById('scopes-parameter-preview');
+        if (previewEl) {
+            if (selectedScopes.size === 0) {
+                previewEl.textContent = '(No scopes selected - click checkboxes or "Select All")';
+                previewEl.style.color = '#94a3b8';
+            } else {
+                previewEl.textContent = Array.from(selectedScopes).join(' ');
+                previewEl.style.color = '#38bdf8';
+            }
+        }
+    }
+
+    function selectAllScopes() {
+        if (!availableScopes) return;
+        availableScopes.forEach(s => selectedScopes.add(s));
+        const checkboxes = document.querySelectorAll('#scopes-list-container input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = true);
+        const items = document.querySelectorAll('#scopes-list-container .scope-checkbox-item');
+        items.forEach(it => it.classList.add('selected'));
+        updateScopesCountAndPreview();
+    }
+
+    function deselectAllScopes() {
+        selectedScopes.clear();
+        const checkboxes = document.querySelectorAll('#scopes-list-container input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = false);
+        const items = document.querySelectorAll('#scopes-list-container .scope-checkbox-item');
+        items.forEach(it => it.classList.remove('selected'));
+        updateScopesCountAndPreview();
     }
 
     // ==========================================================================
@@ -812,7 +958,8 @@ document.addEventListener('DOMContentLoaded', () => {
             redirectUri: document.getElementById('pref-redirect-uri').value,
             apiBaseUrl: document.getElementById('pref-api-base-url').value,
             mockMode: document.getElementById('pref-mock-mode').checked,
-            enableAllEndpoints: enableAllVal
+            enableAllEndpoints: enableAllVal,
+            scopes: (selectedScopes && selectedScopes.size > 0) ? Array.from(selectedScopes) : (currentPreferences && currentPreferences.scopes ? currentPreferences.scopes : [])
         };
 
         try {
@@ -1007,6 +1154,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dashRefresh) dashRefresh.addEventListener('click', refreshToken);
         const startAuth = document.getElementById('btn-start-auth');
         if (startAuth) startAuth.addEventListener('click', startAuthorization);
+        const startAuthScopes = document.getElementById('btn-start-auth-scopes');
+        if (startAuthScopes) startAuthScopes.addEventListener('click', startAuthorization);
+
+        const btnSelectAllScopes = document.getElementById('btn-scopes-select-all');
+        if (btnSelectAllScopes) btnSelectAllScopes.addEventListener('click', selectAllScopes);
+
+        const btnDeselectAllScopes = document.getElementById('btn-scopes-deselect-all');
+        if (btnDeselectAllScopes) btnDeselectAllScopes.addEventListener('click', deselectAllScopes);
+
+        const btnReloadScopes = document.getElementById('btn-scopes-reload');
+        if (btnReloadScopes) btnReloadScopes.addEventListener('click', loadAvailableScopes);
 
         document.getElementById('explorer-datatype-select').addEventListener('change', onExplorerDataTypeChanged);
         document.getElementById('explorer-endpoint-select').addEventListener('change', onExplorerEndpointChanged);

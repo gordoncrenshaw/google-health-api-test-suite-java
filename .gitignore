@@ -1,16 +1,19 @@
-config/
+# Ignore client secrets
 client_secret.json
 
 # OAuth2 Token and Credential stores
 tokens/
-.credentials/
 
-target/
-*.class
+# Ignore system files
 .DS_Store
 *.log
 dependency-reduced-pom.xml
 
+# Ignore build folders
+target/
+*.class
+
+# Ignore IDE files
 .idea/
 *.iml
 

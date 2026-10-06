@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.Comparator;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -90,5 +91,20 @@ public class OAuthServiceTest {
 
         assertTrue(oAuthService.refreshAccessToken());
         assertTrue(oAuthService.getCredential().getAccessToken().startsWith("mock_access_token_"));
+    }
+
+    @Test
+    void testBuildAuthorizationUrlWithSelectedScopes() {
+        List<String> chosenScopes = List.of(
+                "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
+                "https://www.googleapis.com/auth/googlehealth.sleep.readonly"
+        );
+
+        String url = oAuthService.buildAuthorizationUrl("test_state_123", chosenScopes);
+        assertNotNull(url);
+        assertTrue(url.contains("scope="));
+        assertTrue(url.contains("activity_and_fitness.readonly"));
+        assertTrue(url.contains("sleep.readonly"));
+        assertTrue(url.contains("state=test_state_123"));
     }
 }

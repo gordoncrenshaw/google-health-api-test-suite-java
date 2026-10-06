@@ -74,6 +74,10 @@ public class RestApiHandler implements HttpHandler {
                     else if ("POST".equals(method)) handleSavePreferences(exchange);
                     else sendError(exchange, 405, "Method Not Allowed");
                 }
+                case "/api/scopes" -> {
+                    if ("GET".equals(method)) handleGetScopes(exchange);
+                    else sendError(exchange, 405, "Method Not Allowed");
+                }
                 case "/api/auth/status" -> handleGetAuthStatus(exchange);
                 case "/api/auth/refresh" -> handleRefreshToken(exchange);
                 case "/api/auth/url" -> handleGetAuthUrl(exchange);
@@ -255,8 +259,32 @@ public class RestApiHandler implements HttpHandler {
         sendJson(exchange, ok ? 200 : 400, resp.toPrettyString());
     }
 
+    private void handleGetScopes(HttpExchange exchange) throws IOException {
+        List<String> scopes = configManager.getAvailableScopes();
+        ObjectNode resp = jsonMapper.createObjectNode();
+        ArrayNode arr = resp.putArray("scopes");
+        for (String s : scopes) {
+            arr.add(s);
+        }
+        sendJson(exchange, 200, resp.toPrettyString());
+    }
+
     private void handleGetAuthUrl(HttpExchange exchange) throws IOException {
-        String url = oAuthService.buildAuthorizationUrl("web_ux_" + System.currentTimeMillis());
+        List<String> scopes = null;
+        if ("POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            if (!body.isBlank()) {
+                JsonNode json = jsonMapper.readTree(body);
+                if (json.has("scopes") && json.get("scopes").isArray()) {
+                    scopes = new ArrayList<>();
+                    for (JsonNode n : json.get("scopes")) {
+                        String s = n.asText("").trim();
+                        if (!s.isEmpty()) scopes.add(s);
+                    }
+                }
+            }
+        }
+        String url = oAuthService.buildAuthorizationUrl("web_ux_" + System.currentTimeMillis(), scopes);
         ObjectNode resp = jsonMapper.createObjectNode();
         resp.put("authUrl", url);
         sendJson(exchange, 200, resp.toPrettyString());
@@ -281,6 +309,28 @@ public class RestApiHandler implements HttpHandler {
 
     private synchronized void handleStartAuth(HttpExchange exchange) throws IOException {
         Preferences prefs = configManager.getPreferences();
+        List<String> requestedScopes = null;
+        try {
+            String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            if (!body.isBlank()) {
+                JsonNode json = jsonMapper.readTree(body);
+                if (json.has("scopes") && json.get("scopes").isArray()) {
+                    requestedScopes = new ArrayList<>();
+                    for (JsonNode item : json.get("scopes")) {
+                        String s = item.asText("").trim();
+                        if (!s.isEmpty()) requestedScopes.add(s);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Could not parse request body in handleStartAuth: {}", e.getMessage());
+        }
+
+        if (requestedScopes != null && !requestedScopes.isEmpty()) {
+            prefs.setScopes(requestedScopes);
+            configManager.savePreferences(prefs);
+        }
+
         if (activeReceiver != null) {
             activeReceiver.stop();
             activeReceiver = null;
@@ -303,7 +353,7 @@ public class RestApiHandler implements HttpHandler {
             listenerThread.setDaemon(true);
             listenerThread.start();
 
-            String authUrl = oAuthService.buildAuthorizationUrl("web_ux_" + System.currentTimeMillis());
+            String authUrl = oAuthService.buildAuthorizationUrl("web_ux_" + System.currentTimeMillis(), requestedScopes);
             boolean opened = BrowserUtil.openBrowser(authUrl);
 
             ObjectNode resp = jsonMapper.createObjectNode();
