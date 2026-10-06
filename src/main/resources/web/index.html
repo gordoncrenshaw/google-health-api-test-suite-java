@@ -80,15 +80,23 @@
                         <span class="file-badge" id="explorer-syntax-badge">Syntax: /users/me</span>
                     </div>
                     <div class="card-body">
-                        <div class="form-grid">
-                            <div class="form-group">
+                        <!-- Top Metadata Box (Version, Scope, Webhooks Support) -->
+                        <div id="explorer-top-info" class="info-bar mb-3">
+                            <div class="info-item"><strong>Endpoint Version:</strong> <span id="dt-info-version" class="pill-badge pill-cyan font-mono">-</span></div>
+                            <div class="info-item"><strong>Scope:</strong> <span id="dt-info-scope" class="font-mono text-cyan">-</span></div>
+                            <div class="info-item"><strong>Webhooks Support:</strong> <span id="dt-info-webhooks" class="pill-badge pill-neutral">-</span></div>
+                        </div>
+
+                        <!-- Data Type and Operation Selection -->
+                        <div class="form-grid mb-3" style="grid-template-columns: 1fr 1fr;">
+                            <div class="form-group mb-0">
                                 <label for="explorer-datatype-select">Select Data Type:</label>
                                 <select id="explorer-datatype-select" class="form-control">
                                     <!-- Populated from datatypes.yaml -->
                                 </select>
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group mb-0">
                                 <label for="explorer-endpoint-select">Operation / Endpoint:</label>
                                 <select id="explorer-endpoint-select" class="form-control">
                                     <option value="batchDelete">batchDelete</option>
@@ -102,20 +110,37 @@
                                     <option value="rollUp">rollUp</option>
                                 </select>
                             </div>
+                        </div>
 
-                            <div class="form-group" id="explorer-page-size-group">
-                                <label for="explorer-page-size">Page Size:</label>
-                                <input type="number" id="explorer-page-size" class="form-control" value="25" min="1" max="1000">
+                        <!-- Supported Query Parameters Section (below selection) -->
+                        <div id="explorer-query-params-container" class="glass-card mb-3" style="background: rgba(14, 21, 38, 0.6); padding: 14px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <div style="font-weight: 600; font-size: 13px; margin-bottom: 10px; color: var(--text-color); display: flex; align-items: center; justify-content: space-between;">
+                                <span>Supported Query Parameters</span>
+                                <span id="explorer-query-params-count" class="pill-badge pill-cyan" style="font-size: 11px;">3 parameters</span>
+                            </div>
+                            <div id="explorer-no-query-params" class="text-muted" style="display: none; font-size: 13px; padding: 4px 0;">
+                                No query parameters are supported for this operation.
+                            </div>
+                            <div id="explorer-query-params-grid" class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
+                                <div class="form-group mb-0" id="explorer-page-size-group">
+                                    <label for="explorer-page-size" style="font-size: 12px; margin-bottom: 4px;">pageSize <span class="text-muted">(max 1000)</span>:</label>
+                                    <input type="number" id="explorer-page-size" class="form-control font-mono" value="25" min="1" max="1000" placeholder="e.g. 25">
+                                </div>
+                                <div class="form-group mb-0" id="explorer-filter-group">
+                                    <label for="explorer-filter-param" style="font-size: 12px; margin-bottom: 4px;">filter <span class="text-muted font-mono" id="explorer-filter-field-label">(steps.interval.start_time)</span>:</label>
+                                    <input type="text" id="explorer-filter-param" class="form-control font-mono" placeholder="e.g. steps.interval.start_time &gt; &quot;2026-01-01T00:00:00Z&quot;">
+                                </div>
+                                <div class="form-group mb-0" id="explorer-page-token-group">
+                                    <label for="explorer-page-token" style="font-size: 12px; margin-bottom: 4px;">pageToken <span class="text-muted">(pagination token)</span>:</label>
+                                    <input type="text" id="explorer-page-token" class="form-control font-mono" placeholder="Optional continuation token">
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Data Type Details Bar -->
-                        <div id="explorer-datatype-info" class="info-bar mt-3">
-                            <div class="info-item"><strong>Endpoint Version:</strong> <span id="dt-info-version" class="pill-badge pill-cyan font-mono">-</span></div>
-                            <div class="info-item"><strong>Scope:</strong> <span id="dt-info-scope" class="font-mono text-cyan">-</span></div>
-                            <div class="info-item"><strong>Filter Param:</strong> <span id="dt-info-filter" class="font-mono">-</span></div>
-                            <div class="info-item"><strong>Webhooks:</strong> <span id="dt-info-webhooks" class="pill-badge pill-neutral">-</span></div>
+                        <!-- Valid Range Display (below selection) -->
+                        <div id="explorer-valid-range-box" class="info-bar mb-3">
                             <div class="info-item"><strong>Valid Range:</strong> <span id="dt-info-range" class="font-mono text-success">-</span></div>
+                            <span id="dt-info-filter" style="display: none;">-</span>
                         </div>
 
                         <!-- Request Payload (visible for POST/Create/Rollup) -->

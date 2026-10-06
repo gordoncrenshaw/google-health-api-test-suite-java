@@ -183,8 +183,27 @@ public class MockHealthBackend {
         headers.put("Content-Type", List.of("application/json; charset=UTF-8"));
         headers.put("X-Mock-Backend", List.of("true"));
 
+        String pathWithQuery = path;
+        if (queryParams != null && !queryParams.isEmpty()) {
+            boolean first = true;
+            StringBuilder qb = new StringBuilder();
+            for (Map.Entry<String, String> entry : queryParams.entrySet()) {
+                if (entry.getValue() == null || entry.getValue().trim().isEmpty()) {
+                    continue;
+                }
+                if (first) {
+                    qb.append("?");
+                    first = false;
+                } else {
+                    qb.append("&");
+                }
+                qb.append(entry.getKey()).append("=").append(entry.getValue());
+            }
+            pathWithQuery = path + qb.toString();
+        }
+
         StringBuilder curlBuilder = new StringBuilder("curl -X ").append(httpMethod)
-                .append(" \"https://health.googleapis.com").append(path).append("\" ")
+                .append(" \"https://health.googleapis.com").append(pathWithQuery).append("\" ")
                 .append("-H \"Authorization: Bearer mock_token\" -H \"Content-Type: application/json\"");
         if (requestBody != null && !requestBody.trim().isEmpty() && !"GET".equalsIgnoreCase(httpMethod) && !"DELETE".equalsIgnoreCase(httpMethod)) {
             curlBuilder.append(" -d '").append(requestBody.replace("'", "'\\''")).append("'");
@@ -192,7 +211,7 @@ public class MockHealthBackend {
         String curl = curlBuilder.toString();
 
         return new ApiResponse(statusCode, statusMessage, headers, responseBody, latency,
-                "https://health.googleapis.com" + path, httpMethod, requestBody, curl);
+                "https://health.googleapis.com" + pathWithQuery, httpMethod, requestBody, curl);
     }
 
     public JsonNode generateSampleDataPointNode(DataTypeDefinition def, String healthUserId, int index) {

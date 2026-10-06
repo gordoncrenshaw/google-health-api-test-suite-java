@@ -420,19 +420,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         document.getElementById('dt-info-scope').textContent = dt.scopeRequired || 'None';
-        document.getElementById('dt-info-filter').textContent = dt.filterParameterName || '-';
-
-        const webhooksBadge = document.getElementById('dt-info-webhooks');
-        if (dt.webhooksSupported) {
-            webhooksBadge.textContent = 'SUPPORTED';
-            webhooksBadge.className = 'pill-badge pill-success';
-        } else {
-            webhooksBadge.textContent = 'NO';
-            webhooksBadge.className = 'pill-badge pill-neutral';
+        const filterEl = document.getElementById('dt-info-filter');
+        if (filterEl) {
+            filterEl.textContent = dt.filterParameterName || '-';
         }
 
-        const rangeStr = `[${dt.minValue !== null ? dt.minValue : '0'}, ${dt.maxValue !== null ? dt.maxValue : '∞'}] ${dt.unit || ''}`;
-        document.getElementById('dt-info-range').textContent = rangeStr;
+        const filterHint = document.getElementById('explorer-filter-field-label');
+        if (filterHint) {
+            filterHint.textContent = dt.filterParameterName ? `(${dt.filterParameterName})` : '';
+        }
+
+        const filterInput = document.getElementById('explorer-filter-param');
+        if (filterInput) {
+            filterInput.placeholder = dt.filterParameterName 
+                ? `e.g. ${dt.filterParameterName} > "2026-01-01T00:00:00Z"` 
+                : 'e.g. filter expression';
+        }
+
+        const webhooksBadge = document.getElementById('dt-info-webhooks');
+        if (webhooksBadge) {
+            if (dt.webhooksSupported) {
+                webhooksBadge.textContent = 'SUPPORTED';
+                webhooksBadge.className = 'pill-badge pill-success';
+            } else {
+                webhooksBadge.textContent = 'NO';
+                webhooksBadge.className = 'pill-badge pill-neutral';
+            }
+        }
+
+        const rangeStr = (dt.minValue !== null || dt.maxValue !== null)
+            ? `[${dt.minValue !== null ? dt.minValue : '0'}, ${dt.maxValue !== null ? dt.maxValue : '∞'}] ${dt.unit || ''}`.trim()
+            : 'Unconstrained';
+        const rangeEl = document.getElementById('dt-info-range');
+        if (rangeEl) {
+            rangeEl.textContent = rangeStr;
+            rangeEl.className = 'font-mono text-success';
+        }
 
         // Sort endpoints alphabetically and filter supported endpoints
         const endpointSelect = document.getElementById('explorer-endpoint-select');
@@ -477,10 +500,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const epLower = (ep || '').toLowerCase();
         const dt = dataTypes.find(d => d.name === selName);
 
-        // 1. Page Size visibility (only supported for 'list')
-        const pageSizeGroup = document.getElementById('explorer-page-size-group');
-        if (pageSizeGroup) {
-            pageSizeGroup.style.display = (epLower === 'list') ? 'block' : 'none';
+        // 1. Query parameters support visibility (only supported for 'list')
+        const qpGrid = document.getElementById('explorer-query-params-grid');
+        const qpNoMsg = document.getElementById('explorer-no-query-params');
+        const qpCount = document.getElementById('explorer-query-params-count');
+
+        if (epLower === 'list') {
+            if (qpGrid) qpGrid.style.display = 'grid';
+            if (qpNoMsg) qpNoMsg.style.display = 'none';
+            if (qpCount) {
+                qpCount.textContent = '3 parameters';
+                qpCount.className = 'pill-badge pill-cyan';
+                qpCount.style.display = 'inline-block';
+            }
+        } else {
+            if (qpGrid) qpGrid.style.display = 'none';
+            if (qpNoMsg) qpNoMsg.style.display = 'block';
+            if (qpCount) {
+                qpCount.textContent = 'None supported';
+                qpCount.className = 'pill-badge pill-neutral';
+                qpCount.style.display = 'inline-block';
+            }
         }
 
         // 2. Filter parameter visibility / display (batchDelete does not support filter params)
@@ -500,7 +540,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 rangeEl.textContent = 'N/A';
                 rangeEl.className = 'font-mono text-muted';
             } else if (dt) {
-                const rangeStr = `[${dt.minValue !== null ? dt.minValue : '0'}, ${dt.maxValue !== null ? dt.maxValue : '∞'}] ${dt.unit || ''}`;
+                const rangeStr = (dt.minValue !== null || dt.maxValue !== null)
+                    ? `[${dt.minValue !== null ? dt.minValue : '0'}, ${dt.maxValue !== null ? dt.maxValue : '∞'}] ${dt.unit || ''}`.trim()
+                    : 'Unconstrained';
                 rangeEl.textContent = rangeStr;
                 rangeEl.className = 'font-mono text-success';
             }
@@ -611,7 +653,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!dtSelect || !dtSelect.value) return;
         const dtName = dtSelect.value;
         const ep = document.getElementById('explorer-endpoint-select').value;
-        const pageSize = document.getElementById('explorer-page-size').value;
         const epLower = (ep || '').toLowerCase();
 
         let method = 'GET';
@@ -636,7 +677,26 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (epLower === 'exportexercisetcx') path += '/sample-dp-1:exportExerciseTcx';
         else if (epLower === 'get') path += '/sample-dp-1';
         else if (epLower === 'patch') path += '/sample-dp-1';
-        else if (epLower === 'list') path += `?pageSize=${pageSize}`;
+        else if (epLower === 'list') {
+            const queryParams = [];
+            const pageSizeVal = (document.getElementById('explorer-page-size')?.value || '').trim();
+            const filterVal = (document.getElementById('explorer-filter-param')?.value || '').trim();
+            const pageTokenVal = (document.getElementById('explorer-page-token')?.value || '').trim();
+
+            if (pageSizeVal !== '') {
+                queryParams.push(`pageSize=${encodeURIComponent(pageSizeVal)}`);
+            }
+            if (filterVal !== '') {
+                queryParams.push(`filter=${encodeURIComponent(filterVal)}`);
+            }
+            if (pageTokenVal !== '') {
+                queryParams.push(`pageToken=${encodeURIComponent(pageTokenVal)}`);
+            }
+
+            if (queryParams.length > 0) {
+                path += `?${queryParams.join('&')}`;
+            }
+        }
 
         const token = (authStatus && authStatus.accessToken) ? authStatus.accessToken : 'ya29.YOUR_ACCESS_TOKEN';
         let curl = `curl -X ${method} "https://health.googleapis.com${path}" \\\n  -H "Authorization: Bearer ${token}" \\\n  -H "Accept: application/json"`;
@@ -655,13 +715,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         document.getElementById('explorer-curl-command').textContent = curl;
-        document.getElementById('explorer-request-url').textContent = `URL: https://health.googleapis.com${path}`;
+        document.getElementById('explorer-request-url').textContent = `URL: https://health.googleapis.com${decodeURI(path)}`;
     }
 
     async function sendExplorerRequest() {
         const dtName = document.getElementById('explorer-datatype-select').value;
         const ep = document.getElementById('explorer-endpoint-select').value;
-        const pageSize = document.getElementById('explorer-page-size').value;
         const payload = document.getElementById('explorer-payload-input').value;
         const syntax = getPreferredEndpointUserSyntax();
         const epLower = (ep || '').toLowerCase();
@@ -682,7 +741,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const params = {};
             if (epLower === 'list') {
-                params.pageSize = pageSize;
+                const pageSizeVal = (document.getElementById('explorer-page-size')?.value || '').trim();
+                const filterVal = (document.getElementById('explorer-filter-param')?.value || '').trim();
+                const pageTokenVal = (document.getElementById('explorer-page-token')?.value || '').trim();
+
+                if (pageSizeVal !== '') params.pageSize = pageSizeVal;
+                if (filterVal !== '') params.filter = filterVal;
+                if (pageTokenVal !== '') params.pageToken = pageTokenVal;
             } else if (epLower === 'get' || epLower === 'patch' || epLower === 'exportexercisetcx') {
                 params.dataPointId = 'sample-dp-1';
             }
@@ -1237,6 +1302,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('explorer-datatype-select').addEventListener('change', onExplorerDataTypeChanged);
         document.getElementById('explorer-endpoint-select').addEventListener('change', onExplorerEndpointChanged);
         document.getElementById('explorer-page-size').addEventListener('input', updateExplorerCurlPreview);
+        const filterInput = document.getElementById('explorer-filter-param');
+        if (filterInput) filterInput.addEventListener('input', updateExplorerCurlPreview);
+        const pageTokenInput = document.getElementById('explorer-page-token');
+        if (pageTokenInput) pageTokenInput.addEventListener('input', updateExplorerCurlPreview);
         const explorerPayloadInput = document.getElementById('explorer-payload-input');
         if (explorerPayloadInput) {
             explorerPayloadInput.addEventListener('input', updateExplorerCurlPreview);

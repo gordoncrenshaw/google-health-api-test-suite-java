@@ -110,14 +110,20 @@ public class HealthApiClient {
 
         StringBuilder urlBuilder = new StringBuilder(baseUrl).append(relativePath);
         if (queryParams != null && !queryParams.isEmpty()) {
-            urlBuilder.append("?");
             boolean first = true;
             for (Map.Entry<String, String> entry : queryParams.entrySet()) {
-                if (!first) urlBuilder.append("&");
+                if (entry.getValue() == null || entry.getValue().trim().isEmpty()) {
+                    continue;
+                }
+                if (first) {
+                    urlBuilder.append("?");
+                    first = false;
+                } else {
+                    urlBuilder.append("&");
+                }
                 urlBuilder.append(urlEncode(entry.getKey()))
                         .append("=")
                         .append(urlEncode(entry.getValue()));
-                first = false;
             }
         }
 

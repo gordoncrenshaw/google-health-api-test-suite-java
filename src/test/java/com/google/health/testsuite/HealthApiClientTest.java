@@ -48,6 +48,32 @@ public class HealthApiClientTest {
         assertTrue(resp.isSuccess());
         assertTrue(resp.getBody().contains("dataPoints"), "Response must contain dataPoints");
         assertTrue(resp.getCurlCommand().contains("curl -X GET"));
+        assertTrue(resp.getRequestUrl().contains("?pageSize=10"));
+    }
+
+    @Test
+    void testListStepsDataPoints_emptyQueryParamsOmittedFromUrl() {
+        DataTypeDefinition steps = registry.getDataType("steps").orElseThrow();
+        ApiResponse resp = client.listDataPoints(steps, Map.of("pageSize", "", "filter", "   "));
+
+        assertNotNull(resp);
+        assertEquals(200, resp.getStatusCode());
+        assertFalse(resp.getRequestUrl().contains("?"), "URL must not contain '?' when query parameters are empty");
+        assertFalse(resp.getCurlCommand().contains("?"), "cURL must not contain '?' when query parameters are empty");
+    }
+
+    @Test
+    void testListStepsDataPoints_partialEmptyQueryParams() {
+        DataTypeDefinition steps = registry.getDataType("steps").orElseThrow();
+        Map<String, String> params = new java.util.LinkedHashMap<>();
+        params.put("pageSize", "25");
+        params.put("filter", "");
+        ApiResponse resp = client.listDataPoints(steps, params);
+
+        assertNotNull(resp);
+        assertEquals(200, resp.getStatusCode());
+        assertTrue(resp.getRequestUrl().contains("?pageSize=25"));
+        assertFalse(resp.getRequestUrl().contains("filter"));
     }
 
     @Test

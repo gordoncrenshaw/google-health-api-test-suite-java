@@ -383,7 +383,12 @@ public class RestApiHandler implements HttpHandler {
 
         Map<String, String> params = new HashMap<>();
         if (json.has("params") && json.get("params").isObject()) {
-            json.get("params").fields().forEachRemaining(entry -> params.put(entry.getKey(), entry.getValue().asText()));
+            json.get("params").fields().forEachRemaining(entry -> {
+                String val = entry.getValue().asText();
+                if (val != null && !val.trim().isEmpty()) {
+                    params.put(entry.getKey(), val.trim());
+                }
+            });
         }
 
         TestResult result = engine.executeSingleTest(dataType, endpoint, params, requestBody);
