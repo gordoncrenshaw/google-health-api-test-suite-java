@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/auth/refresh', { method: 'POST' });
             const data = await res.json();
             if (data.success) {
-                alert('Success: Access token refreshed and userAuthorization.yaml updated!');
+                alert('Success: Access token refreshed and Credential store updated!');
                 await loadAuthStatus();
             } else {
                 alert('Token Refresh Failed: ' + data.message);
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 btn.innerHTML = originalText;
                                 btn.disabled = false;
                             }
-                            alert('Success! Google Health API tokens received and saved to userAuthorization.yaml.');
+                            alert('Success! Google Health API credentials received and saved into Credential store.');
                         } else if (attempts >= 72) {
                             clearInterval(pollTimer);
                             if (btn) {

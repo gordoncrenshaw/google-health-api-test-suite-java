@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.health.testsuite.auth.OAuthService;
+import com.google.api.client.auth.oauth2.Credential;
 import com.google.health.testsuite.config.ConfigManager;
 import com.google.health.testsuite.config.Preferences;
 import com.google.health.testsuite.config.UserAuthorization;
@@ -54,7 +55,6 @@ public class HealthApiClient {
     public ApiResponse execute(String method, String relativePath, Map<String, String> queryParams,
                                String body, DataTypeDefinition def) {
         Preferences prefs = configManager.getPreferences();
-        UserAuthorization userAuth = configManager.getUserAuthorization();
         String effectiveUser = getEffectiveUserId();
 
         // 1. Check if mock mode is active
@@ -63,28 +63,32 @@ public class HealthApiClient {
             return mockBackend.handleRequest(method, relativePath, queryParams, body, def, effectiveUser);
         }
 
-        // 2. Pre-check token expiration: auto-refresh before request if expired
-        if (userAuth.isExpired() && userAuth.hasRefreshToken()) {
-            logger.info("Access token is expired or expiring soon. Refreshing before request...");
+        // 2. Pre-check token expiration using Credential: auto-refresh before request if expired
+        Credential credential = oAuthService != null ? oAuthService.getCredential() : null;
+        if (credential != null && oAuthService.isExpired(credential) && credential.getRefreshToken() != null) {
+            logger.info("Access token is expired or expiring soon. Refreshing via Credential before request...");
             boolean refreshed = oAuthService.refreshAccessToken();
             if (refreshed) {
-                userAuth = configManager.getUserAuthorization();
+                credential = oAuthService.getCredential();
             } else {
                 logger.warn("Automatic pre-request token refresh failed. Proceeding with existing token.");
             }
         }
 
+        String accessToken = credential != null ? credential.getAccessToken() : configManager.getUserAuthorization().getAccessToken();
+
         // 3. Execute HTTP request
-        ApiResponse response = sendHttpRequest(method, relativePath, queryParams, body, userAuth.getAccessToken());
+        ApiResponse response = sendHttpRequest(method, relativePath, queryParams, body, accessToken);
 
         // 4. If 401 Unauthorized is returned, refresh token automatically and retry once
-        if (response.getStatusCode() == 401 && userAuth.hasRefreshToken()) {
-            logger.warn("Received HTTP 401 Unauthorized. Attempting automatic token refresh and retry...");
+        if (response.getStatusCode() == 401 && ((credential != null && credential.getRefreshToken() != null) || configManager.getUserAuthorization().hasRefreshToken())) {
+            logger.warn("Received HTTP 401 Unauthorized. Attempting automatic Credential token refresh and retry...");
             boolean refreshed = oAuthService.refreshAccessToken();
             if (refreshed) {
-                userAuth = configManager.getUserAuthorization();
-                logger.info("Retrying request with newly refreshed access token...");
-                response = sendHttpRequest(method, relativePath, queryParams, body, userAuth.getAccessToken());
+                credential = oAuthService.getCredential();
+                accessToken = credential != null ? credential.getAccessToken() : configManager.getUserAuthorization().getAccessToken();
+                logger.info("Retrying request with newly refreshed access token from Credential...");
+                response = sendHttpRequest(method, relativePath, queryParams, body, accessToken);
             } else {
                 logger.error("Automatic token refresh after 401 failed.");
             }
@@ -204,13 +208,7 @@ public class HealthApiClient {
             if (prefs.getHealthUserId() != null && !prefs.getHealthUserId().trim().isEmpty()) {
                 return prefs.getHealthUserId().trim();
             }
-            UserAuthorization userAuth = configManager.getUserAuthorization();
-            if (userAuth != null && userAuth.getHealthUserID() != null &&
-                    !userAuth.getHealthUserID().trim().isEmpty() &&
-                    !"me".equalsIgnoreCase(userAuth.getHealthUserID().trim())) {
-                return userAuth.getHealthUserID().trim();
-            }
-            logger.warn("Endpoint user ID setting is 'healthUserId', but no healthUserId is configured. Falling back to 'me'.");
+            logger.warn("Endpoint user ID setting is 'healthUserId', but no healthUserId is configured in preferences. Falling back to 'me'.");
             return "me";
         }
 
@@ -415,17 +413,12 @@ public class HealthApiClient {
                         prefs.setHealthUserId(discoveredId);
                         configManager.savePreferences(prefs);
                     }
-                    // Also update UserAuthorization if missing or set to default "me"
-                    UserAuthorization auth = configManager.getUserAuthorization();
-                    if (auth.getHealthUserID() == null || auth.getHealthUserID().trim().isEmpty() || "me".equalsIgnoreCase(auth.getHealthUserID())) {
-                        auth.setHealthUserID(discoveredId);
-                        configManager.saveUserAuthorization(auth);
-                    }
                 }
             } catch (Exception e) {
                 logger.warn("Could not extract healthUserId from identity response: {}", e.getMessage());
             }
         }
+
 
         return resp;
     }

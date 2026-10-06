@@ -217,7 +217,7 @@ public class SuiteExecutionEngine {
                                 "Authorization verified.");
                     } else {
                         return TestResult.failure(step.getName(), "auth", "check", null,
-                                ValidationResult.fail("No access token found in userAuthorization.yaml", null, null, null),
+                                ValidationResult.fail("No access token found in Credential store", null, null, null),
                                 "Missing authorization credentials.");
                     }
                 }

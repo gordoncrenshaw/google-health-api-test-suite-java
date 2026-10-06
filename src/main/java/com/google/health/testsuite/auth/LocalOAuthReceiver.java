@@ -99,7 +99,7 @@ public class LocalOAuthReceiver {
                             <body>
                               <div class="card">
                                 <h1>&#10004; Authorization Successful!</h1>
-                                <p>Google Health API tokens have been received and saved into <code>userAuthorization.yaml</code>.</p>
+                                <p>Google Health API credentials have been received and saved into the Credential store.</p>
                                 <p>You can now return to the terminal or web application.</p>
                               </div>
                             </body></html>
@@ -107,7 +107,25 @@ public class LocalOAuthReceiver {
                     completionFuture.complete(true);
                 } else {
                     responseCode = 500;
-                    responseHtml = "<html><body><h1>Authorization Failed</h1><p>Failed to exchange code for tokens. Check console logs.</p></body></html>";
+                    String errDetail = oAuthService.getLastAuthError();
+                    if (errDetail == null || errDetail.isEmpty()) {
+                        errDetail = "Failed to exchange code for tokens. Check console logs.";
+                    }
+                    String safeDetail = errDetail.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+                    responseHtml = String.format("""
+                            <!DOCTYPE html>
+                            <html>
+                            <head><title>Authorization Failed</title>
+                            <style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; text-align: center; padding: 60px 20px; } .card { background: #1e293b; border-radius: 12px; padding: 40px; display: inline-block; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); } h1 { color: #f87171; } p { color: #94a3b8; font-size: 16px; } .err { background: #334155; border-left: 4px solid #f87171; padding: 12px; margin: 20px 0; text-align: left; font-family: monospace; color: #fca5a5; word-break: break-all; }</style>
+                            </head>
+                            <body>
+                              <div class="card">
+                                <h1>&#10008; Authorization Failed</h1>
+                                <div class="err">%s</div>
+                                <p>Please check your <code>config/client_secret.json</code> against the OAuth 2.0 Client in Google Cloud Console.</p>
+                              </div>
+                            </body></html>
+                            """, safeDetail);
                     completionFuture.complete(false);
                 }
             } else {

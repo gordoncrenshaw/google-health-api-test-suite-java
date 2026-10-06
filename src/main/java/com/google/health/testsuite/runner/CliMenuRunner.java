@@ -136,7 +136,7 @@ public class CliMenuRunner {
             System.out.println(" Mock Mode:      " + (prefs.isMockMode() ? YELLOW + "ENABLED" : GREEN + "DISABLED (Live API)") + RESET);
             System.out.println(" All Endpoints:  " + (prefs.isEnableAllEndpoints() ? GREEN + "ENABLED (All endpoints active for each datatype)" : YELLOW + "DISABLED (Respects datatypes.yaml)") + RESET);
 
-            System.out.println(BOLD + "\n[ User Authorization Status (config/userAuthorization.yaml) ]" + RESET);
+            System.out.println(BOLD + "\n[ OAuth2 Credential Status (com.google.api.client.auth.oauth2.Credential) ]" + RESET);
             System.out.println(" Health User ID: " + auth.getHealthUserID());
             System.out.println(" Access Token:   " + (auth.hasAccessToken() ? (auth.isExpired() ? RED + "EXPIRED" : GREEN + "VALID") : RED + "NONE") + RESET + " (" + auth.getRemainingSeconds() + "s remaining)");
             System.out.println(" Refresh Token:  " + (auth.hasRefreshToken() ? GREEN + "CONFIGURED (Auto-refresh active)" : RED + "NONE") + RESET);
@@ -339,7 +339,7 @@ public class CliMenuRunner {
 
     private void showTokenStatus() {
         UserAuthorization auth = configManager.getUserAuthorization();
-        System.out.println(CYAN + BOLD + "\n--- Authorization Status (config/userAuthorization.yaml) ---" + RESET);
+        System.out.println(CYAN + BOLD + "\n--- OAuth2 Credential Status (com.google.api.client.auth.oauth2.Credential) ---" + RESET);
         System.out.println(" Health User ID:   " + auth.getHealthUserID());
         System.out.println(" Has Access Token: " + (auth.hasAccessToken() ? GREEN + "YES" : RED + "NO") + RESET);
         System.out.println(" Has Refresh Token:" + (auth.hasRefreshToken() ? GREEN + "YES" : RED + "NO") + RESET);
@@ -386,7 +386,7 @@ public class CliMenuRunner {
                 System.out.println(YELLOW + "Waiting up to 180 seconds for browser callback on " + prefs.getRedirectUri() + "..." + RESET);
                 boolean success = receiver.waitForCallback(180);
                 if (success) {
-                    System.out.println(GREEN + BOLD + "Authorization successful! Tokens saved into config/userAuthorization.yaml" + RESET);
+                    System.out.println(GREEN + BOLD + "Authorization successful! Credentials saved into Credential store." + RESET);
                 } else {
                     System.out.println(RED + "Authorization timed out or failed." + RESET);
                 }
@@ -418,9 +418,9 @@ public class CliMenuRunner {
             UserAuthorization auth = configManager.getUserAuthorization();
             System.out.println(GREEN + BOLD + "Token refresh successful!" + RESET);
             System.out.println(" New expiry: " + auth.getRemainingSeconds() + " seconds remaining");
-            System.out.println(" userAuthorization.yaml updated.");
+            System.out.println(" Credential store updated.");
         } else {
-            System.out.println(RED + "Token refresh failed. Ensure refresh token is present in userAuthorization.yaml." + RESET);
+            System.out.println(RED + "Token refresh failed. Ensure refresh token is present in Credential store." + RESET);
         }
     }
 

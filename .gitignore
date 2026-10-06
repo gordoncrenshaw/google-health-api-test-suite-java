@@ -1,6 +1,10 @@
 config/
 client_secret.json
 
+# OAuth2 Token and Credential stores
+tokens/
+.credentials/
+
 target/
 *.class
 .DS_Store
@@ -9,3 +13,4 @@ dependency-reduced-pom.xml
 
 .idea/
 *.iml
+

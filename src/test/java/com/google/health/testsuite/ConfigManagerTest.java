@@ -1,5 +1,7 @@
 package com.google.health.testsuite;
 
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.health.testsuite.auth.OAuthService;
 import com.google.health.testsuite.config.ConfigManager;
 import com.google.health.testsuite.config.Preferences;
 import com.google.health.testsuite.config.UserAuthorization;
@@ -8,31 +10,41 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.util.Comparator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ConfigManagerTest {
 
     private File tempPrefFile;
-    private File tempAuthFile;
     private File tempSecretJsonFile;
+    private File tempTokensDir;
     private ConfigManager configManager;
+    private OAuthService oAuthService;
 
     @BeforeEach
     void setUp() throws Exception {
         tempPrefFile = File.createTempFile("test_preferences", ".yaml");
-        tempAuthFile = File.createTempFile("test_user_auth", ".yaml");
         tempSecretJsonFile = File.createTempFile("client_secret", ".json");
-        java.nio.file.Files.writeString(tempSecretJsonFile.toPath(),
+        tempTokensDir = Files.createTempDirectory("test_tokens_").toFile();
+
+        Files.writeString(tempSecretJsonFile.toPath(),
                 "{\"web\":{\"client_id\":\"json-client-123.apps.googleusercontent.com\",\"client_secret\":\"json-secret-456\"}}");
-        configManager = new ConfigManager(tempPrefFile, tempAuthFile, tempSecretJsonFile);
+        configManager = new ConfigManager(tempPrefFile, tempSecretJsonFile);
+        oAuthService = new OAuthService(configManager, tempTokensDir);
     }
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws Exception {
         if (tempPrefFile.exists()) tempPrefFile.delete();
-        if (tempAuthFile.exists()) tempAuthFile.delete();
         if (tempSecretJsonFile.exists()) tempSecretJsonFile.delete();
+        if (tempTokensDir != null && tempTokensDir.exists()) {
+            Files.walk(tempTokensDir.toPath())
+                    .sorted(Comparator.reverseOrder())
+                    .map(java.nio.file.Path::toFile)
+                    .forEach(File::delete);
+        }
     }
 
     @Test
@@ -45,12 +57,12 @@ public class ConfigManagerTest {
         configManager.savePreferences(prefs);
 
         // Verify preferences.yaml file does NOT contain clientId or clientSecret
-        String yamlContent = java.nio.file.Files.readString(tempPrefFile.toPath());
+        String yamlContent = Files.readString(tempPrefFile.toPath());
         assertFalse(yamlContent.contains("clientId"));
         assertFalse(yamlContent.contains("clientSecret"));
 
         // Reload
-        ConfigManager reloadMgr = new ConfigManager(tempPrefFile, tempAuthFile, tempSecretJsonFile);
+        ConfigManager reloadMgr = new ConfigManager(tempPrefFile, tempSecretJsonFile);
         Preferences loaded = reloadMgr.getPreferences();
 
         assertEquals("json-client-123.apps.googleusercontent.com", loaded.getClientId());
@@ -68,36 +80,40 @@ public class ConfigManagerTest {
     }
 
     @Test
-    void testSaveAndLoadUserAuthorization() {
-        UserAuthorization auth = new UserAuthorization();
-        auth.setHealthUserID("health-user-999");
-        auth.setAccessToken("ya29.sample_access_token");
-        auth.setRefreshToken("1//sample_refresh_token");
-        auth.setExpiresAtEpochMs(System.currentTimeMillis() + 3600_000);
+    void testCredentialStorageWithOAuthService() {
+        oAuthService.storeCredential("ya29.sample_access_token", "1//sample_refresh_token", 3600, "health.scope");
 
-        configManager.saveUserAuthorization(auth);
+        Credential credential = oAuthService.getCredential();
+        assertNotNull(credential, "Credential must be loaded from data store");
+        assertEquals("ya29.sample_access_token", credential.getAccessToken());
+        assertEquals("1//sample_refresh_token", credential.getRefreshToken());
+        assertNotNull(credential.getExpiresInSeconds());
+        assertTrue(credential.getExpiresInSeconds() > 3000);
 
-        // Reload
-        ConfigManager reloadMgr = new ConfigManager(tempPrefFile, tempAuthFile);
-        UserAuthorization loaded = reloadMgr.getUserAuthorization();
-
-        assertEquals("health-user-999", loaded.getHealthUserID());
-        assertEquals("ya29.sample_access_token", loaded.getAccessToken());
-        assertEquals("1//sample_refresh_token", loaded.getRefreshToken());
-        assertFalse(loaded.isExpired(), "Token expiring in 1 hour should not be expired");
-        assertTrue(loaded.getRemainingSeconds() > 3000);
+        // Check that UserAuthorization view accurately reflects the Credential
+        UserAuthorization auth = configManager.getUserAuthorization();
+        assertEquals("ya29.sample_access_token", auth.getAccessToken());
+        assertEquals("1//sample_refresh_token", auth.getRefreshToken());
+        assertFalse(auth.isExpired());
     }
 
     @Test
-    void testUpdateTokensAutoPersist() {
-        configManager.updateTokens("new-access-token", "new-refresh-token", 1800, "health.scope");
+    void testMockModeExchangeAndRefresh() {
+        Preferences prefs = configManager.getPreferences();
+        prefs.setMockMode(true);
 
-        ConfigManager reloadMgr = new ConfigManager(tempPrefFile, tempAuthFile);
-        UserAuthorization loaded = reloadMgr.getUserAuthorization();
+        boolean exchanged = oAuthService.exchangeCodeForTokens("mock_auth_code");
+        assertTrue(exchanged);
 
-        assertEquals("new-access-token", loaded.getAccessToken());
-        assertEquals("new-refresh-token", loaded.getRefreshToken());
-        assertEquals("health.scope", loaded.getScope());
-        assertFalse(loaded.isExpired());
+        Credential credential = oAuthService.getCredential();
+        assertNotNull(credential);
+        assertNotNull(credential.getAccessToken());
+        assertTrue(credential.getAccessToken().startsWith("mock_access_token_"));
+
+        boolean refreshed = oAuthService.refreshAccessToken();
+        assertTrue(refreshed);
+
+        Credential refreshedCred = oAuthService.getCredential();
+        assertNotNull(refreshedCred.getAccessToken());
     }
 }

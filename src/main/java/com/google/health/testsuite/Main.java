@@ -126,7 +126,7 @@ public class Main {
             boolean success = receiver.waitForCallback(180);
             if (success) {
                 System.out.println("\n\u001B[32m\u001B[1m[SUCCESS] Authorization successful!\u001B[0m");
-                System.out.println("Tokens have been saved to config/userAuthorization.yaml.");
+                System.out.println("Credentials have been saved to the Credential store.");
                 System.out.println("You can now run tests via CLI, Web UX, or Script runner.\n");
                 System.exit(0);
             } else {

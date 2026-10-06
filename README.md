@@ -20,9 +20,9 @@ Official Google Health API Documentation: [https://developers.google.com/health]
   - Declares all supported Google Health API data types (`steps`, `heart-rate`, `distance`, `weight`, `height`, `sleep`, `blood-glucose`, `oxygen-saturation`, etc.).
   - Specifies required OAuth scopes, supported endpoints, AIP-160 filter parameter names, webhook support flags, and numerical minimum/maximum value limits.
   - Simple structure: adding new data types is effortless and consistent.
-- **Automated Token Expiration & Refresh Persistence (`config/userAuthorization.yaml`)**:
-  - Stores `healthUserID`, `accessToken`, `refreshToken`, and expiration epoch timestamps.
-  - Automatically detects token expiration (prior to requests or upon receiving HTTP 401 Unauthorized), calls Google's OAuth token endpoint to rotate credentials, and immediately updates and saves `userAuthorization.yaml` to disk.
+- **Official Google OAuth2 Credential Management (`com.google.api.client.auth.oauth2.Credential`)**:
+  - Securely stores and loads credentials via Google's `FileDataStoreFactory` in `tokens/` (which is git-ignored to prevent token leaks).
+  - Automatically manages token expiration (prior to requests or upon receiving HTTP 401 Unauthorized), executing `Credential.refreshToken()` to rotate access tokens and update the credential data store.
 - **OAuth 2.0 Client Credentials (`config/client_secret.json`)**:
   - Automatically reads `client_id` and `client_secret` from standard Google Cloud OAuth client secret JSON.
 - **Application Preferences (`config/preferences.yaml`)**:
@@ -42,10 +42,10 @@ google-health-api-test-suite-java/
 ├── run.sh                                # Easy multi-mode runner script
 ├── config/
 │   ├── datatypes.yaml                    # Single declarative file defining all Google Health data types
-│   ├── preferences.yaml                  # Stores Client ID, Secret, and OAuth scopes
-│   ├── preferences.example.yaml          # Template preferences file
-│   ├── userAuthorization.yaml            # Stores healthUserID, accessToken, refreshToken, expiry
-│   └── userAuthorization.example.yaml    # Template authorization file
+│   ├── client_secret.json                # Standard Google OAuth 2.0 client secrets JSON
+│   ├── preferences.yaml                  # Application preferences, endpoint settings, and OAuth scopes
+│   └── preferences.example.yaml          # Template preferences file
+├── tokens/                               # Git-ignored directory storing com.google.api.client.auth.oauth2.Credential
 ├── scripts/
 │   ├── sample_suite.yaml                 # Sample multi-step test script with assertions
 │   ├── smoke_test.yaml                   # Fast sanity check script
@@ -321,19 +321,13 @@ Additional health metrics and data types can be added through three mechanisms w
 3. **Directly in YAML (`config/datatypes.yaml`)**:
    - Add a new YAML element adhering to the structure shown above. The test suite automatically validates ranges, binds endpoints, and attaches the appropriate API version prefix.
 
-## 🔐 Authorization & Token Management (`userAuthorization.yaml`)
+## 🔐 Authorization & Token Management (`com.google.api.client.auth.oauth2.Credential`)
 
-The application automatically manages OAuth tokens in `config/userAuthorization.yaml`:
+The application manages OAuth tokens securely using the official Google API Client library's `com.google.api.client.auth.oauth2.Credential` backed by `FileDataStoreFactory` in the git-ignored `tokens/` directory:
 
-```yaml
-healthUserID: "me"
-accessToken: "ya29.a0AfH6SMA..."
-refreshToken: "1//04..."
-tokenType: "Bearer"
-expiresAtEpochMs: 1735689600000
-updatedAt: "2026-10-04T02:00:00Z"
-scope: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly ..."
-```
+- Tokens and credentials are stored in `tokens/StoredCredential` using standard Google serialization.
+- Credentials are never stored in plain-text YAML files, preventing accidental commits to Git or GitHub Push Protection blocks (`GH013`).
+- User settings like `healthUserId` and endpoint syntax preferences are stored separately in `config/preferences.yaml`.
 
 ---
 
@@ -354,7 +348,7 @@ java -jar target/health-api-testsuite.jar --auth
 This command:
 1. Starts a temporary local HTTP callback server on your configured `redirect_uri` (e.g. `http://localhost:8888/callback`).
 2. Automatically launches your default web browser to the Google OAuth consent screen.
-3. Awaits the callback redirect, securely captures the authorization code, exchanges it with Google for access and refresh tokens, and saves them to `config/userAuthorization.yaml`.
+3. Awaits the callback redirect, securely captures the authorization code, exchanges it with Google for access and refresh tokens, and saves them into the `Credential` store.
 
 ### Option B: Interactive CLI Menu
 1. Launch `./run.sh menu` or `mvn exec:java`.
@@ -372,9 +366,9 @@ This command:
 ### Automatic Token Refresh Workflow:
 1. **Pre-flight Check**: Before dispatching any HTTP request, `HealthApiClient` checks if the access token has expired (or has `< 60s` remaining).
 2. **401 Interception**: If an API call receives an HTTP `401 Unauthorized` response from Google:
-   - The client invokes `OAuthService.refreshAccessToken()`.
-   - Google's token service (`https://oauth2.googleapis.com/token`) issues a new access token (and optional rotated refresh token).
-   - The client updates `userAuthorization.yaml` using thread-safe atomic file writing.
+   - The client invokes `OAuthService.refreshAccessToken()`, which delegates to `Credential.refreshToken()`.
+   - Google's token service issues a new access token (and optional rotated refresh token).
+   - The Credential library updates the local data store in `tokens/` automatically.
    - The failed HTTP request is automatically retried with the new token.
 
 ---

@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.health.testsuite.auth.OAuthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,11 +15,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.time.Instant;
 
 /**
- * Manages reading and atomic saving of preferences.yaml, userAuthorization.yaml,
- * and loading OAuth credentials from client_secret.json.
+ * Manages reading and saving of preferences.yaml, resolving OAuth client credentials
+ * from client_secret.json, and coordinating with OAuthService for Credential management.
  */
 public class ConfigManager {
 
@@ -25,32 +26,33 @@ public class ConfigManager {
 
     private static final String DEFAULT_CONFIG_DIR = "config";
     private static final String PREFERENCES_FILE_NAME = "preferences.yaml";
-    private static final String USER_AUTH_FILE_NAME = "userAuthorization.yaml";
     private static final String CLIENT_SECRET_FILE_NAME = "client_secret.json";
 
     private final File preferencesFile;
-    private final File userAuthFile;
     private final File clientSecretFile;
     private final ObjectMapper yamlMapper;
     private final ObjectMapper jsonMapper = new ObjectMapper();
 
     private Preferences preferences;
-    private UserAuthorization userAuthorization;
+    private OAuthService oAuthService;
+    private UserAuthorization fallbackUserAuthorization = new UserAuthorization();
 
     public ConfigManager() {
         this(new File(DEFAULT_CONFIG_DIR, PREFERENCES_FILE_NAME),
-             new File(DEFAULT_CONFIG_DIR, USER_AUTH_FILE_NAME),
              new File(DEFAULT_CONFIG_DIR, CLIENT_SECRET_FILE_NAME));
     }
 
-    public ConfigManager(File preferencesFile, File userAuthFile) {
-        this(preferencesFile, userAuthFile, null);
+    public ConfigManager(File preferencesFile) {
+        this(preferencesFile, new File(DEFAULT_CONFIG_DIR, CLIENT_SECRET_FILE_NAME));
     }
 
-    public ConfigManager(File preferencesFile, File userAuthFile, File clientSecretFile) {
+    public ConfigManager(File preferencesFile, File secondFile) {
         this.preferencesFile = preferencesFile;
-        this.userAuthFile = userAuthFile;
-        this.clientSecretFile = clientSecretFile;
+        if (secondFile != null && secondFile.getName().endsWith(".json")) {
+            this.clientSecretFile = secondFile;
+        } else {
+            this.clientSecretFile = new File(DEFAULT_CONFIG_DIR, CLIENT_SECRET_FILE_NAME);
+        }
 
         YAMLFactory yamlFactory = new YAMLFactory()
                 .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
@@ -59,7 +61,15 @@ public class ConfigManager {
 
         ensureDirectories();
         loadPreferences();
-        loadUserAuthorization();
+    }
+
+    /**
+     * Backward-compatible constructor for existing callers and tests.
+     * The second argument (legacy userAuthFile) is ignored because credentials
+     * are now managed via com.google.api.client.auth.oauth2.Credential.
+     */
+    public ConfigManager(File preferencesFile, File ignoredUserAuthFile, File clientSecretFile) {
+        this(preferencesFile, clientSecretFile);
     }
 
     private void ensureDirectories() {
@@ -67,10 +77,14 @@ public class ConfigManager {
         if (parentPref != null && !parentPref.exists()) {
             parentPref.mkdirs();
         }
-        File parentAuth = userAuthFile.getParentFile();
-        if (parentAuth != null && !parentAuth.exists()) {
-            parentAuth.mkdirs();
-        }
+    }
+
+    public void setOAuthService(OAuthService oAuthService) {
+        this.oAuthService = oAuthService;
+    }
+
+    public OAuthService getOAuthService() {
+        return oAuthService;
     }
 
     public File resolveClientSecretFile() {
@@ -87,13 +101,7 @@ public class ConfigManager {
             return direct;
         }
 
-        // 2. Legacy match: client_secret_2_.json
-        File legacy = new File(parentDir, "client_secret_2_.json");
-        if (legacy.exists()) {
-            return legacy;
-        }
-
-        // 3. Any client_secret*.json
+        // 2. Any client_secret*.json
         File[] matchesAny = parentDir.listFiles((dir, name) -> name.startsWith("client_secret") && name.endsWith(".json"));
         if (matchesAny != null && matchesAny.length > 0) {
             return matchesAny[0];
@@ -207,73 +215,78 @@ public class ConfigManager {
         }
     }
 
-    public synchronized UserAuthorization loadUserAuthorization() {
-        if (!userAuthFile.exists()) {
-            logger.info("User authorization file {} does not exist, creating default.", userAuthFile.getAbsolutePath());
-            userAuthorization = new UserAuthorization();
-            saveUserAuthorization(userAuthorization);
-            return userAuthorization;
-        }
-
-        try {
-            userAuthorization = yamlMapper.readValue(userAuthFile, UserAuthorization.class);
-            logger.debug("Successfully loaded user authorization from {}", userAuthFile.getAbsolutePath());
-        } catch (IOException e) {
-            logger.error("Failed to read user authorization from {}: {}", userAuthFile.getAbsolutePath(), e.getMessage());
-            userAuthorization = new UserAuthorization();
-        }
-        return userAuthorization;
+    /**
+     * Returns the active Credential managed by com.google.api.client.auth.oauth2.Credential.
+     */
+    public Credential getCredential() {
+        return oAuthService != null ? oAuthService.getCredential() : null;
     }
 
-    public synchronized void saveUserAuthorization(UserAuthorization auth) {
-        this.userAuthorization = auth;
-        if (auth.getUpdatedAt() == null || auth.getUpdatedAt().isEmpty()) {
-            auth.setUpdatedAt(Instant.now().toString());
+    /**
+     * Returns an in-memory view of authorization status.
+     * Backed by com.google.api.client.auth.oauth2.Credential when OAuthService is available.
+     */
+    public UserAuthorization getUserAuthorization() {
+        if (oAuthService != null) {
+            return oAuthService.getUserAuthorization();
         }
-
-        try {
-            File tempFile = new File(userAuthFile.getAbsolutePath() + ".tmp");
-            yamlMapper.writeValue(tempFile, auth);
-            Files.move(tempFile.toPath(), userAuthFile.toPath(),
-                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            logger.info("Saved user authorization to {} (healthUserID={}, remainingSeconds={})",
-                    userAuthFile.getAbsolutePath(), auth.getHealthUserID(), auth.getRemainingSeconds());
-        } catch (IOException e) {
-            logger.error("Failed to save user authorization to {}: {}", userAuthFile.getAbsolutePath(), e.getMessage(), e);
+        if (fallbackUserAuthorization != null) {
+            String hId = (preferences != null && preferences.getHealthUserId() != null && !preferences.getHealthUserId().isEmpty())
+                    ? preferences.getHealthUserId() : "me";
+            fallbackUserAuthorization.setHealthUserID(hId);
+            return fallbackUserAuthorization;
         }
+        UserAuthorization auth = new UserAuthorization();
+        String hId = (preferences != null && preferences.getHealthUserId() != null && !preferences.getHealthUserId().isEmpty())
+                ? preferences.getHealthUserId() : "me";
+        auth.setHealthUserID(hId);
+        return auth;
     }
 
+    /**
+     * In-memory or Credential store update for tokens.
+     */
     public synchronized void updateTokens(String accessToken, String refreshToken, long expiresInSeconds, String scope) {
-        if (userAuthorization == null) {
-            userAuthorization = new UserAuthorization();
+        if (oAuthService != null) {
+            oAuthService.storeCredential(accessToken, refreshToken, expiresInSeconds, scope);
+        } else {
+            fallbackUserAuthorization.setAccessToken(accessToken);
+            if (refreshToken != null && !refreshToken.trim().isEmpty()) {
+                fallbackUserAuthorization.setRefreshToken(refreshToken);
+            }
+            if (expiresInSeconds > 0) {
+                fallbackUserAuthorization.setExpiresAtEpochMs(System.currentTimeMillis() + (expiresInSeconds * 1000));
+            }
+            if (scope != null && !scope.trim().isEmpty()) {
+                fallbackUserAuthorization.setScope(scope);
+            }
         }
-        userAuthorization.setAccessToken(accessToken);
-        if (refreshToken != null && !refreshToken.trim().isEmpty()) {
-            userAuthorization.setRefreshToken(refreshToken);
+    }
+
+    /**
+     * Backward-compatible in-memory store method for UserAuthorization.
+     * Tokens are persisted into Credential store if OAuthService is active.
+     */
+    public synchronized void saveUserAuthorization(UserAuthorization auth) {
+        if (auth == null) return;
+        this.fallbackUserAuthorization = auth;
+        if (auth.getHealthUserID() != null && !auth.getHealthUserID().isEmpty() && !"me".equalsIgnoreCase(auth.getHealthUserID())) {
+            if (preferences != null) {
+                preferences.setHealthUserId(auth.getHealthUserID());
+                savePreferences(preferences);
+            }
         }
-        if (expiresInSeconds > 0) {
-            userAuthorization.setExpiresAtEpochMs(System.currentTimeMillis() + (expiresInSeconds * 1000));
+        if (oAuthService != null && auth.hasAccessToken()) {
+            oAuthService.storeCredential(auth.getAccessToken(), auth.getRefreshToken(),
+                    auth.getRemainingSeconds(), auth.getScope());
         }
-        if (scope != null && !scope.trim().isEmpty()) {
-            userAuthorization.setScope(scope);
-        }
-        userAuthorization.setUpdatedAt(Instant.now().toString());
-        saveUserAuthorization(userAuthorization);
     }
 
     public Preferences getPreferences() {
         return preferences;
     }
 
-    public UserAuthorization getUserAuthorization() {
-        return userAuthorization;
-    }
-
     public File getPreferencesFile() {
         return preferencesFile;
-    }
-
-    public File getUserAuthFile() {
-        return userAuthFile;
     }
 }
