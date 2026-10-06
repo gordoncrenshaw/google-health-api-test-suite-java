@@ -260,21 +260,30 @@ public class HealthApiClient {
     }
 
     /**
+     * Standard Batch Delete Data Points request with JSON payload.
+     * Syntax: POST /{version}/users/{userId}/dataTypes/{dataType}/dataPoints:batchDelete
+     */
+    public ApiResponse batchDeleteDataPoints(DataTypeDefinition def, String jsonBody) {
+        String version = getEffectiveVersion(def);
+        String userId = getEffectiveUserId();
+        String path = "/" + version + "/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints:batchDelete";
+        String body = (jsonBody != null && !jsonBody.isBlank()) ? jsonBody : "{\"names\":[]}";
+        return execute("POST", path, null, body, def);
+    }
+
+    /**
      * Standard Batch Delete Data Points request.
      * Syntax: POST /{version}/users/{userId}/dataTypes/{dataType}/dataPoints:batchDelete
      */
     public ApiResponse batchDeleteDataPoints(DataTypeDefinition def, List<String> dataPointNames) {
-        String version = getEffectiveVersion(def);
-        String userId = getEffectiveUserId();
-        String path = "/" + version + "/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints:batchDelete";
-
         ObjectNode reqNode = jsonMapper.createObjectNode();
         ArrayNode namesArray = reqNode.putArray("names");
-        for (String name : dataPointNames) {
-            namesArray.add(name);
+        if (dataPointNames != null) {
+            for (String name : dataPointNames) {
+                namesArray.add(name);
+            }
         }
-
-        return execute("POST", path, null, reqNode.toPrettyString(), def);
+        return batchDeleteDataPoints(def, reqNode.toPrettyString());
     }
 
     /**

@@ -339,5 +339,21 @@ public class HealthApiClientTest {
             assertEquals("patch", r.getEndpoint());
         }
     }
+
+    @Test
+    void testBatchDeleteWithJsonPayload() {
+        DataTypeDefinition steps = registry.getDataType("steps").orElseThrow();
+        String jsonPayload = "{\n  \"names\": []\n}";
+        ApiResponse resp = client.batchDeleteDataPoints(steps, jsonPayload);
+        assertNotNull(resp);
+        assertEquals(200, resp.getStatusCode());
+        assertTrue(resp.getRequestUrl().contains("/v4/users/me/dataTypes/steps/dataPoints:batchDelete"));
+        assertTrue(resp.getCurlCommand().contains("\"names\""));
+
+        SuiteExecutionEngine engine = new SuiteExecutionEngine(configManager, registry, client);
+        TestResult engineResult = engine.executeSingleTest("steps", "batchDelete", null, jsonPayload);
+        assertNotNull(engineResult);
+        assertTrue(engineResult.isPassed(), engineResult.getMessage());
+    }
 }
 

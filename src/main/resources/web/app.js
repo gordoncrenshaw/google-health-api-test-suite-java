@@ -476,7 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const selName = document.getElementById('explorer-datatype-select').value;
         const epLower = (ep || '').toLowerCase();
 
-        if (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'reconcile' || epLower === 'patch') {
+        if (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'reconcile' || epLower === 'patch' || epLower === 'batchdelete') {
             payloadContainer.style.display = 'block';
             if (!payloadInput.value.trim() || payloadInput.dataset.forEp !== epLower) {
                 payloadInput.value = generateSamplePayload(selName, epLower);
@@ -491,6 +491,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function generateSamplePayload(dataType, endpoint = '') {
         const epLower = endpoint.toLowerCase();
+        if (epLower === 'batchdelete') {
+            return JSON.stringify({
+                names: []
+            }, null, 2);
+        }
         if (epLower === 'patch') {
             return JSON.stringify({
                 dataPointId: "sample-dp-1",
@@ -596,14 +601,16 @@ document.addEventListener('DOMContentLoaded', () => {
         let curl = `curl -X ${method} "https://health.googleapis.com${path}" \\\n  -H "Authorization: Bearer ${token}" \\\n  -H "Accept: application/json"`;
 
         if (method === 'POST' || method === 'PATCH') {
-            if (epLower === 'batchdelete') {
-                const sampleBody = JSON.stringify({ names: [`users/${userSegment}/dataTypes/${dtName}/dataPoints/sample-dp-1`] }, null, 2);
-                curl += ` \\\n  -H "Content-Type: application/json" \\\n  -d '${sampleBody.replace(/'/g, "'\\''")}'`;
-            } else {
-                const payloadInput = document.getElementById('explorer-payload-input');
-                const body = (payloadInput && payloadInput.value.trim()) ? payloadInput.value.trim() : '{}';
-                curl += ` \\\n  -H "Content-Type: application/json" \\\n  -d '${body.replace(/'/g, "'\\''")}'`;
+            const payloadInput = document.getElementById('explorer-payload-input');
+            let body = (payloadInput && payloadInput.value.trim()) ? payloadInput.value.trim() : null;
+            if (!body) {
+                if (epLower === 'batchdelete') {
+                    body = JSON.stringify({ names: [] }, null, 2);
+                } else {
+                    body = '{}';
+                }
             }
+            curl += ` \\\n  -H "Content-Type: application/json" \\\n  -d '${body.replace(/'/g, "'\\''")}'`;
         }
 
         document.getElementById('explorer-curl-command').textContent = curl;
@@ -623,13 +630,17 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.textContent = 'Sending...';
 
         try {
-            const hasBody = (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'reconcile' || epLower === 'patch');
+            const hasBody = (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'reconcile' || epLower === 'patch' || epLower === 'batchdelete');
+            let bodyToSend = payload;
+            if (epLower === 'batchdelete' && (!payload || !payload.trim())) {
+                bodyToSend = JSON.stringify({ names: [] }, null, 2);
+            }
             const reqBody = {
                 dataType: dtName,
                 endpoint: ep,
                 endpointUserId: syntax,
                 params: { pageSize: pageSize, dataPointId: 'sample-dp-1' },
-                body: hasBody ? payload : null
+                body: hasBody ? bodyToSend : null
             };
 
             const res = await fetch('/api/test/single', {

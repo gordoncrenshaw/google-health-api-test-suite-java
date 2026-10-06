@@ -183,8 +183,13 @@ public class MockHealthBackend {
         headers.put("Content-Type", List.of("application/json; charset=UTF-8"));
         headers.put("X-Mock-Backend", List.of("true"));
 
-        String curl = "curl -X " + httpMethod + " \"https://health.googleapis.com" + path + "\" " +
-                "-H \"Authorization: Bearer mock_token\" -H \"Content-Type: application/json\"";
+        StringBuilder curlBuilder = new StringBuilder("curl -X ").append(httpMethod)
+                .append(" \"https://health.googleapis.com").append(path).append("\" ")
+                .append("-H \"Authorization: Bearer mock_token\" -H \"Content-Type: application/json\"");
+        if (requestBody != null && !requestBody.trim().isEmpty() && !"GET".equalsIgnoreCase(httpMethod) && !"DELETE".equalsIgnoreCase(httpMethod)) {
+            curlBuilder.append(" -d '").append(requestBody.replace("'", "'\\''")).append("'");
+        }
+        String curl = curlBuilder.toString();
 
         return new ApiResponse(statusCode, statusMessage, headers, responseBody, latency,
                 "https://health.googleapis.com" + path, httpMethod, requestBody, curl);

@@ -57,9 +57,14 @@ public class SuiteExecutionEngine {
                 case "rollup" -> response = apiClient.rollUpDataPoints(def, requestBody);
                 case "dailyrollup" -> response = apiClient.dailyRollUpDataPoints(def, requestBody);
                 case "batchdelete" -> {
-                    List<String> names = (queryParams != null && queryParams.containsKey("names")) ?
-                            Arrays.asList(queryParams.get("names").split(",")) : List.of("users/" + apiClient.getEffectiveUserId() + "/dataTypes/" + def.getName() + "/dataPoints/dp-1");
-                    response = apiClient.batchDeleteDataPoints(def, names);
+                    if (requestBody != null && !requestBody.isBlank()) {
+                        response = apiClient.batchDeleteDataPoints(def, requestBody);
+                    } else if (queryParams != null && queryParams.containsKey("names")) {
+                        List<String> names = Arrays.asList(queryParams.get("names").split(","));
+                        response = apiClient.batchDeleteDataPoints(def, names);
+                    } else {
+                        response = apiClient.batchDeleteDataPoints(def, "{\"names\":[]}");
+                    }
                 }
                 case "reconcile" -> response = apiClient.reconcileDataPoints(def, requestBody);
                 case "exportexercisetcx" -> {
