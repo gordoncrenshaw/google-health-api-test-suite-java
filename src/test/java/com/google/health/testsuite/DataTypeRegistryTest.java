@@ -65,6 +65,14 @@ public class DataTypeRegistryTest {
 
         // Backward compatibility fallback
         assertTrue(registry.getDataType("heart_rate").isPresent(), "heart_rate fallback must work");
+        assertEquals("https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly", hr.getWriteScopeRequired());
+    }
+
+    @Test
+    void testDerivedWriteScopeRequired() {
+        DataTypeDefinition custom = new DataTypeDefinition("custom", "Custom", "https://www.googleapis.com/auth/googlehealth.sample.readonly",
+                List.of("list", "batchDelete"), null, false, 0.0, 100.0, "unit");
+        assertEquals("https://www.googleapis.com/auth/googlehealth.sample.writeonly", custom.getWriteScopeRequired());
     }
 
     @Test

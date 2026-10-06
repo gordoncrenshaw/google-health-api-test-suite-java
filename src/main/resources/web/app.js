@@ -407,6 +407,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (types.length > 0) {
             onExplorerDataTypeChanged();
         }
+    function getDataTypeWriteScope(dt) {
+        if (!dt) return 'None';
+        if (dt.writeScopeRequired && dt.writeScopeRequired.trim()) {
+            return dt.writeScopeRequired.trim();
+        }
+        if (dt.scopeRequired && dt.scopeRequired.includes('.readonly')) {
+            return dt.scopeRequired.replace('.readonly', '.writeonly');
+        }
+        return dt.scopeRequired || 'None';
+    }
+
+    function getRequiredScopeForOperation(dt, endpoint) {
+        if (!dt) return 'None';
+        const epLower = (endpoint || '').toLowerCase();
+        if (epLower === 'batchdelete' || epLower === 'create' || epLower === 'patch') {
+            return getDataTypeWriteScope(dt);
+        }
+        return dt.scopeRequired || 'None';
     }
 
     function onExplorerDataTypeChanged() {
@@ -419,7 +437,12 @@ document.addEventListener('DOMContentLoaded', () => {
             versionEl.textContent = dt.endpointVersion || 'v4';
         }
 
-        document.getElementById('dt-info-scope').textContent = dt.scopeRequired || 'None';
+        const endpointSelect = document.getElementById('explorer-endpoint-select');
+        const currentEp = endpointSelect ? endpointSelect.value : 'list';
+        const scopeEl = document.getElementById('dt-info-scope');
+        if (scopeEl) {
+            scopeEl.textContent = getRequiredScopeForOperation(dt, currentEp);
+        }
         const filterEl = document.getElementById('dt-info-filter');
         if (filterEl) {
             filterEl.textContent = dt.filterParameterName || '-';
@@ -548,17 +571,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 4. Scope required display (batchDelete supports writeScopeRequired e.g. activity_and_fitness.writeonly)
+        // 4. Scope required display (batchDelete, create, and patch support the datatype's writeonly scope)
         const scopeEl = document.getElementById('dt-info-scope');
         if (scopeEl) {
-            if (epLower === 'batchdelete') {
-                const writeScope = (dt && dt.writeScopeRequired) ? dt.writeScopeRequired : 'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly';
-                scopeEl.textContent = writeScope;
-            } else if (epLower === 'create' || epLower === 'patch') {
-                scopeEl.textContent = (dt && dt.writeScopeRequired) ? dt.writeScopeRequired : (dt?.scopeRequired || 'None');
-            } else {
-                scopeEl.textContent = dt?.scopeRequired || 'None';
-            }
+            scopeEl.textContent = getRequiredScopeForOperation(dt, epLower);
         }
 
         if (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'reconcile' || epLower === 'patch' || epLower === 'batchdelete') {

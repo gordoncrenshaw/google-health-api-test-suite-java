@@ -196,7 +196,13 @@ public class DataTypeDefinition {
     }
 
     public String getWriteScopeRequired() {
-        return writeScopeRequired;
+        if (writeScopeRequired != null && !writeScopeRequired.isBlank()) {
+            return writeScopeRequired;
+        }
+        if (scopeRequired != null && scopeRequired.contains(".readonly")) {
+            return scopeRequired.replace(".readonly", ".writeonly");
+        }
+        return scopeRequired;
     }
 
     public void setWriteScopeRequired(String writeScopeRequired) {
