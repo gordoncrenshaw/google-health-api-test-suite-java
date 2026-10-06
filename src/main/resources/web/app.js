@@ -506,6 +506,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // 4. Scope required display (batchDelete supports writeScopeRequired e.g. activity_and_fitness.writeonly)
+        const scopeEl = document.getElementById('dt-info-scope');
+        if (scopeEl) {
+            if (epLower === 'batchdelete') {
+                const writeScope = (dt && dt.writeScopeRequired) ? dt.writeScopeRequired : 'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly';
+                scopeEl.textContent = writeScope;
+            } else if (epLower === 'create' || epLower === 'patch') {
+                scopeEl.textContent = (dt && dt.writeScopeRequired) ? dt.writeScopeRequired : (dt?.scopeRequired || 'None');
+            } else {
+                scopeEl.textContent = dt?.scopeRequired || 'None';
+            }
+        }
+
         if (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'reconcile' || epLower === 'patch' || epLower === 'batchdelete') {
             payloadContainer.style.display = 'block';
             if (!payloadInput.value.trim() || payloadInput.dataset.forEp !== epLower) {
