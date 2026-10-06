@@ -407,6 +407,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (types.length > 0) {
             onExplorerDataTypeChanged();
         }
+    }
+
     function getDataTypeWriteScope(dt) {
         if (!dt) return 'None';
         if (dt.writeScopeRequired && dt.writeScopeRequired.trim()) {
@@ -443,6 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (scopeEl) {
             scopeEl.textContent = getRequiredScopeForOperation(dt, currentEp);
         }
+
         const filterEl = document.getElementById('dt-info-filter');
         if (filterEl) {
             filterEl.textContent = dt.filterParameterName || '-';
@@ -481,7 +484,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Sort endpoints alphabetically and filter supported endpoints
-        const endpointSelect = document.getElementById('explorer-endpoint-select');
         const sortedOptions = Array.from(endpointSelect.options).sort((a, b) => a.value.localeCompare(b.value));
         endpointSelect.innerHTML = '';
         sortedOptions.forEach(opt => endpointSelect.appendChild(opt));
@@ -523,12 +525,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const epLower = (ep || '').toLowerCase();
         const dt = dataTypes.find(d => d.name === selName);
 
-        // 1. Query parameters support visibility (only supported for 'list')
+        // 1. Query parameters visibility
+        // batchDelete does not support pageSize, filter, or pageToken query parameters - these fields are removed
+        const qpContainer = document.getElementById('explorer-query-params-container');
         const qpGrid = document.getElementById('explorer-query-params-grid');
         const qpNoMsg = document.getElementById('explorer-no-query-params');
         const qpCount = document.getElementById('explorer-query-params-count');
 
-        if (epLower === 'list') {
+        if (epLower === 'batchdelete') {
+            if (qpContainer) qpContainer.style.display = 'none';
+        } else if (epLower === 'list') {
+            if (qpContainer) qpContainer.style.display = 'block';
             if (qpGrid) qpGrid.style.display = 'grid';
             if (qpNoMsg) qpNoMsg.style.display = 'none';
             if (qpCount) {
@@ -537,13 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 qpCount.style.display = 'inline-block';
             }
         } else {
-            if (qpGrid) qpGrid.style.display = 'none';
-            if (qpNoMsg) qpNoMsg.style.display = 'block';
-            if (qpCount) {
-                qpCount.textContent = 'None supported';
-                qpCount.className = 'pill-badge pill-neutral';
-                qpCount.style.display = 'inline-block';
-            }
+            if (qpContainer) qpContainer.style.display = 'none';
         }
 
         // 2. Filter parameter visibility / display (batchDelete does not support filter params)
@@ -556,13 +557,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 3. Valid range display (batchDelete does not have valid range)
+        // 3. Valid range display (batchDelete does not have "Valid range" - hide the valid range box)
+        const validRangeBox = document.getElementById('explorer-valid-range-box');
         const rangeEl = document.getElementById('dt-info-range');
-        if (rangeEl) {
-            if (epLower === 'batchdelete') {
+        if (epLower === 'batchdelete') {
+            if (validRangeBox) validRangeBox.style.display = 'none';
+            if (rangeEl) {
                 rangeEl.textContent = 'N/A';
                 rangeEl.className = 'font-mono text-muted';
-            } else if (dt) {
+            }
+        } else {
+            if (validRangeBox) validRangeBox.style.display = 'flex';
+            if (rangeEl && dt) {
                 const rangeStr = (dt.minValue !== null || dt.maxValue !== null)
                     ? `[${dt.minValue !== null ? dt.minValue : '0'}, ${dt.maxValue !== null ? dt.maxValue : '∞'}] ${dt.unit || ''}`.trim()
                     : 'Unconstrained';
@@ -571,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 4. Scope required display (batchDelete, create, and patch support the datatype's writeonly scope)
+        // 4. Scope required display (batchDelete supports the writeonly scope associated with the datatype listed in "Select data type")
         const scopeEl = document.getElementById('dt-info-scope');
         if (scopeEl) {
             scopeEl.textContent = getRequiredScopeForOperation(dt, epLower);
