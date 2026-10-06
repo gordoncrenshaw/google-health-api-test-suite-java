@@ -343,7 +343,7 @@ public class HealthApiClientTest {
     @Test
     void testBatchDeleteWithJsonPayload() {
         DataTypeDefinition steps = registry.getDataType("steps").orElseThrow();
-        String jsonPayload = "{\n  \"names\": []\n}";
+        String jsonPayload = "{\n  \"names\": [\n    string\n  ]\n}";
         ApiResponse resp = client.batchDeleteDataPoints(steps, jsonPayload);
         assertNotNull(resp);
         assertEquals(200, resp.getStatusCode());

@@ -262,12 +262,16 @@ public class HealthApiClient {
     /**
      * Standard Batch Delete Data Points request with JSON payload.
      * Syntax: POST /{version}/users/{userId}/dataTypes/{dataType}/dataPoints:batchDelete
+     * Payload template: { "names": [ string ] }
      */
     public ApiResponse batchDeleteDataPoints(DataTypeDefinition def, String jsonBody) {
         String version = getEffectiveVersion(def);
         String userId = getEffectiveUserId();
         String path = "/" + version + "/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints:batchDelete";
-        String body = (jsonBody != null && !jsonBody.isBlank()) ? jsonBody : "{\"names\":[]}";
+        String body = (jsonBody != null && !jsonBody.isBlank()) ? jsonBody : "{\n  \"names\": [\n    \"string\"\n  ]\n}";
+        if (body.contains("[") && body.contains("string") && !body.contains("\"string\"")) {
+            body = body.replaceAll("\\[\\s*string\\s*\\]", "[\"string\"]");
+        }
         return execute("POST", path, null, body, def);
     }
 

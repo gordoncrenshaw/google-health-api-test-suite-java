@@ -475,6 +475,36 @@ document.addEventListener('DOMContentLoaded', () => {
         const payloadInput = document.getElementById('explorer-payload-input');
         const selName = document.getElementById('explorer-datatype-select').value;
         const epLower = (ep || '').toLowerCase();
+        const dt = dataTypes.find(d => d.name === selName);
+
+        // 1. Page Size visibility (only supported for 'list')
+        const pageSizeGroup = document.getElementById('explorer-page-size-group');
+        if (pageSizeGroup) {
+            pageSizeGroup.style.display = (epLower === 'list') ? 'block' : 'none';
+        }
+
+        // 2. Filter parameter visibility / display (batchDelete does not support filter params)
+        const filterEl = document.getElementById('dt-info-filter');
+        if (filterEl) {
+            if (epLower === 'batchdelete') {
+                filterEl.textContent = 'N/A';
+            } else {
+                filterEl.textContent = (dt && dt.filterParameterName) ? dt.filterParameterName : 'none';
+            }
+        }
+
+        // 3. Valid range display (batchDelete does not have valid range)
+        const rangeEl = document.getElementById('dt-info-range');
+        if (rangeEl) {
+            if (epLower === 'batchdelete') {
+                rangeEl.textContent = 'N/A';
+                rangeEl.className = 'font-mono text-muted';
+            } else if (dt) {
+                const rangeStr = `[${dt.minValue !== null ? dt.minValue : '0'}, ${dt.maxValue !== null ? dt.maxValue : '∞'}] ${dt.unit || ''}`;
+                rangeEl.textContent = rangeStr;
+                rangeEl.className = 'font-mono text-success';
+            }
+        }
 
         if (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'reconcile' || epLower === 'patch' || epLower === 'batchdelete') {
             payloadContainer.style.display = 'block';
@@ -492,9 +522,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function generateSamplePayload(dataType, endpoint = '') {
         const epLower = endpoint.toLowerCase();
         if (epLower === 'batchdelete') {
-            return JSON.stringify({
-                names: []
-            }, null, 2);
+            return `{\n  "names": [\n    string\n  ]\n}`;
         }
         if (epLower === 'patch') {
             return JSON.stringify({
@@ -605,7 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let body = (payloadInput && payloadInput.value.trim()) ? payloadInput.value.trim() : null;
             if (!body) {
                 if (epLower === 'batchdelete') {
-                    body = JSON.stringify({ names: [] }, null, 2);
+                    body = `{\n  "names": [\n    string\n  ]\n}`;
                 } else {
                     body = '{}';
                 }
@@ -633,13 +661,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const hasBody = (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'reconcile' || epLower === 'patch' || epLower === 'batchdelete');
             let bodyToSend = payload;
             if (epLower === 'batchdelete' && (!payload || !payload.trim())) {
-                bodyToSend = JSON.stringify({ names: [] }, null, 2);
+                bodyToSend = `{\n  "names": [\n    string\n  ]\n}`;
             }
+            if (bodyToSend && epLower === 'batchdelete') {
+                bodyToSend = bodyToSend.replace(/\[\s*string\s*\]/g, '[\n    "string"\n  ]');
+            }
+
+            const params = {};
+            if (epLower === 'list') {
+                params.pageSize = pageSize;
+            } else if (epLower === 'get' || epLower === 'patch' || epLower === 'exportexercisetcx') {
+                params.dataPointId = 'sample-dp-1';
+            }
+
             const reqBody = {
                 dataType: dtName,
                 endpoint: ep,
                 endpointUserId: syntax,
-                params: { pageSize: pageSize, dataPointId: 'sample-dp-1' },
+                params: params,
                 body: hasBody ? bodyToSend : null
             };
 
@@ -671,7 +710,12 @@ document.addEventListener('DOMContentLoaded', () => {
         latencyBadge.textContent = `${result.latencyMs} ms`;
         latencyBadge.className = 'pill-badge pill-neutral';
 
-        if (result.validationResult) {
+        const epLower = (result.endpoint || '').toLowerCase();
+        if (epLower === 'batchdelete') {
+            valBadge.textContent = 'Valid Range: N/A';
+            valBadge.className = 'pill-badge pill-neutral';
+            valBadge.title = 'batchDelete does not have range constraints';
+        } else if (result.validationResult) {
             if (result.validationResult.valid) {
                 valBadge.textContent = 'Range Validated: PASS';
                 valBadge.className = 'pill-badge pill-success';
