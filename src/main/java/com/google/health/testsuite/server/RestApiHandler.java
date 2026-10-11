@@ -83,6 +83,11 @@ public class RestApiHandler implements HttpHandler {
                     if ("GET".equals(method)) handleGetScopes(exchange);
                     else sendError(exchange, 405, "Method Not Allowed");
                 }
+                case "/api/manifest" -> {
+                    if ("GET".equals(method)) handleGetManifest(exchange);
+                    else if ("POST".equals(method) || "PUT".equals(method)) handleSaveManifest(exchange);
+                    else sendError(exchange, 405, "Method Not Allowed");
+                }
                 case "/api/version", "/api/status" -> handleGetVersion(exchange);
                 case "/api/auth/status" -> handleGetAuthStatus(exchange);
                 case "/api/auth/refresh" -> handleRefreshToken(exchange);
@@ -422,13 +427,17 @@ public class RestApiHandler implements HttpHandler {
 
     private void handleRunAllTests(HttpExchange exchange) throws IOException {
         String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-        String scriptPath = "scripts/standard_tests.yaml";
+        String scriptPath = null;
+        String manifestPath = null;
         boolean stream = "/api/test/run-stream".equals(exchange.getRequestURI().getPath());
         if (body != null && !body.trim().isEmpty()) {
             try {
                 JsonNode json = jsonMapper.readTree(body);
+                if (json.has("manifestPath") && !json.path("manifestPath").asText().isBlank()) {
+                    manifestPath = json.path("manifestPath").asText().trim();
+                }
                 if (json.has("scriptPath") && !json.path("scriptPath").asText().isBlank()) {
-                    scriptPath = json.path("scriptPath").asText();
+                    scriptPath = json.path("scriptPath").asText().trim();
                 }
                 if (json.has("stream") && json.path("stream").asBoolean(false)) {
                     stream = true;
@@ -442,10 +451,37 @@ public class RestApiHandler implements HttpHandler {
             stream = true;
         }
 
+        // Determine if we should execute a manifest or an explicit single script
+        File manifestFile = null;
+        if (manifestPath != null) {
+            manifestFile = new File(manifestPath);
+        } else if (scriptPath == null || scriptPath.isBlank() || scriptPath.endsWith("manifest.yaml")) {
+            File defaultManifest = configManager.getManifestFile();
+            if (defaultManifest != null && defaultManifest.exists() && defaultManifest.length() > 0) {
+                manifestFile = defaultManifest;
+            }
+        }
+
+        if (manifestFile != null && manifestFile.exists() && manifestFile.length() > 0) {
+            if (stream) {
+                handleStreamingManifestExecution(exchange, manifestFile);
+            } else {
+                logger.info("Executing full test suite from manifest: {}", manifestFile.getPath());
+                ScriptRunner runner = new ScriptRunner(engine);
+                List<TestResult> results = runner.executeManifest(manifestFile);
+                sendJson(exchange, 200, jsonMapper.writeValueAsString(results));
+            }
+            return;
+        }
+
+        // Fallback to single script execution
+        if (scriptPath == null || scriptPath.isBlank()) {
+            scriptPath = "scripts/standard_tests.yaml";
+        }
         File scriptFile = new File(scriptPath);
         if (!scriptFile.exists()) {
-            logger.error("Standard tests script file not found: {}", scriptFile.getAbsolutePath());
-            sendError(exchange, 404, "standard_tests.yaml file is not found: " + scriptPath);
+            logger.error("Test script file not found: {}", scriptFile.getAbsolutePath());
+            sendError(exchange, 404, "Script file is not found: " + scriptPath);
             return;
         }
 
@@ -458,6 +494,102 @@ public class RestApiHandler implements HttpHandler {
         ScriptRunner runner = new ScriptRunner(engine);
         List<TestResult> results = runner.executeScript(scriptFile);
         sendJson(exchange, 200, jsonMapper.writeValueAsString(results));
+    }
+
+    private void handleStreamingManifestExecution(HttpExchange exchange, File manifestFile) throws IOException {
+        logger.info("Starting real-time streaming execution for manifest: {}", manifestFile.getPath());
+
+        exchange.getResponseHeaders().set("Content-Type", "application/x-ndjson; charset=UTF-8");
+        exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-transform");
+        exchange.getResponseHeaders().set("Connection", "keep-alive");
+        exchange.getResponseHeaders().set("X-Accel-Buffering", "no");
+
+        exchange.sendResponseHeaders(200, 0);
+
+        try (OutputStream os = exchange.getResponseBody()) {
+            ScriptRunner runner = new ScriptRunner(engine);
+            TestSuiteManifest manifest;
+            try {
+                if (manifestFile.getName().endsWith(".json")) {
+                    manifest = jsonMapper.readValue(manifestFile, TestSuiteManifest.class);
+                } else {
+                    manifest = yamlMapper.readValue(manifestFile, TestSuiteManifest.class);
+                }
+            } catch (Exception e) {
+                logger.error("Error parsing manifest file {}: {}", manifestFile.getName(), e.getMessage());
+                ObjectNode errNode = jsonMapper.createObjectNode();
+                errNode.put("type", "error");
+                errNode.put("message", "Error parsing manifest file: " + e.getMessage());
+                errNode.put("errorMessage", e.getMessage());
+                os.write((errNode.toString() + "\n").getBytes(StandardCharsets.UTF_8));
+                os.flush();
+                return;
+            }
+
+            int totalStepsAcrossAll = 0;
+            List<String> scriptPaths = manifest.getScripts() != null ? manifest.getScripts() : Collections.emptyList();
+            for (String sp : scriptPaths) {
+                if (sp == null || sp.trim().isEmpty()) continue;
+                File sf = new File(sp.trim());
+                if (!sf.exists()) sf = new File("scripts", sp.trim());
+                if (sf.exists()) {
+                    try {
+                        TestSuiteScript s = sf.getName().endsWith(".json")
+                                ? jsonMapper.readValue(sf, TestSuiteScript.class)
+                                : yamlMapper.readValue(sf, TestSuiteScript.class);
+                        totalStepsAcrossAll += s.getSteps().size();
+                    } catch (Exception ignored) {}
+                }
+            }
+
+            ObjectNode startNode = jsonMapper.createObjectNode();
+            startNode.put("type", "start");
+            startNode.put("manifestName", manifest.getName());
+            startNode.put("manifestFile", manifestFile.getPath());
+            startNode.put("total", totalStepsAcrossAll);
+            startNode.put("totalScripts", scriptPaths.size());
+            os.write((startNode.toString() + "\n").getBytes(StandardCharsets.UTF_8));
+            os.flush();
+
+            long startTime = System.currentTimeMillis();
+            AtomicInteger passedCount = new AtomicInteger(0);
+            AtomicInteger failedCount = new AtomicInteger(0);
+
+            runner.executeManifest(manifest, (index, total, step, result) -> {
+                if (result.isPassed()) {
+                    passedCount.incrementAndGet();
+                } else {
+                    failedCount.incrementAndGet();
+                }
+
+                ObjectNode stepNode = jsonMapper.createObjectNode();
+                stepNode.put("type", "step");
+                stepNode.put("index", index);
+                stepNode.put("total", total);
+                stepNode.put("scriptFile", result.getScriptFile() != null ? result.getScriptFile() : "");
+                stepNode.set("result", jsonMapper.valueToTree(result));
+
+                try {
+                    os.write((stepNode.toString() + "\n").getBytes(StandardCharsets.UTF_8));
+                    os.flush();
+                } catch (IOException e) {
+                    throw new RuntimeException("Client disconnected: " + e.getMessage(), e);
+                }
+            });
+
+            long duration = System.currentTimeMillis() - startTime;
+            ObjectNode completeNode = jsonMapper.createObjectNode();
+            completeNode.put("type", "complete");
+            completeNode.put("manifestName", manifest.getName());
+            completeNode.put("total", totalStepsAcrossAll);
+            completeNode.put("passed", passedCount.get());
+            completeNode.put("failed", failedCount.get());
+            completeNode.put("durationMs", duration);
+            os.write((completeNode.toString() + "\n").getBytes(StandardCharsets.UTF_8));
+            os.flush();
+        } catch (Exception e) {
+            logger.warn("Streaming manifest execution completed or connection closed: {}", e.getMessage());
+        }
     }
 
     private void handleStreamingExecution(HttpExchange exchange, File scriptFile) throws IOException {
@@ -496,6 +628,7 @@ public class RestApiHandler implements HttpHandler {
             ObjectNode startNode = jsonMapper.createObjectNode();
             startNode.put("type", "start");
             startNode.put("scriptName", script.getName());
+            startNode.put("scriptFile", scriptFile.getName());
             startNode.put("total", totalSteps);
             os.write((startNode.toString() + "\n").getBytes(StandardCharsets.UTF_8));
             os.flush();
@@ -515,6 +648,7 @@ public class RestApiHandler implements HttpHandler {
                 stepNode.put("type", "step");
                 stepNode.put("index", index);
                 stepNode.put("total", total);
+                stepNode.put("scriptFile", result.getScriptFile() != null ? result.getScriptFile() : scriptFile.getName());
                 stepNode.set("result", jsonMapper.valueToTree(result));
 
                 try {
@@ -536,6 +670,30 @@ public class RestApiHandler implements HttpHandler {
             os.flush();
         } catch (Exception e) {
             logger.warn("Streaming execution completed or connection closed: {}", e.getMessage());
+        }
+    }
+
+    private void handleGetManifest(HttpExchange exchange) throws IOException {
+        TestSuiteManifest manifest = configManager.loadTestSuiteManifest();
+        ObjectNode node = (ObjectNode) jsonMapper.valueToTree(manifest);
+        node.put("manifestPath", configManager.getManifestFile().getPath());
+        node.put("manifestFileExists", configManager.getManifestFile().exists());
+        sendJson(exchange, 200, jsonMapper.writeValueAsString(node));
+    }
+
+    private void handleSaveManifest(HttpExchange exchange) throws IOException {
+        String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        try {
+            TestSuiteManifest manifest = jsonMapper.readValue(body, TestSuiteManifest.class);
+            configManager.saveTestSuiteManifest(manifest);
+            ObjectNode node = (ObjectNode) jsonMapper.valueToTree(manifest);
+            node.put("success", true);
+            node.put("manifestPath", configManager.getManifestFile().getPath());
+            node.put("message", "Test suite manifest saved successfully.");
+            sendJson(exchange, 200, jsonMapper.writeValueAsString(node));
+        } catch (Exception e) {
+            logger.error("Failed to save manifest: {}", e.getMessage(), e);
+            sendError(exchange, 400, "Failed to save manifest: " + e.getMessage());
         }
     }
 

@@ -595,19 +595,41 @@ src/main/java/com/google/health/testsuite/common/AppVersion.java
 
 ```java
 public final class AppVersion {
-    public static final String VERSION = "1.0.4";
+    public static final String VERSION = "1.0.5";
     public static final String API_TARGET = "v4";
     public static final String RELEASE_DATE = "2026-10-11";
 }
 ```
 
 - **Runtime Availability**: The version is exposed via `/api/status` and `/api/version` endpoints.
-- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.4` pill badge and in the system information banner).
+- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.5` pill badge and in the system information banner).
 - **How to Update**: When adding new functionality or fixes, increment `AppVersion.VERSION` following Semantic Versioning (`MAJOR.MINOR.PATCH`) and document changes in the changelog below.
 
 ---
 
 ## 📋 Version History & Changelog
+
+### Version 1.0.5 (October 11, 2026)
+
+#### 🌟 New Features & API Enhancements
+- **Test Suite Manifest File (Issue #28)**:
+  - Added [`config/test_suite_manifest.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/config/test_suite_manifest.yaml) defining the ordered list of test script files executed when pressing "Run Full Test Suite".
+  - Created [`TestSuiteManifest.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/model/TestSuiteManifest.java) to model the manifest schema, with loading/saving support in [`ConfigManager.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/config/ConfigManager.java).
+  - Added `/api/manifest` GET and POST/PUT endpoints in [`RestApiHandler.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/server/RestApiHandler.java) for retrieving available scripts and saving active manifest configurations.
+  - Added manifest badge and interactive "Configure Manifest" panel in the Web UI ([`index.html`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/resources/web/index.html), [`app.js`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/resources/web/app.js)) with script checkboxes, Select All, Deselect All, and Save Manifest buttons.
+  - Reorganized test suites: split monolithic test scripts into modular individual datatype scripts (`scripts/standard_tests-*.yaml`) and a standalone auth verification script ([`scripts/standard_tests_auth.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_auth.yaml)).
+  - Added "Script" column to the Test Execution Results table and recorded `scriptFile` on each [`TestResult`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/model/TestResult.java).
+  - Added dynamic `DataTypeDefinition` synthesis in [`SuiteExecutionEngine.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/runner/SuiteExecutionEngine.java) to support custom and unregistered data types.
+- **Real-Time Failed Tests Filtering (Issue #29)**:
+  - Added **"Show Failed Only"** filter checkbox with real-time count badge to the Test Execution Results table header on the Full Test Suite tab.
+  - Enabled click-to-filter directly from the red "Failed" metric summary card.
+  - Real-time CSS-driven filtering hides passed rows instantly without UI lag as events stream in.
+  - Added empty-state notification row when all executed tests pass while the filter is active.
+  - Added persistent `suiteFilterFailedOnly` preference in [`Preferences.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/config/Preferences.java) and the Preferences tab.
+- **Fix Filters on Daily VO2 Max (Issue #30)**:
+  - Updated filter parameters in [`scripts/standard_tests-dailyVo2Max.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-dailyVo2Max.yaml) to use `daily_vo2_max.date` instead of interval times for `list` and `reconcile` operations.
+
+---
 
 ### Version 1.0.4 (October 11, 2026)
 

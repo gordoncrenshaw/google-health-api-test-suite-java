@@ -4,85 +4,81 @@ description: "Quick sanity checks on all endpoints"
 stopOnError: false
 
 steps:
-  - name: "Standard: Check Auth Status"
-    action: "check_auth"
-    assertStatus: [200]
-
   # Datatype Tests
-  - name: "Standard: Distance List (Default)"
+  - name: "Standard: Active Minutes List (Default)"
     action: "list"
-    dataType: "distance"
+    dataType: "active-minutes"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance List (pageSize)"
+  - name: "Standard: Active Minutes List (pageSize)"
     action: "list"
-    dataType: "distance"
+    dataType: "active-minutes"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance List (pageToken)"
+  - name: "Standard: Active Minutes List (pageToken)"
     action: "list"
-    dataType: "distance"
+    dataType: "active-minutes"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance List (filter: civil_start_time)"
+  - name: "Standard: Active Minutes List (filter: civil_start_time)"
     action: "list"
-    dataType: "distance"
+    dataType: "active-minutes"
     queryParams:
-      filter: 'distance.interval.civil_start_time >= "2026-10-01"'
+      filter: 'active_minutes.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance List (filter: start_time)"
+  - name: "Standard: Active Minutes List (filter: start_time)"
     action: "list"
-    dataType: "distance"
+    dataType: "active-minutes"
     queryParams:
-      filter: 'distance.interval.start_time >= "2026-10-01T00:00:00Z" AND distance.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'active_minutes.interval.start_time >= "2026-10-01T00:00:00Z" AND active_minutes.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance List (dataSourceFamily: all-sources)"
+  - name: "Standard: Active Minutes List (dataSourceFamily: all-sources)"
     action: "list"
-    dataType: "distance"
+    dataType: "active-minutes"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance List (dataSourceFamily: google-wearables)"
+  - name: "Standard: Active Minutes List (dataSourceFamily: google-wearables)"
     action: "list"
-    dataType: "distance"
+    dataType: "active-minutes"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance List (dataSourceFamily: google-sources)"
+  - name: "Standard: Active Minutes List (dataSourceFamily: google-sources)"
     action: "list"
-    dataType: "distance"
+    dataType: "active-minutes"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance List (combined)"
+  - name: "Standard: Active Minutes List (combined)"
     action: "list"
-    dataType: "distance"
+    dataType: "active-minutes"
     queryParams:
-      filter: 'distance.interval.start_time >= "2026-10-01T00:00:00Z" AND distance.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'active_minutes.interval.start_time >= "2026-10-01T00:00:00Z" AND active_minutes.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance DailyRollUp (Default)"
+  - name: "Standard: Active Minutes DailyRollUp (Default)"
     action: "dailyrollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -114,9 +110,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Distance DailyRollUp (windowSizeDays)"
+  - name: "Standard: Active Minutes DailyRollUp (windowSizeDays)"
     action: "dailyrollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -149,9 +145,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Distance DailyRollUp (pageSize)"
+  - name: "Standard: Active Minutes DailyRollUp (pageSize)"
     action: "dailyrollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -184,9 +180,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Distance DailyRollUp (pageToken)"
+  - name: "Standard: Active Minutes DailyRollUp (pageToken)"
     action: "dailyrollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -219,9 +215,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Distance DailyRollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Active Minutes DailyRollUp (dataSourceFamily: all-sources)"
     action: "dailyrollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -254,9 +250,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Distance DailyRollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Active Minutes DailyRollUp (dataSourceFamily: google-wearables)"
     action: "dailyrollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -289,9 +285,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Distance DailyRollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Active Minutes DailyRollUp (dataSourceFamily: google-sources)"
     action: "dailyrollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -324,9 +320,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Distance DailyRollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Active Minutes DailyRollUp (dataSourceFamily: self-sources)"
     action: "dailyrollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -359,9 +355,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Distance DailyRollUp (combined)"
+  - name: "Standard: Active Minutes DailyRollUp (combined)"
     action: "dailyrollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -396,9 +392,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Distance RollUp (Default)"
+  - name: "Standard: Active Minutes RollUp (Default)"
     action: "rollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -409,9 +405,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Distance RollUp (pageSize)"
+  - name: "Standard: Active Minutes RollUp (pageSize)"
     action: "rollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -423,9 +419,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Distance RollUp (pageToken)"
+  - name: "Standard: Active Minutes RollUp (pageToken)"
     action: "rollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -436,9 +432,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Distance RollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Active Minutes RollUp (dataSourceFamily: all-sources)"
     action: "rollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -450,9 +446,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Distance RollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Active Minutes RollUp (dataSourceFamily: google-wearables)"
     action: "rollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -464,9 +460,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Distance RollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Active Minutes RollUp (dataSourceFamily: google-sources)"
     action: "rollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -478,9 +474,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Distance RollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Active Minutes RollUp (dataSourceFamily: self-sources)"
     action: "rollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -492,9 +488,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Distance RollUp (combined)"
+  - name: "Standard: Active Minutes RollUp (combined)"
     action: "rollup"
-    dataType: "distance"
+    dataType: "active-minutes"
     body: |
       {
         "range": {
@@ -507,73 +503,73 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Distance Reconcile (Default)"
+  - name: "Standard: Active Minutes Reconcile (Default)"
     action: "reconcile"
-    dataType: "distance"
+    dataType: "active-minutes"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance Reconcile (pageSize)"
+  - name: "Standard: Active Minutes Reconcile (pageSize)"
     action: "reconcile"
-    dataType: "distance"
+    dataType: "active-minutes"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance Reconcile (pageToken)"
+  - name: "Standard: Active Minutes Reconcile (pageToken)"
     action: "reconcile"
-    dataType: "distance"
+    dataType: "active-minutes"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance Reconcile (filter: civil_start_time)"
+  - name: "Standard: Active Minutes Reconcile (filter: civil_start_time)"
     action: "reconcile"
-    dataType: "distance"
+    dataType: "active-minutes"
     queryParams:
-      filter: 'distance.interval.civil_start_time >= "2026-10-01"'
+      filter: 'active_minutes.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance Reconcile (filter: start_time)"
+  - name: "Standard: Active Minutes Reconcile (filter: start_time)"
     action: "reconcile"
-    dataType: "distance"
+    dataType: "active-minutes"
     queryParams:
-      filter: 'distance.interval.start_time >= "2026-10-01T00:00:00Z" AND distance.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'active_minutes.interval.start_time >= "2026-10-01T00:00:00Z" AND active_minutes.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance Reconcile (dataSourceFamily: all-sources)"
+  - name: "Standard: Active Minutes Reconcile (dataSourceFamily: all-sources)"
     action: "reconcile"
-    dataType: "distance"
+    dataType: "active-minutes"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance Reconcile (dataSourceFamily: google-wearables)"
+  - name: "Standard: Active Minutes Reconcile (dataSourceFamily: google-wearables)"
     action: "reconcile"
-    dataType: "distance"
+    dataType: "active-minutes"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance Reconcile (dataSourceFamily: google-sources)"
+  - name: "Standard: Active Minutes Reconcile (dataSourceFamily: google-sources)"
     action: "reconcile"
-    dataType: "distance"
+    dataType: "active-minutes"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Distance Reconcile (combined)"
+  - name: "Standard: Active Minutes Reconcile (combined)"
     action: "reconcile"
-    dataType: "distance"
+    dataType: "active-minutes"
     queryParams:
-      filter: 'distance.interval.start_time >= "2026-10-01T00:00:00Z" AND distance.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'active_minutes.interval.start_time >= "2026-10-01T00:00:00Z" AND active_minutes.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true

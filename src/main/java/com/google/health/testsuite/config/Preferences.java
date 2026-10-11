@@ -24,6 +24,8 @@ import java.util.List;
         "mockMode",
         "enableAllEndpoints",
         "suiteVisibleRows",
+        "suiteFilterFailedOnly",
+        "suiteManifestPath",
         "scopes"
 })
 public class Preferences {
@@ -68,6 +70,14 @@ public class Preferences {
     @JsonProperty("suiteVisibleRows")
     @JsonAlias({"suite_visible_rows", "visibleRows"})
     private int suiteVisibleRows = 12;
+
+    @JsonProperty("suiteFilterFailedOnly")
+    @JsonAlias({"suite_filter_failed_only", "filterFailedOnly"})
+    private boolean suiteFilterFailedOnly = false;
+
+    @JsonProperty("suiteManifestPath")
+    @JsonAlias({"suite_manifest_path", "manifestPath", "testSuiteManifest", "suiteManifest"})
+    private String suiteManifestPath = "config/test_suite_manifest.yaml";
 
     @JsonProperty("scopes")
     private List<String> scopes = new ArrayList<>();
@@ -222,6 +232,23 @@ public class Preferences {
 
     public void setSuiteVisibleRows(int suiteVisibleRows) {
         this.suiteVisibleRows = suiteVisibleRows > 0 ? suiteVisibleRows : 12;
+    }
+
+    public boolean isSuiteFilterFailedOnly() {
+        return suiteFilterFailedOnly;
+    }
+
+    public void setSuiteFilterFailedOnly(boolean suiteFilterFailedOnly) {
+        this.suiteFilterFailedOnly = suiteFilterFailedOnly;
+    }
+
+    public String getSuiteManifestPath() {
+        return (suiteManifestPath != null && !suiteManifestPath.trim().isEmpty())
+                ? suiteManifestPath.trim() : "config/test_suite_manifest.yaml";
+    }
+
+    public void setSuiteManifestPath(String suiteManifestPath) {
+        this.suiteManifestPath = suiteManifestPath;
     }
 
     public List<String> getScopes() {

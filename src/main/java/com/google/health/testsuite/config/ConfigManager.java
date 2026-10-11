@@ -8,6 +8,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.health.testsuite.auth.OAuthService;
+import com.google.health.testsuite.model.TestSuiteManifest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -345,5 +346,64 @@ public final class ConfigManager {
         savePreferences(preferences);
         logger.info("Saved {} available scopes to preferences file {}",
                 (scopes != null ? scopes.size() : 0), preferencesFile.getAbsolutePath());
+    }
+
+    public static final String DEFAULT_MANIFEST_FILE_NAME = "test_suite_manifest.yaml";
+
+    public File getManifestFile() {
+        if (preferences != null && preferences.getSuiteManifestPath() != null && !preferences.getSuiteManifestPath().trim().isEmpty()) {
+            return new File(preferences.getSuiteManifestPath().trim());
+        }
+        return new File(DEFAULT_CONFIG_DIR, DEFAULT_MANIFEST_FILE_NAME);
+    }
+
+    public synchronized TestSuiteManifest loadTestSuiteManifest() {
+        File manifestFile = getManifestFile();
+        if (manifestFile.exists() && manifestFile.length() > 0) {
+            try {
+                TestSuiteManifest manifest = yamlMapper.readValue(manifestFile, TestSuiteManifest.class);
+                logger.info("Loaded test suite manifest from {} ({} scripts)", manifestFile.getPath(), manifest.getScripts().size());
+                return manifest;
+            } catch (Exception e) {
+                logger.error("Failed to parse manifest from {}: {}", manifestFile.getPath(), e.getMessage());
+            }
+        }
+        return createDefaultManifest();
+    }
+
+    public synchronized void saveTestSuiteManifest(TestSuiteManifest manifest) throws IOException {
+        if (manifest == null) return;
+        File file = getManifestFile();
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists()) {
+            parent.mkdirs();
+        }
+        File tempFile = new File(file.getAbsolutePath() + ".tmp");
+        yamlMapper.writeValue(tempFile, manifest);
+        Files.move(tempFile.toPath(), file.toPath(),
+                StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        logger.info("Saved test suite manifest to {}", file.getAbsolutePath());
+    }
+
+    public static TestSuiteManifest createDefaultManifest() {
+        List<String> defaultScripts = List.of(
+                "scripts/active-energy-burned_tests.yaml",
+                "scripts/active-minutes_tests.yaml",
+                "scripts/active-zone-minutes_tests.yaml",
+                "scripts/activity-level_tests.yaml",
+                "scripts/altitude_tests.yaml",
+                "scripts/distance_tests.yaml",
+                "scripts/floors_tests.yaml",
+                "scripts/run-vo2-max_tests.yaml",
+                "scripts/sedentary-period_tests.yaml",
+                "scripts/steps_tests.yaml",
+                "scripts/swim-lengths-data_tests.yaml",
+                "scripts/time-in-heart-rate-zone_tests.yaml",
+                "scripts/total-calories_tests.yaml",
+                "scripts/vo2-max_tests.yaml"
+        );
+        return new TestSuiteManifest("Google Health API Full Test Suite",
+                "Master test suite executing data type and endpoint test scripts",
+                defaultScripts);
     }
 }

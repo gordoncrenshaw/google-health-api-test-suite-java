@@ -17,6 +17,7 @@ public class TestResult {
     private final ValidationResult validationResult;
     private final ApiResponse apiResponse;
     private final String timestamp;
+    private String scriptFile;
 
     public TestResult(String testName, String dataType, String endpoint, boolean passed,
                       int statusCode, long latencyMs, String message,
@@ -87,6 +88,14 @@ public class TestResult {
 
     public String getTimestamp() {
         return timestamp;
+    }
+
+    public String getScriptFile() {
+        return scriptFile;
+    }
+
+    public void setScriptFile(String scriptFile) {
+        this.scriptFile = scriptFile;
     }
 
     @Override

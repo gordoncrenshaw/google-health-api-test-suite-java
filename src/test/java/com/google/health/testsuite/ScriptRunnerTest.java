@@ -55,14 +55,14 @@ public class ScriptRunnerTest {
 
     @Test
     void testRunStandardTestsScript() throws Exception {
-        File scriptFile = new File("scripts/standard_tests.yaml");
-        assertTrue(scriptFile.exists(), "standard_tests.yaml script must exist");
+        File scriptFile = new File("scripts/standard_tests-steps.yaml");
+        assertTrue(scriptFile.exists(), "standard_tests-steps.yaml script must exist");
 
         int exitCode = runner.runScript(scriptFile);
-        assertEquals(0, exitCode, "standard_tests.yaml should pass with exit code 0 in mock mode");
+        assertEquals(0, exitCode, "standard_tests-steps.yaml should pass with exit code 0 in mock mode");
 
         var results = runner.executeScript(scriptFile);
-        assertTrue(results.size() >= 36, "Should have at least 36 test steps");
+        assertFalse(results.isEmpty(), "Should have test steps");
         assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
                 "All standard tests should pass");
     }
@@ -113,5 +113,33 @@ public class ScriptRunnerTest {
         assertEquals(1, result.getFailedTests().size());
         assertEquals("Expected Failing Step", result.getFailedTests().get(0).getTestName());
         assertFalse(result.getFailedTests().get(0).isPassed());
+    }
+
+    @Test
+    void testRunManifestExecution() throws Exception {
+        File manifestFile = new File("config/test_suite_manifest.yaml");
+        assertTrue(manifestFile.exists(), "Manifest file should exist");
+
+        var results = runner.executeManifest(manifestFile);
+        assertNotNull(results);
+        assertFalse(results.isEmpty(), "Should execute steps from manifest");
+        var failed = results.stream().filter(r -> !r.isPassed()).toList();
+        for (var f : failed) {
+            System.err.println("FAILED STEP: [" + f.getScriptFile() + "] " + f.getTestName() + " -> " + f.getMessage());
+        }
+        assertTrue(failed.isEmpty(), "All manifest test steps should pass in mock mode, but failed: " + failed.size());
+        assertNotNull(results.get(0).getScriptFile(), "Script file name should be populated on test result");
+    }
+
+    @Test
+    void testRunManifestWithDetails() {
+        File manifestFile = new File("config/test_suite_manifest.yaml");
+        ScriptRunner.ScriptRunResult runResult = runner.runManifestWithDetails(manifestFile);
+
+        assertEquals(0, runResult.getExitCode());
+        assertTrue(runResult.isSuccess());
+        assertTrue(runResult.getTotalSteps() > 0);
+        assertEquals(0, runResult.getFailedCount());
+        assertFalse(runResult.getAllResults().isEmpty());
     }
 }

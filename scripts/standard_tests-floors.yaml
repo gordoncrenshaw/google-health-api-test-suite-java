@@ -4,10 +4,6 @@ description: "Quick sanity checks on all endpoints"
 stopOnError: false
 
 steps:
-  - name: "Standard: Check Auth Status"
-    action: "check_auth"
-    assertStatus: [200]
-
   # Datatype Tests
   - name: "Standard: Floors DailyRollUp (Default)"
     action: "dailyrollup"

@@ -51,6 +51,9 @@ public class RestApiHandlerTest {
         configManager = new ConfigManager(tempPrefFile, tempSecretJsonFile);
         Preferences prefs = configManager.getPreferences();
         prefs.setMockMode(true);
+        File tempManifest = File.createTempFile("test_manifest", ".yaml");
+        tempManifest.deleteOnExit();
+        prefs.setSuiteManifestPath(tempManifest.getAbsolutePath());
         configManager.savePreferences(prefs);
 
         oAuthService = new OAuthService(configManager, tempTokensDir);
@@ -160,14 +163,14 @@ public class RestApiHandlerTest {
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + port + "/api/test/run-all"))
                 .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString("{\"scriptPath\":\"scripts/standard_tests.yaml\"}"))
+                .POST(HttpRequest.BodyPublishers.ofString("{\"scriptPath\":\"scripts/standard_tests-steps.yaml\"}"))
                 .build();
 
         HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
         assertEquals(200, resp.statusCode());
 
         JsonNode root = jsonMapper.readTree(resp.body());
-        assertTrue(root.size() >= 36, "Should return results from standard_tests.yaml");
+        assertFalse(root.isEmpty(), "Should return results from test script");
         for (JsonNode item : root) {
             assertTrue(item.get("passed").asBoolean(), "Step should pass: " + item.get("testName").asText());
         }
@@ -198,19 +201,19 @@ public class RestApiHandlerTest {
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + port + "/api/test/run-stream"))
                 .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString("{\"scriptPath\":\"scripts/standard_tests.yaml\"}"))
+                .POST(HttpRequest.BodyPublishers.ofString("{\"scriptPath\":\"scripts/standard_tests-steps.yaml\"}"))
                 .build();
 
         HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
         assertEquals(200, resp.statusCode());
 
         String[] lines = resp.body().split("\n");
-        assertTrue(lines.length >= 38, "Should contain start, step events, and complete event");
+        assertTrue(lines.length >= 3, "Should contain start, step events, and complete event");
 
         JsonNode firstEvent = jsonMapper.readTree(lines[0]);
         assertEquals("start", firstEvent.get("type").asText());
         int totalExpected = firstEvent.get("total").asInt();
-        assertTrue(totalExpected >= 36);
+        assertTrue(totalExpected > 0);
 
         JsonNode secondEvent = jsonMapper.readTree(lines[1]);
         assertEquals("step", secondEvent.get("type").asText());
@@ -360,5 +363,46 @@ public class RestApiHandlerTest {
         assertTrue(root.has("errorMessage"));
         assertTrue(root.get("errorMessage").asText().toLowerCase().contains("error parsing script file"));
         assertTrue(root.get("message").asText().toLowerCase().contains("error parsing script file"));
+    }
+
+    @Test
+    void testGetManifestEndpoint() throws Exception {
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/manifest"))
+                .GET()
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, resp.statusCode());
+
+        JsonNode root = jsonMapper.readTree(resp.body());
+        assertTrue(root.has("name"));
+        assertTrue(root.has("scripts"));
+        assertTrue(root.get("scripts").isArray());
+        assertTrue(root.has("manifestPath"));
+    }
+
+    @Test
+    void testSaveManifestEndpoint() throws Exception {
+        String body = """
+            {
+              "name": "Custom Suite",
+              "description": "My custom tests",
+              "scripts": ["scripts/steps_tests.yaml", "scripts/distance_tests.yaml"]
+            }
+            """;
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/manifest"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, resp.statusCode());
+
+        JsonNode root = jsonMapper.readTree(resp.body());
+        assertTrue(root.get("success").asBoolean());
+        assertEquals("Custom Suite", root.get("name").asText());
+        assertEquals(2, root.get("scripts").size());
     }
 }

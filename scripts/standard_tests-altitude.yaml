@@ -4,14 +4,81 @@ description: "Quick sanity checks on all endpoints"
 stopOnError: false
 
 steps:
-  - name: "Standard: Check Auth Status"
-    action: "check_auth"
-    assertStatus: [200]
-
   # Datatype Tests
-  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (Default)"
+  - name: "Standard: Altitude List (Default)"
+    action: "list"
+    dataType: "altitude"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude List (pageSize)"
+    action: "list"
+    dataType: "altitude"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude List (pageToken)"
+    action: "list"
+    dataType: "altitude"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude List (filter: civil_start_time)"
+    action: "list"
+    dataType: "altitude"
+    queryParams:
+      filter: 'altitude.interval.civil_start_time >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude List (filter: start_time)"
+    action: "list"
+    dataType: "altitude"
+    queryParams:
+      filter: 'altitude.interval.start_time >= "2026-10-01T00:00:00Z" AND altitude.interval.start_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "altitude"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "altitude"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "altitude"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude List (combined)"
+    action: "list"
+    dataType: "altitude"
+    queryParams:
+      filter: 'altitude.interval.start_time >= "2026-10-01T00:00:00Z" AND altitude.interval.start_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude DailyRollUp (Default)"
     action: "dailyrollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -43,9 +110,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (windowSizeDays)"
+  - name: "Standard: Altitude DailyRollUp (windowSizeDays)"
     action: "dailyrollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -78,9 +145,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (pageSize)"
+  - name: "Standard: Altitude DailyRollUp (pageSize)"
     action: "dailyrollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -113,9 +180,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (pageToken)"
+  - name: "Standard: Altitude DailyRollUp (pageToken)"
     action: "dailyrollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -148,9 +215,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Altitude DailyRollUp (dataSourceFamily: all-sources)"
     action: "dailyrollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -183,9 +250,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Altitude DailyRollUp (dataSourceFamily: google-wearables)"
     action: "dailyrollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -218,9 +285,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Altitude DailyRollUp (dataSourceFamily: google-sources)"
     action: "dailyrollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -253,9 +320,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Altitude DailyRollUp (dataSourceFamily: self-sources)"
     action: "dailyrollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -288,9 +355,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (combined)"
+  - name: "Standard: Altitude DailyRollUp (combined)"
     action: "dailyrollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -325,9 +392,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Calories In Heart Rate Zone RollUp (Default)"
+  - name: "Standard: Altitude RollUp (Default)"
     action: "rollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -338,9 +405,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Calories In Heart Rate Zone RollUp (pageSize)"
+  - name: "Standard: Altitude RollUp (pageSize)"
     action: "rollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -352,9 +419,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Calories In Heart Rate Zone RollUp (pageToken)"
+  - name: "Standard: Altitude RollUp (pageToken)"
     action: "rollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -365,9 +432,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Calories In Heart Rate Zone RollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Altitude RollUp (dataSourceFamily: all-sources)"
     action: "rollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -379,9 +446,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Calories In Heart Rate Zone RollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Altitude RollUp (dataSourceFamily: google-wearables)"
     action: "rollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -393,9 +460,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Calories In Heart Rate Zone RollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Altitude RollUp (dataSourceFamily: google-sources)"
     action: "rollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -407,9 +474,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Calories In Heart Rate Zone RollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Altitude RollUp (dataSourceFamily: self-sources)"
     action: "rollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -421,9 +488,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Calories In Heart Rate Zone RollUp (combined)"
+  - name: "Standard: Altitude RollUp (combined)"
     action: "rollup"
-    dataType: "calories-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -435,3 +502,74 @@ steps:
         "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
       }
     assertStatus: [200]
+
+  - name: "Standard: Altitude Reconcile (Default)"
+    action: "reconcile"
+    dataType: "altitude"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "altitude"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "altitude"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude Reconcile (filter: civil_start_time)"
+    action: "reconcile"
+    dataType: "altitude"
+    queryParams:
+      filter: 'altitude.interval.civil_start_time >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude Reconcile (filter: start_time)"
+    action: "reconcile"
+    dataType: "altitude"
+    queryParams:
+      filter: 'altitude.interval.start_time >= "2026-10-01T00:00:00Z" AND altitude.interval.start_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "altitude"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "altitude"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "altitude"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Altitude Reconcile (combined)"
+    action: "reconcile"
+    dataType: "altitude"
+    queryParams:
+      filter: 'altitude.interval.start_time >= "2026-10-01T00:00:00Z" AND altitude.interval.start_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

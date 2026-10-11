@@ -4,85 +4,81 @@ description: "Quick sanity checks on all endpoints"
 stopOnError: false
 
 steps:
-  - name: "Standard: Check Auth Status"
-    action: "check_auth"
-    assertStatus: [200]
-
   # Datatype Tests
-  - name: "Standard: Swim Lengths Data List (Default)"
+  - name: "Standard: Time In Heart Rate Zone List (Default)"
     action: "list"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data List (pageSize)"
+  - name: "Standard: Time In Heart Rate Zone List (pageSize)"
     action: "list"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data List (pageToken)"
+  - name: "Standard: Time In Heart Rate Zone List (pageToken)"
     action: "list"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data List (filter: civil_start_time)"
+  - name: "Standard: Time In Heart Rate Zone List (filter: civil_start_time)"
     action: "list"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     queryParams:
-      filter: 'swim_lengths_data.interval.civil_start_time >= "2026-10-01"'
+      filter: 'time_in_heart_rate_zone.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data List (filter: start_time)"
+  - name: "Standard: Time In Heart Rate Zone List (filter: start_time)"
     action: "list"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     queryParams:
-      filter: 'swim_lengths_data.interval.start_time >= "2026-10-01T00:00:00Z" AND swim_lengths_data.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'time_in_heart_rate_zone.interval.start_time >= "2026-10-01T00:00:00Z" AND time_in_heart_rate_zone.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data List (dataSourceFamily: all-sources)"
+  - name: "Standard: Time In Heart Rate Zone List (dataSourceFamily: all-sources)"
     action: "list"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data List (dataSourceFamily: google-wearables)"
+  - name: "Standard: Time In Heart Rate Zone List (dataSourceFamily: google-wearables)"
     action: "list"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data List (dataSourceFamily: google-sources)"
+  - name: "Standard: Time In Heart Rate Zone List (dataSourceFamily: google-sources)"
     action: "list"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data List (combined)"
+  - name: "Standard: Time In Heart Rate Zone List (combined)"
     action: "list"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     queryParams:
-      filter: 'swim_lengths_data.interval.start_time >= "2026-10-01T00:00:00Z" AND swim_lengths_data.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'time_in_heart_rate_zone.interval.start_time >= "2026-10-01T00:00:00Z" AND time_in_heart_rate_zone.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data DailyRollUp (Default)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (Default)"
     action: "dailyrollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -114,9 +110,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Swim Lengths Data DailyRollUp (windowSizeDays)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (windowSizeDays)"
     action: "dailyrollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -149,9 +145,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Swim Lengths Data DailyRollUp (pageSize)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (pageSize)"
     action: "dailyrollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -184,9 +180,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Swim Lengths Data DailyRollUp (pageToken)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (pageToken)"
     action: "dailyrollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -219,9 +215,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Swim Lengths Data DailyRollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (dataSourceFamily: all-sources)"
     action: "dailyrollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -254,9 +250,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Swim Lengths Data DailyRollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (dataSourceFamily: google-wearables)"
     action: "dailyrollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -289,9 +285,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Swim Lengths Data DailyRollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (dataSourceFamily: google-sources)"
     action: "dailyrollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -324,9 +320,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Swim Lengths Data DailyRollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (dataSourceFamily: self-sources)"
     action: "dailyrollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -359,9 +355,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Swim Lengths Data DailyRollUp (combined)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (combined)"
     action: "dailyrollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -396,9 +392,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Swim Lengths Data RollUp (Default)"
+  - name: "Standard: Time In Heart Rate Zone RollUp (Default)"
     action: "rollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -409,9 +405,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Swim Lengths Data RollUp (pageSize)"
+  - name: "Standard: Time In Heart Rate Zone RollUp (pageSize)"
     action: "rollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -423,9 +419,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Swim Lengths Data RollUp (pageToken)"
+  - name: "Standard: Time In Heart Rate Zone RollUp (pageToken)"
     action: "rollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -436,9 +432,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Swim Lengths Data RollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Time In Heart Rate Zone RollUp (dataSourceFamily: all-sources)"
     action: "rollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -450,9 +446,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Swim Lengths Data RollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Time In Heart Rate Zone RollUp (dataSourceFamily: google-wearables)"
     action: "rollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -464,9 +460,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Swim Lengths Data RollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Time In Heart Rate Zone RollUp (dataSourceFamily: google-sources)"
     action: "rollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -478,9 +474,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Swim Lengths Data RollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Time In Heart Rate Zone RollUp (dataSourceFamily: self-sources)"
     action: "rollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -492,9 +488,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Swim Lengths Data RollUp (combined)"
+  - name: "Standard: Time In Heart Rate Zone RollUp (combined)"
     action: "rollup"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -507,73 +503,73 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Swim Lengths Data Reconcile (Default)"
+  - name: "Standard: Time In Heart Rate Zone Reconcile (Default)"
     action: "reconcile"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data Reconcile (pageSize)"
+  - name: "Standard: Time In Heart Rate Zone Reconcile (pageSize)"
     action: "reconcile"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data Reconcile (pageToken)"
+  - name: "Standard: Time In Heart Rate Zone Reconcile (pageToken)"
     action: "reconcile"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data Reconcile (filter: civil_start_time)"
+  - name: "Standard: Time In Heart Rate Zone Reconcile (filter: civil_start_time)"
     action: "reconcile"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     queryParams:
-      filter: 'swim_lengths_data.interval.civil_start_time >= "2026-10-01"'
+      filter: 'time_in_heart_rate_zone.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data Reconcile (filter: start_time)"
+  - name: "Standard: Time In Heart Rate Zone Reconcile (filter: start_time)"
     action: "reconcile"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     queryParams:
-      filter: 'swim_lengths_data.interval.start_time >= "2026-10-01T00:00:00Z" AND swim_lengths_data.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'time_in_heart_rate_zone.interval.start_time >= "2026-10-01T00:00:00Z" AND time_in_heart_rate_zone.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data Reconcile (dataSourceFamily: all-sources)"
+  - name: "Standard: Time In Heart Rate Zone Reconcile (dataSourceFamily: all-sources)"
     action: "reconcile"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data Reconcile (dataSourceFamily: google-wearables)"
+  - name: "Standard: Time In Heart Rate Zone Reconcile (dataSourceFamily: google-wearables)"
     action: "reconcile"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data Reconcile (dataSourceFamily: google-sources)"
+  - name: "Standard: Time In Heart Rate Zone Reconcile (dataSourceFamily: google-sources)"
     action: "reconcile"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Swim Lengths Data Reconcile (combined)"
+  - name: "Standard: Time In Heart Rate Zone Reconcile (combined)"
     action: "reconcile"
-    dataType: "swim-lengths-data"
+    dataType: "time-in-heart-rate-zone"
     queryParams:
-      filter: 'swim_lengths_data.interval.start_time >= "2026-10-01T00:00:00Z" AND swim_lengths_data.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'time_in_heart_rate_zone.interval.start_time >= "2026-10-01T00:00:00Z" AND time_in_heart_rate_zone.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true

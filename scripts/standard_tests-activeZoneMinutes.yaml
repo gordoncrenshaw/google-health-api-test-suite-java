@@ -4,85 +4,82 @@ description: "Quick sanity checks on all endpoints"
 stopOnError: false
 
 steps:
-  - name: "Standard: Check Auth Status"
-    action: "check_auth"
-    assertStatus: [200]
 
   # Datatype Tests
-  - name: "Standard: Time In Heart Rate Zone List (Default)"
+  - name: "Standard: Active Zone Minutes List (Default)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone List (pageSize)"
+  - name: "Standard: Active Zone Minutes List (pageSize)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone List (pageToken)"
+  - name: "Standard: Active Zone Minutes List (pageToken)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone List (filter: civil_start_time)"
+  - name: "Standard: Active Zone Minutes List (filter: civil_start_time)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     queryParams:
-      filter: 'time_in_heart_rate_zone.interval.civil_start_time >= "2026-10-01"'
+      filter: 'active_zone_minutes.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone List (filter: start_time)"
+  - name: "Standard: Active Zone Minutes List (filter: start_time)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     queryParams:
-      filter: 'time_in_heart_rate_zone.interval.start_time >= "2026-10-01T00:00:00Z" AND time_in_heart_rate_zone.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'active_zone_minutes.interval.start_time >= "2026-10-01T00:00:00Z" AND active_zone_minutes.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone List (dataSourceFamily: all-sources)"
+  - name: "Standard: Active Zone Minutes List (dataSourceFamily: all-sources)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone List (dataSourceFamily: google-wearables)"
+  - name: "Standard: Active Zone Minutes List (dataSourceFamily: google-wearables)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone List (dataSourceFamily: google-sources)"
+  - name: "Standard: Active Zone Minutes List (dataSourceFamily: google-sources)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone List (combined)"
+  - name: "Standard: Active Zone Minutes List (combined)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     queryParams:
-      filter: 'time_in_heart_rate_zone.interval.start_time >= "2026-10-01T00:00:00Z" AND time_in_heart_rate_zone.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'active_zone_minutes.interval.start_time >= "2026-10-01T00:00:00Z" AND active_zone_minutes.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (Default)"
+  - name: "Standard: Active Zone Minutes DailyRollUp (Default)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -114,9 +111,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (windowSizeDays)"
+  - name: "Standard: Active Zone Minutes DailyRollUp (windowSizeDays)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -149,9 +146,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (pageSize)"
+  - name: "Standard: Active Zone Minutes DailyRollUp (pageSize)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -184,9 +181,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (pageToken)"
+  - name: "Standard: Active Zone Minutes DailyRollUp (pageToken)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -219,9 +216,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Active Zone Minutes DailyRollUp (dataSourceFamily: all-sources)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -254,9 +251,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Active Zone Minutes DailyRollUp (dataSourceFamily: google-wearables)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -289,9 +286,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Active Zone Minutes DailyRollUp (dataSourceFamily: google-sources)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -324,9 +321,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Active Zone Minutes DailyRollUp (dataSourceFamily: self-sources)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -359,9 +356,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (combined)"
+  - name: "Standard: Active Zone Minutes DailyRollUp (combined)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -396,9 +393,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Time In Heart Rate Zone RollUp (Default)"
+  - name: "Standard: Active Zone Minutes RollUp (Default)"
     action: "rollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -409,9 +406,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Time In Heart Rate Zone RollUp (pageSize)"
+  - name: "Standard: Active Zone Minutes RollUp (pageSize)"
     action: "rollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -423,9 +420,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone RollUp (pageToken)"
+  - name: "Standard: Active Zone Minutes RollUp (pageToken)"
     action: "rollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -436,9 +433,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone RollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Active Zone Minutes RollUp (dataSourceFamily: all-sources)"
     action: "rollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -450,9 +447,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone RollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Active Zone Minutes RollUp (dataSourceFamily: google-wearables)"
     action: "rollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -464,9 +461,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone RollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Active Zone Minutes RollUp (dataSourceFamily: google-sources)"
     action: "rollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -478,9 +475,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone RollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Active Zone Minutes RollUp (dataSourceFamily: self-sources)"
     action: "rollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -492,9 +489,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Time In Heart Rate Zone RollUp (combined)"
+  - name: "Standard: Active Zone Minutes RollUp (combined)"
     action: "rollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     body: |
       {
         "range": {
@@ -507,73 +504,73 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (Default)"
+  - name: "Standard: Active Zone Minutes Reconcile (Default)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (pageSize)"
+  - name: "Standard: Active Zone Minutes Reconcile (pageSize)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (pageToken)"
+  - name: "Standard: Active Zone Minutes Reconcile (pageToken)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (filter: civil_start_time)"
+  - name: "Standard: Active Zone Minutes Reconcile (filter: civil_start_time)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     queryParams:
-      filter: 'time_in_heart_rate_zone.interval.civil_start_time >= "2026-10-01"'
+      filter: 'active_zone_minutes.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (filter: start_time)"
+  - name: "Standard: Active Zone Minutes Reconcile (filter: start_time)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     queryParams:
-      filter: 'time_in_heart_rate_zone.interval.start_time >= "2026-10-01T00:00:00Z" AND time_in_heart_rate_zone.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'active_zone_minutes.interval.start_time >= "2026-10-01T00:00:00Z" AND active_zone_minutes.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (dataSourceFamily: all-sources)"
+  - name: "Standard: Active Zone Minutes Reconcile (dataSourceFamily: all-sources)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (dataSourceFamily: google-wearables)"
+  - name: "Standard: Active Zone Minutes Reconcile (dataSourceFamily: google-wearables)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (dataSourceFamily: google-sources)"
+  - name: "Standard: Active Zone Minutes Reconcile (dataSourceFamily: google-sources)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (combined)"
+  - name: "Standard: Active Zone Minutes Reconcile (combined)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "active-zone-minutes"
     queryParams:
-      filter: 'time_in_heart_rate_zone.interval.start_time >= "2026-10-01T00:00:00Z" AND time_in_heart_rate_zone.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'active_zone_minutes.interval.start_time >= "2026-10-01T00:00:00Z" AND active_zone_minutes.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true

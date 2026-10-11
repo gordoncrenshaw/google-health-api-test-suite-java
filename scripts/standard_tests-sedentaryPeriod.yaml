@@ -4,85 +4,81 @@ description: "Quick sanity checks on all endpoints"
 stopOnError: false
 
 steps:
-  - name: "Standard: Check Auth Status"
-    action: "check_auth"
-    assertStatus: [200]
-
   # Datatype Tests
-  - name: "Standard: Active Energy Burned List (Default)"
+  - name: "Standard: Sedentary Period List (Default)"
     action: "list"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned List (pageSize)"
+  - name: "Standard: Sedentary Period List (pageSize)"
     action: "list"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned List (pageToken)"
+  - name: "Standard: Sedentary Period List (pageToken)"
     action: "list"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned List (filter: civil_start_time)"
+  - name: "Standard: Sedentary Period List (filter: civil_start_time)"
     action: "list"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     queryParams:
-      filter: 'active_energy_burned.interval.civil_start_time >= "2026-10-01"'
+      filter: 'sedentary_period.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned List (filter: start_time)"
+  - name: "Standard: Sedentary Period List (filter: start_time)"
     action: "list"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     queryParams:
-      filter: 'active_energy_burned.interval.start_time >= "2026-10-01T00:00:00Z" AND active_energy_burned.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'sedentary_period.interval.start_time >= "2026-10-01T00:00:00Z" AND sedentary_period.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned List (dataSourceFamily: all-sources)"
+  - name: "Standard: Sedentary Period List (dataSourceFamily: all-sources)"
     action: "list"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned List (dataSourceFamily: google-wearables)"
+  - name: "Standard: Sedentary Period List (dataSourceFamily: google-wearables)"
     action: "list"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned List (dataSourceFamily: google-sources)"
+  - name: "Standard: Sedentary Period List (dataSourceFamily: google-sources)"
     action: "list"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned List (combined)"
+  - name: "Standard: Sedentary Period List (combined)"
     action: "list"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     queryParams:
-      filter: 'active_energy_burned.interval.start_time >= "2026-10-01T00:00:00Z" AND active_energy_burned.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'sedentary_period.interval.start_time >= "2026-10-01T00:00:00Z" AND sedentary_period.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned DailyRollUp (Default)"
+  - name: "Standard: Sedentary Period DailyRollUp (Default)"
     action: "dailyrollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -114,9 +110,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Energy Burned DailyRollUp (windowSizeDays)"
+  - name: "Standard: Sedentary Period DailyRollUp (windowSizeDays)"
     action: "dailyrollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -149,9 +145,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Energy Burned DailyRollUp (pageSize)"
+  - name: "Standard: Sedentary Period DailyRollUp (pageSize)"
     action: "dailyrollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -184,9 +180,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Energy Burned DailyRollUp (pageToken)"
+  - name: "Standard: Sedentary Period DailyRollUp (pageToken)"
     action: "dailyrollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -219,9 +215,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Energy Burned DailyRollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Sedentary Period DailyRollUp (dataSourceFamily: all-sources)"
     action: "dailyrollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -254,9 +250,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Energy Burned DailyRollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Sedentary Period DailyRollUp (dataSourceFamily: google-wearables)"
     action: "dailyrollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -289,9 +285,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Energy Burned DailyRollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Sedentary Period DailyRollUp (dataSourceFamily: google-sources)"
     action: "dailyrollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -324,9 +320,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Energy Burned DailyRollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Sedentary Period DailyRollUp (dataSourceFamily: self-sources)"
     action: "dailyrollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -359,9 +355,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Energy Burned DailyRollUp (combined)"
+  - name: "Standard: Sedentary Period DailyRollUp (combined)"
     action: "dailyrollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -396,9 +392,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Energy Burned RollUp (Default)"
+  - name: "Standard: Sedentary Period RollUp (Default)"
     action: "rollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -409,9 +405,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Energy Burned RollUp (pageSize)"
+  - name: "Standard: Sedentary Period RollUp (pageSize)"
     action: "rollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -423,9 +419,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Energy Burned RollUp (pageToken)"
+  - name: "Standard: Sedentary Period RollUp (pageToken)"
     action: "rollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -436,9 +432,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Energy Burned RollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Sedentary Period RollUp (dataSourceFamily: all-sources)"
     action: "rollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -450,9 +446,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Energy Burned RollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Sedentary Period RollUp (dataSourceFamily: google-wearables)"
     action: "rollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -464,9 +460,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Energy Burned RollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Sedentary Period RollUp (dataSourceFamily: google-sources)"
     action: "rollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -478,9 +474,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Energy Burned RollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Sedentary Period RollUp (dataSourceFamily: self-sources)"
     action: "rollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -492,9 +488,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Energy Burned RollUp (combined)"
+  - name: "Standard: Sedentary Period RollUp (combined)"
     action: "rollup"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -507,73 +503,73 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Energy Burned Reconcile (Default)"
+  - name: "Standard: Sedentary Period Reconcile (Default)"
     action: "reconcile"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned Reconcile (pageSize)"
+  - name: "Standard: Sedentary Period Reconcile (pageSize)"
     action: "reconcile"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned Reconcile (pageToken)"
+  - name: "Standard: Sedentary Period Reconcile (pageToken)"
     action: "reconcile"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned Reconcile (filter: civil_start_time)"
+  - name: "Standard: Sedentary Period Reconcile (filter: civil_start_time)"
     action: "reconcile"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     queryParams:
-      filter: 'active_energy_burned.interval.civil_start_time >= "2026-10-01"'
+      filter: 'sedentary_period.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned Reconcile (filter: start_time)"
+  - name: "Standard: Sedentary Period Reconcile (filter: start_time)"
     action: "reconcile"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     queryParams:
-      filter: 'active_energy_burned.interval.start_time >= "2026-10-01T00:00:00Z" AND active_energy_burned.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'sedentary_period.interval.start_time >= "2026-10-01T00:00:00Z" AND sedentary_period.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned Reconcile (dataSourceFamily: all-sources)"
+  - name: "Standard: Sedentary Period Reconcile (dataSourceFamily: all-sources)"
     action: "reconcile"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned Reconcile (dataSourceFamily: google-wearables)"
+  - name: "Standard: Sedentary Period Reconcile (dataSourceFamily: google-wearables)"
     action: "reconcile"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned Reconcile (dataSourceFamily: google-sources)"
+  - name: "Standard: Sedentary Period Reconcile (dataSourceFamily: google-sources)"
     action: "reconcile"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Energy Burned Reconcile (combined)"
+  - name: "Standard: Sedentary Period Reconcile (combined)"
     action: "reconcile"
-    dataType: "active-energy-burned"
+    dataType: "sedentary-period"
     queryParams:
-      filter: 'active_energy_burned.interval.start_time >= "2026-10-01T00:00:00Z" AND active_energy_burned.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'sedentary_period.interval.start_time >= "2026-10-01T00:00:00Z" AND sedentary_period.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true

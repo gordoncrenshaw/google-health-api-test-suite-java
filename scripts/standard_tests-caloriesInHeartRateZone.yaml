@@ -4,85 +4,10 @@ description: "Quick sanity checks on all endpoints"
 stopOnError: false
 
 steps:
-  - name: "Standard: Check Auth Status"
-    action: "check_auth"
-    assertStatus: [200]
-
   # Datatype Tests
-  - name: "Standard: Run VO2 Max List (Default)"
-    action: "list"
-    dataType: "run-vo2-max"
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max List (pageSize)"
-    action: "list"
-    dataType: "run-vo2-max"
-    queryParams:
-      pageSize: "5"
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max List (pageToken)"
-    action: "list"
-    dataType: "run-vo2-max"
-    queryParams:
-      pageToken: ""
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max List (filter: civil_time)"
-    action: "list"
-    dataType: "run-vo2-max"
-    queryParams:
-      filter: 'run_vo2_max.sample_time.civil_time >= "2026-10-01"'
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max List (filter: physical_time)"
-    action: "list"
-    dataType: "run-vo2-max"
-    queryParams:
-      filter: 'run_vo2_max.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND run_vo2_max.sample_time.physical_time < "2026-10-08T23:59:59Z"'
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max List (dataSourceFamily: all-sources)"
-    action: "list"
-    dataType: "run-vo2-max"
-    queryParams:
-      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max List (dataSourceFamily: google-wearables)"
-    action: "list"
-    dataType: "run-vo2-max"
-    queryParams:
-      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max List (dataSourceFamily: google-sources)"
-    action: "list"
-    dataType: "run-vo2-max"
-    queryParams:
-      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max List (combined)"
-    action: "list"
-    dataType: "run-vo2-max"
-    queryParams:
-      filter: 'run_vo2_max.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND run_vo2_max.sample_time.physical_time < "2026-10-08T23:59:59Z"'
-      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max DailyRollUp (Default)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (Default)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -114,9 +39,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Run VO2 Max DailyRollUp (windowSizeDays)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (windowSizeDays)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -149,9 +74,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Run VO2 Max DailyRollUp (pageSize)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (pageSize)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -184,9 +109,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max DailyRollUp (pageToken)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (pageToken)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -219,9 +144,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max DailyRollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (dataSourceFamily: all-sources)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -254,9 +179,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max DailyRollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (dataSourceFamily: google-wearables)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -289,9 +214,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max DailyRollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (dataSourceFamily: google-sources)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -324,9 +249,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max DailyRollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (dataSourceFamily: self-sources)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -359,9 +284,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Run VO2 Max DailyRollUp (combined)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (combined)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -396,9 +321,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Run VO2 Max RollUp (Default)"
+  - name: "Standard: Calories In Heart Rate Zone RollUp (Default)"
     action: "rollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -409,9 +334,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Run VO2 Max RollUp (pageSize)"
+  - name: "Standard: Calories In Heart Rate Zone RollUp (pageSize)"
     action: "rollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -423,9 +348,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max RollUp (pageToken)"
+  - name: "Standard: Calories In Heart Rate Zone RollUp (pageToken)"
     action: "rollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -436,9 +361,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max RollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Calories In Heart Rate Zone RollUp (dataSourceFamily: all-sources)"
     action: "rollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -450,9 +375,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max RollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Calories In Heart Rate Zone RollUp (dataSourceFamily: google-wearables)"
     action: "rollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -464,9 +389,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max RollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Calories In Heart Rate Zone RollUp (dataSourceFamily: google-sources)"
     action: "rollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -478,9 +403,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max RollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Calories In Heart Rate Zone RollUp (dataSourceFamily: self-sources)"
     action: "rollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -492,9 +417,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Run VO2 Max RollUp (combined)"
+  - name: "Standard: Calories In Heart Rate Zone RollUp (combined)"
     action: "rollup"
-    dataType: "run-vo2-max"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -506,74 +431,3 @@ steps:
         "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
       }
     assertStatus: [200]
-
-  - name: "Standard: Run VO2 Max Reconcile (Default)"
-    action: "reconcile"
-    dataType: "run-vo2-max"
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max Reconcile (pageSize)"
-    action: "reconcile"
-    dataType: "run-vo2-max"
-    queryParams:
-      pageSize: "5"
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max Reconcile (pageToken)"
-    action: "reconcile"
-    dataType: "run-vo2-max"
-    queryParams:
-      pageToken: ""
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max Reconcile (filter: civil_time)"
-    action: "reconcile"
-    dataType: "run-vo2-max"
-    queryParams:
-      filter: 'run_vo2_max.sample_time.civil_time >= "2026-10-01"'
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max Reconcile (filter: physical_time)"
-    action: "reconcile"
-    dataType: "run-vo2-max"
-    queryParams:
-      filter: 'run_vo2_max.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND run_vo2_max.sample_time.physical_time < "2026-10-08T23:59:59Z"'
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max Reconcile (dataSourceFamily: all-sources)"
-    action: "reconcile"
-    dataType: "run-vo2-max"
-    queryParams:
-      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max Reconcile (dataSourceFamily: google-wearables)"
-    action: "reconcile"
-    dataType: "run-vo2-max"
-    queryParams:
-      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max Reconcile (dataSourceFamily: google-sources)"
-    action: "reconcile"
-    dataType: "run-vo2-max"
-    queryParams:
-      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
-    assertStatus: [200]
-    validateRange: true
-
-  - name: "Standard: Run VO2 Max Reconcile (combined)"
-    action: "reconcile"
-    dataType: "run-vo2-max"
-    queryParams:
-      filter: 'run_vo2_max.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND run_vo2_max.sample_time.physical_time < "2026-10-08T23:59:59Z"'
-      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
-    assertStatus: [200]
-    validateRange: true

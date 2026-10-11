@@ -146,6 +146,14 @@ public class SuiteExecutionEngine {
         String dtName = step.getDataType();
         boolean enableAll = configManager.getPreferences().isEnableAllEndpoints();
         DataTypeDefinition def = (dtName != null) ? dataTypeRegistry.getDataType(dtName, enableAll).orElse(null) : null;
+        if (def == null && dtName != null && !dtName.trim().isEmpty()) {
+            def = new DataTypeDefinition();
+            def.setName(dtName.trim());
+            def.setDisplayName(dtName.trim());
+            def.setScopeRequired("https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly");
+            def.setWriteScopeRequired("https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly");
+            def = def.withAllEndpointsEnabled();
+        }
 
         ApiResponse response;
         try {
