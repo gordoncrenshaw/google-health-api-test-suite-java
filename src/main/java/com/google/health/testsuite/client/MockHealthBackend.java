@@ -126,6 +126,7 @@ public class MockHealthBackend {
             } else if (path.contains(":rollUp") || path.contains(":dailyRollUp")) {
                 ObjectNode rollup = jsonMapper.createObjectNode();
                 ArrayNode dataPoints = rollup.putArray("dataPoints");
+                ArrayNode rollupDataPoints = rollup.putArray("rollupDataPoints");
                 ObjectNode dp = dataPoints.addObject();
                 dp.put("startTime", Instant.now().minus(1, ChronoUnit.DAYS).toString());
                 dp.put("endTime", Instant.now().toString());
@@ -135,6 +136,7 @@ public class MockHealthBackend {
                     ObjectNode typeNode = dp.putObject(toCamelCase(def.getName()));
                     typeNode.put("value", sampleVal);
                 }
+                rollupDataPoints.add(dp.deepCopy());
                 responseBody = rollup.toPrettyString();
 
             } else if ("PATCH".equalsIgnoreCase(httpMethod)) {

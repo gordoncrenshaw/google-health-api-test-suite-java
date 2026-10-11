@@ -613,6 +613,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 endTime: new Date().toISOString()
             }, null, 2);
         }
+        if (epLower === 'rollup') {
+            return JSON.stringify({
+                range: {
+                    startTime: new Date(Date.now() - 86400000).toISOString(),
+                    endTime: new Date().toISOString()
+                },
+                windowSize: "3600s"
+            }, null, 2);
+        }
+        if (epLower === 'dailyrollup') {
+            const today = new Date();
+            const weekAgo = new Date(Date.now() - 7 * 86400000);
+            return JSON.stringify({
+                range: {
+                    start: {
+                        date: { year: weekAgo.getUTCFullYear(), month: weekAgo.getUTCMonth() + 1, day: weekAgo.getUTCDate() },
+                        time: { hours: 0, minutes: 0, seconds: 0 }
+                    },
+                    end: {
+                        date: { year: today.getUTCFullYear(), month: today.getUTCMonth() + 1, day: today.getUTCDate() },
+                        time: { hours: 23, minutes: 59, seconds: 59 }
+                    }
+                },
+                windowSizeDays: 1
+            }, null, 2);
+        }
         return JSON.stringify({
             startTime: new Date(Date.now() - 3600000).toISOString(),
             endTime: new Date().toISOString(),

@@ -595,19 +595,35 @@ src/main/java/com/google/health/testsuite/common/AppVersion.java
 
 ```java
 public final class AppVersion {
-    public static final String VERSION = "1.0.1";
+    public static final String VERSION = "1.0.2";
     public static final String API_TARGET = "v4";
-    public static final String RELEASE_DATE = "2026-10-10";
+    public static final String RELEASE_DATE = "2026-10-11";
 }
 ```
 
 - **Runtime Availability**: The version is exposed via `/api/status` and `/api/version` endpoints.
-- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.1` pill badge and in the system information banner).
+- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.2` pill badge and in the system information banner).
 - **How to Update**: When adding new functionality or fixes, increment `AppVersion.VERSION` following Semantic Versioning (`MAJOR.MINOR.PATCH`) and document changes in the changelog below.
 
 ---
 
 ## 📋 Version History & Changelog
+
+### Version 1.0.2 (October 11, 2026)
+
+#### 🐛 Bug Fixes & API Enhancements
+- **Fix "Standard: DailyRollUp Steps" Failure (Issue #15)**:
+  - Added request payload `body` in `scripts/standard_tests.yaml` defining a valid `CivilTimeInterval` (`start` and `end` with `date` and `time` objects) and `windowSizeDays: 1`, preventing `HTTP 400 Invalid argument in request`.
+  - Updated `TestStep` with custom `BodyDeserializer` to ensure the script execution engine accurately deserializes and transmits the payload value (`body`), supporting both quoted JSON strings and YAML object mappings.
+  - Updated Web UX API Explorer in `app.js` to pre-populate valid `CivilTimeInterval` and `windowSizeDays: 1` template payloads when `dailyrollup` is selected.
+- **Fix "Standard: RollUp Steps" Failure (Issue #16)**:
+  - Added request payload `body` in `scripts/standard_tests.yaml` (and `scripts/sample_suite.yaml`) defining a valid RFC 3339 physical time `range` (`startTime` and `endTime`) and `windowSize: "3600s"`, preventing `HTTP 400 Invalid time range`.
+  - Updated Web UX API Explorer in `app.js` to pre-populate valid RFC 3339 `range` and `windowSize: "3600s"` template payloads when `rollup` is selected.
+- **Validation Engine Enhancements**:
+  - Updated `ValidationEngine` to parse and validate `rollupDataPoints` arrays in addition to standard `dataPoints` arrays for range check assertions.
+  - Updated `MockHealthBackend` to include `rollupDataPoints` array in mock mode.
+
+---
 
 ### Version 1.0.1 (October 10, 2026)
 

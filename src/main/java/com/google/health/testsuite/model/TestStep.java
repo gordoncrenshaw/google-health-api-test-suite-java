@@ -32,7 +32,27 @@ public class TestStep {
     private Map<String, String> queryParams = new HashMap<>();
 
     @JsonProperty("body")
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = BodyDeserializer.class)
     private String body;
+
+    /**
+     * Custom deserializer for the body field to support both quoted JSON strings
+     * and structured YAML objects/maps in script definitions.
+     */
+    public static class BodyDeserializer extends com.fasterxml.jackson.databind.JsonDeserializer<String> {
+        @Override
+        public String deserialize(com.fasterxml.jackson.core.JsonParser p, com.fasterxml.jackson.databind.DeserializationContext ctxt)
+                throws java.io.IOException {
+            com.fasterxml.jackson.databind.JsonNode node = p.getCodec().readTree(p);
+            if (node == null || node.isNull()) {
+                return null;
+            }
+            if (node.isTextual()) {
+                return node.asText();
+            }
+            return node.toString();
+        }
+    }
 
     // Assertions
     @JsonProperty("assertStatus")
