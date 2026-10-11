@@ -9,9 +9,9 @@ steps:
     assertStatus: [200]
 
   # Datatype Tests
-  - name: "Standard: Steps DailyRollUp (Default)"
+  - name: "Standard: Floors DailyRollUp (Default)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -43,9 +43,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps DailyRollUp (windowSizeDays)"
+  - name: "Standard: Floors DailyRollUp (windowSizeDays)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -78,9 +78,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps DailyRollUp (pageSize)"
+  - name: "Standard: Floors DailyRollUp (pageSize)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -113,9 +113,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps DailyRollUp (pageToken)"
+  - name: "Standard: Floors DailyRollUp (pageToken)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -148,9 +148,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps DailyRollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Floors DailyRollUp (dataSourceFamily: all-sources)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -183,9 +183,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps DailyRollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Floors DailyRollUp (dataSourceFamily: google-wearables)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -218,9 +218,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps DailyRollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Floors DailyRollUp (dataSourceFamily: google-sources)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -253,9 +253,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps DailyRollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Floors DailyRollUp (dataSourceFamily: self-sources)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -288,9 +288,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps DailyRollUp (combined)"
+  - name: "Standard: Floors DailyRollUp (combined)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -325,9 +325,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps RollUp (Default)"
+  - name: "Standard: Floors RollUp (Default)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -338,9 +338,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps RollUp (pageSize)"
+  - name: "Standard: Floors RollUp (pageSize)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -352,9 +352,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps RollUp (pageToken)"
+  - name: "Standard: Floors RollUp (pageToken)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -365,9 +365,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps RollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Floors RollUp (dataSourceFamily: all-sources)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -379,9 +379,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps RollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Floors RollUp (dataSourceFamily: google-wearables)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -393,9 +393,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps RollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Floors RollUp (dataSourceFamily: google-sources)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -407,9 +407,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps RollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Floors RollUp (dataSourceFamily: self-sources)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -421,9 +421,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps RollUp (combined)"
+  - name: "Standard: Floors RollUp (combined)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "floors"
     body: |
       {
         "range": {
@@ -436,73 +436,73 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps Reconcile (Default)"
+  - name: "Standard: Floors Reconcile (Default)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "floors"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (pageSize)"
+  - name: "Standard: Floors Reconcile (pageSize)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "floors"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (pageToken)"
+  - name: "Standard: Floors Reconcile (pageToken)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "floors"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (filter: civil_start_time)"
+  - name: "Standard: Floors Reconcile (filter: civil_start_time)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "floors"
     queryParams:
-      filter: 'steps.interval.civil_start_time >= "2026-10-01"'
+      filter: 'floors.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (filter: start_time)"
+  - name: "Standard: Floors Reconcile (filter: start_time)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "floors"
     queryParams:
-      filter: 'steps.interval.start_time >= "2026-10-01T00:00:00Z" AND steps.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'floors.interval.start_time >= "2026-10-01T00:00:00Z" AND floors.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (dataSourceFamily: all-sources)"
+  - name: "Standard: Floors Reconcile (dataSourceFamily: all-sources)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "floors"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (dataSourceFamily: google-wearables)"
+  - name: "Standard: Floors Reconcile (dataSourceFamily: google-wearables)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "floors"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (dataSourceFamily: google-sources)"
+  - name: "Standard: Floors Reconcile (dataSourceFamily: google-sources)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "floors"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (combined)"
+  - name: "Standard: Floors Reconcile (combined)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "floors"
     queryParams:
-      filter: 'steps.interval.start_time >= "2026-10-01T00:00:00Z" AND steps.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'floors.interval.start_time >= "2026-10-01T00:00:00Z" AND floors.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true

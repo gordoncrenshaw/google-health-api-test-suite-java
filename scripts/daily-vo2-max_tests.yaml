@@ -9,144 +9,144 @@ steps:
     assertStatus: [200]
 
   # Datatype Tests
-  - name: "Standard: Steps List (Default)"
+  - name: "Standard: Daily VO2 Max List (Default)"
     action: "list"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps List (pageSize)"
+  - name: "Standard: Daily VO2 Max List (pageSize)"
     action: "list"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps List (pageToken)"
+  - name: "Standard: Daily VO2 Max List (pageToken)"
     action: "list"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps List (filter: civil_start_time)"
+  - name: "Standard: Daily VO2 Max List (filter: civil_start_time)"
     action: "list"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     queryParams:
-      filter: 'steps.interval.civil_start_time >= "2026-10-01"'
+      filter: 'daily_vo2_max.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps List (filter: start_time)"
+  - name: "Standard: Daily VO2 Max List (filter: start_time)"
     action: "list"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     queryParams:
-      filter: 'steps.interval.start_time >= "2026-10-01T00:00:00Z" AND steps.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'daily_vo2_max.interval.start_time >= "2026-10-01T00:00:00Z" AND daily_vo2_max.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps List (dataSourceFamily: all-sources)"
+  - name: "Standard: Daily VO2 Max List (dataSourceFamily: all-sources)"
     action: "list"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps List (dataSourceFamily: google-wearables)"
+  - name: "Standard: Daily VO2 Max List (dataSourceFamily: google-wearables)"
     action: "list"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps List (dataSourceFamily: google-sources)"
+  - name: "Standard: Daily VO2 Max List (dataSourceFamily: google-sources)"
     action: "list"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps List (combined)"
+  - name: "Standard: Daily VO2 Max List (combined)"
     action: "list"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     queryParams:
-      filter: 'steps.interval.start_time >= "2026-10-01T00:00:00Z" AND steps.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'daily_vo2_max.interval.start_time >= "2026-10-01T00:00:00Z" AND daily_vo2_max.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (Default)"
+  - name: "Standard: Daily VO2 Max Reconcile (Default)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (pageSize)"
+  - name: "Standard: Daily VO2 Max Reconcile (pageSize)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (pageToken)"
+  - name: "Standard: Daily VO2 Max Reconcile (pageToken)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (filter: civil_start_time)"
+  - name: "Standard: Daily VO2 Max Reconcile (filter: civil_start_time)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     queryParams:
-      filter: 'steps.interval.civil_start_time >= "2026-10-01"'
+      filter: 'daily_vo2_max.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (filter: start_time)"
+  - name: "Standard: Daily VO2 Max Reconcile (filter: start_time)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     queryParams:
-      filter: 'steps.interval.start_time >= "2026-10-01T00:00:00Z" AND steps.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'daily_vo2_max.interval.start_time >= "2026-10-01T00:00:00Z" AND daily_vo2_max.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (dataSourceFamily: all-sources)"
+  - name: "Standard: Daily VO2 Max Reconcile (dataSourceFamily: all-sources)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (dataSourceFamily: google-wearables)"
+  - name: "Standard: Daily VO2 Max Reconcile (dataSourceFamily: google-wearables)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (dataSourceFamily: google-sources)"
+  - name: "Standard: Daily VO2 Max Reconcile (dataSourceFamily: google-sources)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Steps Reconcile (combined)"
+  - name: "Standard: Daily VO2 Max Reconcile (combined)"
     action: "reconcile"
-    dataType: "steps"
+    dataType: "daily-vo2-max"
     queryParams:
-      filter: 'steps.interval.start_time >= "2026-10-01T00:00:00Z" AND steps.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'daily_vo2_max.interval.start_time >= "2026-10-01T00:00:00Z" AND daily_vo2_max.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true
