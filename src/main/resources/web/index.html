@@ -186,15 +186,15 @@
                 <div class="card glass-card mb-4">
                     <div class="card-header">
                         <h2 class="card-title">Automated Google Health API Test Suite</h2>
-                        <span class="file-badge">Runs across all datatypes in datatypes.yaml</span>
+                        <span class="file-badge">scripts/standard_tests.yaml</span>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted mb-4">Executes automated HTTP calls across all supported data types, verifies HTTP response codes, checks schema compliance, and validates that returned values adhere to minimum and maximum range constraints.</p>
+                        <p class="text-muted mb-4">Executes automated HTTP list queries and range validations across all supported data types defined in <code>scripts/standard_tests.yaml</code>.</p>
 
                         <div class="suite-controls">
                             <button id="btn-run-full-suite" class="btn btn-primary btn-lg">
                                 <svg viewBox="0 0 24 24" class="btn-icon"><path d="M8 5v14l11-7z"/></svg>
-                                Run All Data Types Test Suite
+                                Run Full Test Suite (standard_tests.yaml)
                             </button>
                             <span id="suite-status-text" class="text-muted ml-3">Ready to execute.</span>
                         </div>
@@ -228,11 +228,12 @@
 
                 <!-- Results Table -->
                 <div class="card glass-card">
-                    <div class="card-header">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <h3 class="card-title">Test Execution Results</h3>
+                        <span id="suite-visible-rows-badge" class="file-badge">Scrollable (12 rows)</span>
                     </div>
                     <div class="card-body p-0">
-                        <div class="table-responsive">
+                        <div class="table-responsive suite-scroll-box" id="suite-table-container">
                             <table class="data-table" id="suite-results-table">
                                 <thead>
                                     <tr>
@@ -247,7 +248,7 @@
                                 </thead>
                                 <tbody id="suite-results-tbody">
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted py-4">No test run executed yet. Click "Run All Data Types Test Suite" to start.</td>
+                                        <td colspan="7" class="text-center text-muted py-4">No test run executed yet. Click "Run Full Test Suite (standard_tests.yaml)" to start.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -650,6 +651,12 @@
                                 <div class="form-group">
                                     <label for="pref-api-base-url">API Base URL:</label>
                                     <input type="text" id="pref-api-base-url" class="form-control font-mono" value="https://health.googleapis.com">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="pref-suite-visible-rows">Test Suite Results Visible Rows:</label>
+                                    <input type="number" id="pref-suite-visible-rows" class="form-control font-mono" min="3" max="100" value="12">
+                                    <small class="text-muted" style="display: block; margin-top: 4px; font-size: 0.8rem;">Controls the scrollable box height on the Full Test Suite tab (default: 12 rows).</small>
                                 </div>
                             </div>
 

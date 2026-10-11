@@ -1,0 +1,175 @@
+# ==============================================================================
+# Google Health API Test Suite - Standard List Operations Script (Mode 3)
+# ==============================================================================
+# Covers all 18 Google Health API data types defined in config/datatypes.yaml
+# that support the "list" endpoint operation.
+# ==============================================================================
+
+name: "Google Health API Standard List Operations Test Suite"
+description: "Executes list queries and range validations across all supported data types"
+stopOnError: false
+
+steps:
+  # Initial Auth Check
+  - name: "Standard: Check Auth Status"
+    action: "check_auth"
+    assertStatus: [200]
+
+  # Identity Endpoints
+  - name: "Standard: Get Identity"
+    action: "identity"
+    assertStatus: [200]
+
+  # Irregular Rhythm Notifications Endpoints
+  - name: "Standard: Get Irregular Rhythm Notifications Profile"
+    action: "irn_profile"
+    assertStatus: [200]
+
+  # Profile Endpoints
+  - name: "Standard: Get Profile"
+    action: "profile"
+    assertStatus: [200]
+
+  - name: "Standard: Update Profile"
+    action: "update_profile"
+    body: '{"userConfiguredWalkingStrideLengthMm": "745"}'
+    assertStatus: [200]
+
+  # Settings Endpoints
+  - name: "Standard: Get Settings"
+    action: "settings"
+    assertStatus: [200]
+
+  - name: "Standard: Update Settings"
+    action: "update_settings"
+    body: '{"temperatureUnit": "TEMPERATURE_UNIT_FAHRENHEIT"}'
+    assertStatus: [200]
+
+  # Paired Devices Endpoints
+  - name: "Standard: List Paired Devices"
+    action: "devices"
+    assertStatus: [200]
+
+  # Steps Datatype Tests
+  - name: "Standard: List Steps"
+    action: "list"
+    dataType: "steps"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: DailyRollUp Steps"
+    action: "daily_rollup"
+    dataType: "steps"
+    assertStatus: [200]
+
+  - name: "Standard: RollUp Steps"
+    action: "rollup"
+    dataType: "steps"
+    assertStatus: [200]
+
+  # Datatype List Endpoints
+  - name: "Standard: List Distance"
+    action: "list"
+    dataType: "distance"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: List Altitude"
+    action: "list"
+    dataType: "altitude"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: List Active Calories Burned"
+    action: "list"
+    dataType: "active-energy-burned"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: List Basal Calories Burned"
+    action: "list"
+    dataType: "basal-energy-burned"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: List Active Zone Minutes"
+    action: "list"
+    dataType: "active-zone-minutes"
+    assertStatus: [200]
+    validateRange: true
+
+  # Cardiac & Biometric Metrics
+  - name: "Standard: List Heart Rate"
+    action: "list"
+    dataType: "heart-rate"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: List Daily Resting Heart Rate"
+    action: "list"
+    dataType: "daily-resting-heart-rate"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: List Heart Rate Variability (HRV)"
+    action: "list"
+    dataType: "heart-rate-variability"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: List Electrocardiogram (ECG)"
+    action: "list"
+    dataType: "electrocardiogram"
+    assertStatus: [200]
+    validateRange: true
+
+  # Body Composition & Measurements
+  - name: "Standard: List Body Weight"
+    action: "list"
+    dataType: "weight"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: List Body Height"
+    action: "list"
+    dataType: "height"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: List Body Fat Percentage"
+    action: "list"
+    dataType: "body-fat"
+    assertStatus: [200]
+    validateRange: true
+
+  # Vital Signs & Clinical Metrics
+  - name: "Standard: List Blood Oxygen (SpO2)"
+    action: "list"
+    dataType: "oxygen-saturation"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: List Blood Glucose"
+    action: "list"
+    dataType: "blood-glucose"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: List Skin Temperature Sensors"
+    action: "list"
+    dataType: "skin-temperature-sensors"
+    assertStatus: [200]
+    validateRange: true
+
+  # Sleep & Fitness Sessions
+  - name: "Standard: List Sleep Sessions"
+    action: "list"
+    dataType: "sleep"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: List Exercise Workouts"
+    action: "list"
+    dataType: "exercise"
+    assertStatus: [200]
+    validateRange: true

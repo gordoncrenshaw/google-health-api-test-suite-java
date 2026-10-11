@@ -609,7 +609,20 @@ public class CliMenuRunner {
     private void runFullTestSuite() {
         System.out.println(CYAN + BOLD + "\n--- Running Comprehensive Test Suite Across All Data Types ---" + RESET);
         long start = System.currentTimeMillis();
-        List<TestResult> results = engine.executeAllDataTypesTest("list");
+        File stdScript = new File("scripts/standard_tests.yaml");
+        if (!stdScript.exists()) {
+            System.out.println(RED + "Error: standard_tests.yaml file is not found: " + stdScript.getAbsolutePath() + RESET);
+            return;
+        }
+
+        List<TestResult> results;
+        try {
+            System.out.println("Executing from script: scripts/standard_tests.yaml");
+            results = new ScriptRunner(engine).executeScript(stdScript);
+        } catch (Exception e) {
+            System.out.println(RED + "Failed executing standard_tests.yaml: " + e.getMessage() + RESET);
+            return;
+        }
         long duration = System.currentTimeMillis() - start;
 
         int passed = 0;

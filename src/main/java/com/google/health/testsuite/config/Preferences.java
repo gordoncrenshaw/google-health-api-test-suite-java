@@ -23,6 +23,7 @@ import java.util.List;
         "endpointUserId",
         "mockMode",
         "enableAllEndpoints",
+        "suiteVisibleRows",
         "scopes"
 })
 public class Preferences {
@@ -63,6 +64,10 @@ public class Preferences {
     @JsonProperty("enableAllEndpoints")
     @JsonAlias({"enable_all_endpoints", "enableAllEndpointsForEachDatatype", "enableAllEndpoints"})
     private boolean enableAllEndpoints = false;
+
+    @JsonProperty("suiteVisibleRows")
+    @JsonAlias({"suite_visible_rows", "visibleRows"})
+    private int suiteVisibleRows = 12;
 
     @JsonProperty("scopes")
     private List<String> scopes = new ArrayList<>();
@@ -209,6 +214,14 @@ public class Preferences {
 
     public void setEnableAllEndpoints(boolean enableAllEndpoints) {
         this.enableAllEndpoints = enableAllEndpoints;
+    }
+
+    public int getSuiteVisibleRows() {
+        return suiteVisibleRows > 0 ? suiteVisibleRows : 12;
+    }
+
+    public void setSuiteVisibleRows(int suiteVisibleRows) {
+        this.suiteVisibleRows = suiteVisibleRows > 0 ? suiteVisibleRows : 12;
     }
 
     public List<String> getScopes() {

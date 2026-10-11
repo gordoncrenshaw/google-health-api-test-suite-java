@@ -30,6 +30,58 @@ public class ScriptRunner {
         this.jsonMapper = new ObjectMapper();
     }
 
+    @FunctionalInterface
+    public interface TestStepListener {
+        void onStepExecuted(int index, int total, TestStep step, TestResult result);
+    }
+
+    /**
+     * Executes the given script file and returns the list of TestResult items.
+     */
+    public List<TestResult> executeScript(File scriptFile) throws IOException {
+        return executeScript(scriptFile, null);
+    }
+
+    /**
+     * Executes the given script file with a real-time listener for each step.
+     */
+    public List<TestResult> executeScript(File scriptFile, TestStepListener listener) throws IOException {
+        if (!scriptFile.exists()) {
+            throw new IOException("Script file does not exist: " + scriptFile.getAbsolutePath());
+        }
+
+        TestSuiteScript script;
+        if (scriptFile.getName().endsWith(".json")) {
+            script = jsonMapper.readValue(scriptFile, TestSuiteScript.class);
+        } else {
+            script = yamlMapper.readValue(scriptFile, TestSuiteScript.class);
+        }
+
+        int total = script.getSteps().size();
+        logger.info("Executing test script: {} ({} steps)", script.getName(), total);
+        List<TestResult> results = new ArrayList<>();
+
+        for (int i = 0; i < total; i++) {
+            TestStep step = script.getSteps().get(i);
+            TestResult result = engine.executeStep(step);
+            results.add(result);
+
+            if (listener != null) {
+                try {
+                    listener.onStepExecuted(i + 1, total, step, result);
+                } catch (Exception e) {
+                    logger.warn("Listener error during step {}: {}", (i + 1), e.getMessage());
+                }
+            }
+
+            if (!result.isPassed() && script.isStopOnError()) {
+                logger.warn("Stopping script execution early due to failure (stopOnError: true)");
+                break;
+            }
+        }
+        return results;
+    }
+
     /**
      * Executes the given script file and returns exit code (0 = success, 1 = failure).
      */

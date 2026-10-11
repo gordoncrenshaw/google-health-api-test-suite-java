@@ -222,35 +222,157 @@ java -jar target/health-api-testsuite.jar --script scripts/sample_suite.yaml
 
 ## 📝 Script File Syntax (`scripts/*.yaml`)
 
-Script files allow defining custom sequences of API calls and assertions in YAML or JSON:
+Script files allow defining custom sequences of automated test steps and assertions in YAML or JSON for CI/CD, regression testing, or headless batch runs.
+
+### Top-Level Suite Attributes
+
+| Attribute Name | Type | Required | Default | Description & Supported Values |
+| :--- | :---: | :---: | :---: | :--- |
+| `name` | String | No | `"Unnamed Test Script"` | Display name/title of the test script suite. |
+| `description` | String | No | `""` | Optional description explaining the scope of the test script. |
+| `stopOnError` | Boolean | No | `false` | When `true`, halts execution immediately upon the first step failure. When `false`, continues running all remaining steps. |
+| `steps` | List | **Yes** | `[]` | Ordered list of test step objects to execute. |
+
+---
+
+### Supported Attributes for Adding a Test Step (`steps[]`)
+
+Each test step entry in `steps` supports the following attribute names and values:
+
+| Attribute Name | Type | Required | Default | Supported Values & Description |
+| :--- | :---: | :---: | :---: | :--- |
+| `name` | String | No | Auto-generated | Human-readable label for the step. If omitted, defaults to `<action> (<dataType>)` (e.g., `"list (steps)"`). |
+| `action` | String | No | `"list"` | The API operation or check to execute. See [Supported Actions](#supported-actions) below for all available options. |
+| `dataType` | String | Conditional | `null` | Required for data point actions (`list`, `get`, `create`, `rollup`, `dailyrollup`, `reconcile`, `patch`, etc.). Must match a registered data type name from `config/datatypes.yaml` (e.g., `steps`, `heart-rate`, `distance`, `weight`). |
+| `dataPointId` | String | Conditional | `"default-dp"` / `"sample-dp-1"` | Identifier of the specific data point. Used by single-point operations (`get`, `patch`, `exportexercisetcx`). |
+| `userId` | String | No | `null` (active pref) | User identifier in URL syntax (`/v4/users/{userId}/...`). Supported values: `"me"`, a specific numeric Health User ID (e.g., `"7226778021918831098"`), or `"auto"` (falls back to active `endpointUserId` from `config/preferences.yaml`). |
+| `queryParams` | Map / Object | No | `{}` | Key-value pairs appended as URL query parameters (e.g., `pageSize: "25"`, `pageToken: "..."`, `filter: "..."`). |
+| `body` | String | Conditional | `null` | Raw JSON string payload for requests that send data (`create`, `update_profile`, `update_settings`, `rollup`, `dailyrollup`, `reconcile`, `patch`, `batchdelete`). |
+| `assertStatus` | Integer or List of Integers | No | `[200]` | Expected HTTP status codes for the step to pass. Accepts a single integer (e.g., `200`) or a YAML list of integers (e.g., `[200]`, `[200, 204]`, `[404]`). |
+| `validateRange` | Boolean | No | `true` | Validates returned numerical measurements in the response payload against the `minValue` and `maxValue` defined in `config/datatypes.yaml`. Supported values: `true` or `false`. |
+| `assertContains` | List of Strings | No | `[]` | List of substrings that must be present in the raw HTTP response body for the test to pass (e.g., `["dataPoints"]`, `["temperatureUnit"]`). |
+
+---
+
+### Supported Actions (`action`)
+
+The `action` attribute supports the following operations and alias names:
+
+#### 1. Data Type & DataPoint Operations (Require `dataType`)
+| Action Name | Aliases | Method / Endpoint | Description |
+| :--- | :--- | :--- | :--- |
+| `list` | `list_datapoints` | `GET /v4/users/{userId}/dataTypes/{dataType}/dataPoints` | Queries data points for the given data type with optional `queryParams`. |
+| `get` | `get_datapoint` | `GET /v4/users/{userId}/dataTypes/{dataType}/dataPoints/{dataPointId}` | Retrieves a single data point by `dataPointId`. |
+| `create` | `create_datapoint` | `POST /v4/users/{userId}/dataTypes/{dataType}/dataPoints` | Inserts a new data point using JSON in `body`. |
+| `rollup` | - | `POST /v4/users/{userId}/dataTypes/{dataType}/dataPoints:rollUp` | Computes physical aggregate rollups over intervals. Optional JSON in `body`. |
+| `dailyrollup` | `daily_rollup` | `POST /v4/users/{userId}/dataTypes/{dataType}/dataPoints:dailyRollUp` | Computes daily aggregate rollups. Optional JSON in `body`. |
+| `reconcile` | - | `POST /v4/users/{userId}/dataTypes/{dataType}/dataPoints:reconcile` | Reconciles data points (e.g., sleep stage timeline records). Sends JSON `body`. |
+| `patch` | `patch_datapoint` | `PATCH /v4/users/{userId}/dataTypes/{dataType}/dataPoints/{dataPointId}` | Updates an existing data point by ID with JSON `body`. |
+| `exportexercisetcx` | `export_exercise_tcx` | `GET /v4/users/{userId}/dataTypes/{dataType}/dataPoints/{dataPointId}:exportTcx` | Exports GPS and heart rate TCX track XML for an exercise data point. |
+| `batchdelete` | `batch_delete` | `POST /v4/users/{userId}/dataTypes/{dataType}/dataPoints:batchDelete` | Deletes multiple data points by name. Sends JSON `body` or `queryParams.names`. |
+
+#### 2. User Identity, Profile & Settings Operations
+| Action Name | Aliases | Method / Endpoint | Description |
+| :--- | :--- | :--- | :--- |
+| `identity` | `get_identity` | `GET /v4/users/{userId}/identity` | Retrieves user identity mapping (e.g., `healthUserId`). |
+| `profile` | `get_profile` | `GET /v4/users/{userId}/profile` | Retrieves user profile metadata (`displayName`, `locale`, `userConfiguredWalkingStrideLengthMm`, etc.). |
+| `update_profile` | `patch_profile` | `PATCH /v4/users/{userId}/profile` | Updates user profile attributes with JSON `body`. |
+| `settings` | `get_settings` | `GET /v4/users/{userId}/settings` | Retrieves user settings (`temperatureUnit`, `timeZone`, etc.). |
+| `update_settings` | `patch_settings` | `PATCH /v4/users/{userId}/settings` | Updates user settings with JSON `body` (e.g., `'{"temperatureUnit": "TEMPERATURE_UNIT_FAHRENHEIT"}'`). |
+| `irn_profile` | `get_irn_profile`, `irnprofile` | `GET /v4/users/{userId}/irnProfile` | Retrieves Irregular Rhythm Notifications (IRN) AFib feature enablement status. |
+| `devices` | `list_devices` | `GET /v4/users/{userId}/pairedDevices` | Lists connected smartwatches, fitness trackers, and paired hardware. |
+
+#### 3. Authentication & Pre-Check Operations
+| Action Name | Aliases | Description |
+| :--- | :--- | :--- |
+| `check_auth` | - | Verifies that a valid OAuth access token is stored in the credential store or simulation/mock mode is active. |
+
+---
+
+### Supported Data Types (`dataType`)
+
+When executing data point actions (`list`, `get`, `create`, `rollup`, `dailyrollup`, `batchdelete`), `dataType` accepts any identifier declared in `config/datatypes.yaml`:
+
+- **Activity & Energy**: `steps`, `distance`, `floors`, `altitude`, `active-energy-burned`, `basal-energy-burned`, `active-zone-minutes`, `exercise`
+- **Biometrics & Vitals**: `heart-rate`, `daily-resting-heart-rate`, `heart-rate-variability`, `electrocardiogram`
+- **Body Measurements**: `weight`, `height`, `body-fat`
+- **Health Metrics**: `blood-glucose`, `oxygen-saturation`, `skin-temperature-sensors`
+- **Sleep**: `sleep`
+- Any custom data type added to `config/datatypes.yaml`.
+
+---
+
+### Complete Example Script (`scripts/example_suite.yaml`)
 
 ```yaml
-name: "Google Health Custom Daily Test"
-description: "Checks sync of steps and heart rate"
-stopOnError: false # When true, stops execution on first failing step
+name: "Comprehensive Google Health API Test Script"
+description: "Demonstrates all supported test step attributes and operations"
+stopOnError: false
 
 steps:
-  - name: "Check Credentials"
+  # 1. Authorization Verification
+  - name: "Verify OAuth Credentials"
     action: "check_auth"
     assertStatus: [200]
 
-  - name: "Query Steps for Today"
-    action: "list"               # Supported actions: list, get, create, rollup, dailyrollup, batchdelete, profile, devices, check_auth
-    dataType: "steps"            # Data type name from datatypes.yaml
-    queryParams:
-      pageSize: "50"
-    assertStatus: [200]          # Expected HTTP status code(s)
-    validateRange: true          # Validates response measurements against min/max in datatypes.yaml
-    assertContains:              # Optional expected substrings
-      - "dataPoints"
+  # 2. Identity & User Endpoints
+  - name: "Get Identity"
+    action: "identity"
+    assertStatus: [200]
+    assertContains:
+      - "healthUserId"
 
-  - name: "Query Heart Rate"
+  - name: "Get User Profile"
+    action: "profile"
+    assertStatus: [200]
+
+  - name: "Update Profile Stride Length"
+    action: "update_profile"
+    body: '{"userConfiguredWalkingStrideLengthMm": "745"}'
+    assertStatus: [200]
+
+  - name: "Get User Settings"
+    action: "settings"
+    assertStatus: [200]
+
+  - name: "Update Temperature Unit"
+    action: "update_settings"
+    body: '{"temperatureUnit": "TEMPERATURE_UNIT_FAHRENHEIT"}'
+    assertStatus: [200]
+
+  - name: "List Paired Devices"
+    action: "devices"
+    assertStatus: [200]
+
+  - name: "Get IRN Profile"
+    action: "irn_profile"
+    assertStatus: [200]
+
+  # 3. Data Type Operations with Range Validation & Filters
+  - name: "List Steps with Page Size"
     action: "list"
-    dataType: "heart-rate"
+    dataType: "steps"
     queryParams:
       pageSize: "25"
     assertStatus: [200]
     validateRange: true
+
+  - name: "Daily RollUp Steps"
+    action: "daily_rollup"
+    dataType: "steps"
+    assertStatus: [200]
+
+  - name: "Physical RollUp Steps"
+    action: "rollup"
+    dataType: "steps"
+    assertStatus: [200]
+
+  - name: "Get Single Heart Rate DataPoint"
+    action: "get"
+    dataType: "heart-rate"
+    dataPointId: "sample-dp-1"
+    assertStatus: [200, 404] # Accepts 200 (found) or 404 (if ID not present)
+    validateRange: false
 ```
 
 ---

@@ -144,4 +144,77 @@ public class RestApiHandlerTest {
         assertTrue(url.contains("activity_and_fitness.readonly"));
         assertTrue(url.contains("sleep.readonly"));
     }
+
+    @Test
+    void testRunAllTestsQueriesStandardTestsYaml() throws Exception {
+        // Configure mock mode
+        Preferences prefs = configManager.getPreferences();
+        prefs.setMockMode(true);
+        configManager.savePreferences(prefs);
+
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/test/run-all"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString("{\"scriptPath\":\"scripts/standard_tests.yaml\"}"))
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, resp.statusCode());
+
+        JsonNode root = jsonMapper.readTree(resp.body());
+        assertTrue(root.isArray());
+        assertEquals(19, root.size(), "Should return 19 results from standard_tests.yaml");
+        for (JsonNode item : root) {
+            assertTrue(item.get("passed").asBoolean(), "Step should pass: " + item.get("testName").asText());
+        }
+    }
+
+    @Test
+    void testRunAllTestsFailsWhenStandardTestsYamlIsMissing() throws Exception {
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/test/run-all"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString("{\"scriptPath\":\"scripts/non_existent_tests.yaml\"}"))
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        assertEquals(404, resp.statusCode());
+
+        JsonNode root = jsonMapper.readTree(resp.body());
+        assertTrue(root.has("error"));
+        assertTrue(root.get("error").asText().contains("file is not found"));
+    }
+
+    @Test
+    void testRunStreamTestsRealTimeEvents() throws Exception {
+        Preferences prefs = configManager.getPreferences();
+        prefs.setMockMode(true);
+        configManager.savePreferences(prefs);
+
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/test/run-stream"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString("{\"scriptPath\":\"scripts/standard_tests.yaml\"}"))
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, resp.statusCode());
+
+        String[] lines = resp.body().split("\n");
+        assertTrue(lines.length >= 21, "Should contain start, 19 step events, and complete event");
+
+        JsonNode firstEvent = jsonMapper.readTree(lines[0]);
+        assertEquals("start", firstEvent.get("type").asText());
+        assertEquals(19, firstEvent.get("total").asInt());
+
+        JsonNode secondEvent = jsonMapper.readTree(lines[1]);
+        assertEquals("step", secondEvent.get("type").asText());
+        assertEquals(1, secondEvent.get("index").asInt());
+        assertTrue(secondEvent.has("result"));
+
+        JsonNode lastEvent = jsonMapper.readTree(lines[lines.length - 1]);
+        assertEquals("complete", lastEvent.get("type").asText());
+        assertEquals(19, lastEvent.get("total").asInt());
+        assertEquals(19, lastEvent.get("passed").asInt());
+    }
 }

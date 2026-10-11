@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.health.testsuite.auth.BrowserUtil;
 import com.google.health.testsuite.auth.LocalOAuthReceiver;
 import com.google.health.testsuite.auth.OAuthService;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Handles all REST API requests from the JavaScript/HTML frontend (Mode 2).
@@ -37,6 +39,7 @@ public class RestApiHandler implements HttpHandler {
     private final DataTypeRegistry dataTypeRegistry;
     private final OAuthService oAuthService;
     private final ObjectMapper jsonMapper;
+    private final ObjectMapper yamlMapper;
     private LocalOAuthReceiver activeReceiver;
 
     public RestApiHandler(SuiteExecutionEngine engine, OAuthService oAuthService) {
@@ -45,6 +48,7 @@ public class RestApiHandler implements HttpHandler {
         this.dataTypeRegistry = engine.getDataTypeRegistry();
         this.oAuthService = oAuthService;
         this.jsonMapper = new ObjectMapper();
+        this.yamlMapper = new ObjectMapper(new YAMLFactory());
     }
 
     @Override
@@ -84,7 +88,7 @@ public class RestApiHandler implements HttpHandler {
                 case "/api/auth/start" -> handleStartAuth(exchange);
                 case "/api/auth/code" -> handleExchangeAuthCode(exchange);
                 case "/api/test/single" -> handleRunSingleTest(exchange);
-                case "/api/test/run-all" -> handleRunAllTests(exchange);
+                case "/api/test/run-all", "/api/test/run-stream" -> handleRunAllTests(exchange);
                 case "/api/test/script" -> handleRunScript(exchange);
                 case "/api/scripts" -> handleListScripts(exchange);
                 case "/api/health/profile" -> {
@@ -213,6 +217,9 @@ public class RestApiHandler implements HttpHandler {
         }
         current.setMockMode(incoming.isMockMode());
         current.setEnableAllEndpoints(incoming.isEnableAllEndpoints());
+        if (incoming.getSuiteVisibleRows() > 0) {
+            current.setSuiteVisibleRows(incoming.getSuiteVisibleRows());
+        }
         if (incoming.getScopes() != null && !incoming.getScopes().isEmpty()) {
             current.setScopes(incoming.getScopes());
         }
@@ -397,16 +404,110 @@ public class RestApiHandler implements HttpHandler {
 
     private void handleRunAllTests(HttpExchange exchange) throws IOException {
         String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-        String endpoint = "list";
+        String scriptPath = "scripts/standard_tests.yaml";
+        boolean stream = "/api/test/run-stream".equals(exchange.getRequestURI().getPath());
         if (body != null && !body.trim().isEmpty()) {
-            JsonNode json = jsonMapper.readTree(body);
-            if (json.has("endpoint")) {
-                endpoint = json.path("endpoint").asText("list");
+            try {
+                JsonNode json = jsonMapper.readTree(body);
+                if (json.has("scriptPath") && !json.path("scriptPath").asText().isBlank()) {
+                    scriptPath = json.path("scriptPath").asText();
+                }
+                if (json.has("stream") && json.path("stream").asBoolean(false)) {
+                    stream = true;
+                }
+            } catch (Exception ignored) {
             }
         }
 
-        List<TestResult> results = engine.executeAllDataTypesTest(endpoint);
+        String query = exchange.getRequestURI().getQuery();
+        if (query != null && query.contains("stream=true")) {
+            stream = true;
+        }
+
+        File scriptFile = new File(scriptPath);
+        if (!scriptFile.exists()) {
+            logger.error("Standard tests script file not found: {}", scriptFile.getAbsolutePath());
+            sendError(exchange, 404, "standard_tests.yaml file is not found: " + scriptPath);
+            return;
+        }
+
+        if (stream) {
+            handleStreamingExecution(exchange, scriptFile);
+            return;
+        }
+
+        logger.info("Executing full test suite from script: {}", scriptFile.getPath());
+        ScriptRunner runner = new ScriptRunner(engine);
+        List<TestResult> results = runner.executeScript(scriptFile);
         sendJson(exchange, 200, jsonMapper.writeValueAsString(results));
+    }
+
+    private void handleStreamingExecution(HttpExchange exchange, File scriptFile) throws IOException {
+        logger.info("Starting real-time streaming execution for script: {}", scriptFile.getPath());
+
+        exchange.getResponseHeaders().set("Content-Type", "application/x-ndjson; charset=UTF-8");
+        exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-transform");
+        exchange.getResponseHeaders().set("Connection", "keep-alive");
+        exchange.getResponseHeaders().set("X-Accel-Buffering", "no");
+
+        // 0 tells Sun HttpServer to use chunked transfer encoding
+        exchange.sendResponseHeaders(200, 0);
+
+        try (OutputStream os = exchange.getResponseBody()) {
+            ScriptRunner runner = new ScriptRunner(engine);
+
+            TestSuiteScript script;
+            if (scriptFile.getName().endsWith(".json")) {
+                script = jsonMapper.readValue(scriptFile, TestSuiteScript.class);
+            } else {
+                script = yamlMapper.readValue(scriptFile, TestSuiteScript.class);
+            }
+
+            int totalSteps = script.getSteps().size();
+            ObjectNode startNode = jsonMapper.createObjectNode();
+            startNode.put("type", "start");
+            startNode.put("scriptName", script.getName());
+            startNode.put("total", totalSteps);
+            os.write((startNode.toString() + "\n").getBytes(StandardCharsets.UTF_8));
+            os.flush();
+
+            long startTime = System.currentTimeMillis();
+            AtomicInteger passedCount = new AtomicInteger(0);
+            AtomicInteger failedCount = new AtomicInteger(0);
+
+            runner.executeScript(scriptFile, (index, total, step, result) -> {
+                if (result.isPassed()) {
+                    passedCount.incrementAndGet();
+                } else {
+                    failedCount.incrementAndGet();
+                }
+
+                ObjectNode stepNode = jsonMapper.createObjectNode();
+                stepNode.put("type", "step");
+                stepNode.put("index", index);
+                stepNode.put("total", total);
+                stepNode.set("result", jsonMapper.valueToTree(result));
+
+                try {
+                    os.write((stepNode.toString() + "\n").getBytes(StandardCharsets.UTF_8));
+                    os.flush();
+                } catch (IOException e) {
+                    throw new RuntimeException("Client disconnected: " + e.getMessage(), e);
+                }
+            });
+
+            long duration = System.currentTimeMillis() - startTime;
+            ObjectNode completeNode = jsonMapper.createObjectNode();
+            completeNode.put("type", "complete");
+            completeNode.put("total", totalSteps);
+            completeNode.put("passed", passedCount.get());
+            completeNode.put("failed", failedCount.get());
+            completeNode.put("durationMs", duration);
+            os.write((completeNode.toString() + "\n").getBytes(StandardCharsets.UTF_8));
+            os.flush();
+        } catch (Exception e) {
+            logger.warn("Streaming execution completed or connection closed: {}", e.getMessage());
+        }
     }
 
     private void handleListScripts(HttpExchange exchange) throws IOException {

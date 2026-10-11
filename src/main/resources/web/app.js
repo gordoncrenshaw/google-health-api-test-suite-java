@@ -876,31 +876,217 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================================================
-    // 4. Full Test Suite Runner
+    // 4. Full Test Suite Runner (Real-Time Streaming)
     // ==========================================================================
+    function applySuiteVisibleRows(numRows) {
+        const rows = parseInt(numRows, 10) || 12;
+        const container = document.getElementById('suite-table-container');
+        if (container) {
+            container.style.setProperty('--suite-visible-rows', rows);
+            const thead = container.querySelector('thead');
+            const firstRow = container.querySelector('tbody tr');
+            const headerHeight = thead && thead.offsetHeight > 0 ? thead.offsetHeight : 42;
+            const rowHeight = firstRow && firstRow.offsetHeight > 0 ? firstRow.offsetHeight : 48;
+            // +1px for top border
+            const maxHeightPx = headerHeight + (rows * rowHeight) + 1;
+            container.style.maxHeight = `${maxHeightPx}px`;
+        }
+        const badge = document.getElementById('suite-visible-rows-badge');
+        if (badge) {
+            badge.textContent = `Scrollable (${rows} rows)`;
+        }
+    }
+
+    function buildSuiteResultRow(r) {
+        let detailHtml = '';
+        if (r.passed) {
+            const passMsg = r.validationResult?.message || r.message || 'Validation passed';
+            detailHtml = `<span class="text-secondary" style="font-size: 12px;" title="${escapeHtml(passMsg)}">${escapeHtml(passMsg)}</span>`;
+        } else {
+            const httpCode = r.statusCode || (r.apiResponse ? r.apiResponse.statusCode : 500);
+            let endpointError = '';
+
+            if (r.apiResponse?.errorMessage) {
+                endpointError = r.apiResponse.errorMessage;
+            } else if (r.apiResponse?.body) {
+                try {
+                    const parsed = typeof r.apiResponse.body === 'string' ? JSON.parse(r.apiResponse.body) : r.apiResponse.body;
+                    if (parsed?.error?.message) {
+                        endpointError = parsed.error.message;
+                    } else if (typeof parsed?.error === 'string') {
+                        endpointError = parsed.error;
+                    } else if (parsed?.message) {
+                        endpointError = parsed.message;
+                    } else if (parsed?.error_description) {
+                        endpointError = parsed.error_description;
+                    }
+                } catch (e) {
+                    // Not JSON
+                }
+            }
+
+            if (!endpointError && r.message) {
+                const dashIdx = r.message.indexOf(' - ');
+                if (dashIdx !== -1) {
+                    endpointError = r.message.substring(dashIdx + 3).trim();
+                } else if (r.message.startsWith('Failed: HTTP ')) {
+                    const afterHttp = r.message.replace(/^Failed:\s*HTTP\s*\d+\s*:?\s*/i, '').trim();
+                    if (afterHttp) {
+                        endpointError = afterHttp;
+                    } else {
+                        endpointError = r.message;
+                    }
+                } else {
+                    endpointError = r.message;
+                }
+            }
+
+            if (!endpointError) {
+                endpointError = 'Endpoint returned error';
+            }
+
+            detailHtml = `
+                <div class="suite-error-cell" title="${escapeHtml(endpointError)}">
+                    <span class="suite-error-code font-mono">
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                        HTTP ${escapeHtml(String(httpCode))} Error
+                    </span>
+                    <span class="suite-error-msg font-mono">${escapeHtml(endpointError)}</span>
+                </div>
+            `;
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'suite-result-row';
+        tr.innerHTML = `
+            <td><span class="pill-badge ${r.passed ? 'pill-success' : 'pill-danger'}">${r.passed ? 'PASS' : 'FAIL'}</span></td>
+            <td><strong>${escapeHtml(r.dataType || 'api')}</strong></td>
+            <td><span class="font-mono">${escapeHtml(r.endpoint || 'list')}</span></td>
+            <td><span class="pill-badge ${(r.statusCode === 200 || (r.passed && !r.statusCode)) ? 'pill-success' : 'pill-danger'} font-mono font-semibold">${escapeHtml(String(r.statusCode !== undefined && r.statusCode !== null ? r.statusCode : 200))}</span></td>
+            <td>${r.latencyMs} ms</td>
+            <td title="${r.passed ? escapeHtml(r.validationResult?.message || r.message || '') : escapeHtml(r.message || '')}">${detailHtml}</td>
+            <td><span class="text-muted font-mono" style="font-size: 11px;">${new Date().toLocaleTimeString()}</span></td>
+        `;
+        return tr;
+    }
+
     async function runFullTestSuite() {
         const btn = document.getElementById('btn-run-full-suite');
         const progressBar = document.getElementById('suite-progress-bar');
         const statusText = document.getElementById('suite-status-text');
+        const tbody = document.getElementById('suite-results-tbody');
+        const countTotal = document.getElementById('suite-count-total');
+        const countPassed = document.getElementById('suite-count-passed');
+        const countFailed = document.getElementById('suite-count-failed');
+        const avgLatency = document.getElementById('suite-avg-latency');
 
         btn.disabled = true;
-        statusText.textContent = 'Running test suite across all data types...';
-        progressBar.style.width = '30%';
+        statusText.textContent = 'Initializing real-time execution from scripts/standard_tests.yaml...';
+        progressBar.style.width = '3%';
+        tbody.innerHTML = '';
+        countTotal.textContent = '0';
+        countPassed.textContent = '0';
+        countFailed.textContent = '0';
+        avgLatency.textContent = '0 ms';
+
+        let totalTests = 0;
+        let passed = 0;
+        let failed = 0;
+        let totalLatency = 0;
+        let stepCount = 0;
 
         try {
             const res = await fetch('/api/test/run-all', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ endpoint: 'list' })
+                body: JSON.stringify({ scriptPath: 'scripts/standard_tests.yaml', endpoint: 'list', stream: true })
             });
 
-            progressBar.style.width = '85%';
-            const results = await res.json();
-            progressBar.style.width = '100%';
+            if (!res.ok) {
+                let errorMsg = `HTTP ${res.status}`;
+                try {
+                    const errData = await res.json();
+                    if (errData && errData.error) errorMsg = errData.error;
+                } catch (_) {}
+                throw new Error(errorMsg);
+            }
 
-            renderSuiteResults(results);
-            statusText.textContent = `Completed ${results.length} tests.`;
+            // Real-time chunk reader for streaming JSON events
+            if (res.body && res.body.getReader) {
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop(); // keep trailing incomplete line
+
+                    for (const rawLine of lines) {
+                        const line = rawLine.trim();
+                        if (!line) continue;
+
+                        let msg;
+                        try {
+                            msg = JSON.parse(line.startsWith('data:') ? line.substring(5).trim() : line);
+                        } catch (parseErr) {
+                            console.warn('Stream parse error:', line);
+                            continue;
+                        }
+
+                        if (msg.type === 'start') {
+                            totalTests = msg.total || 0;
+                            countTotal.textContent = totalTests;
+                            statusText.textContent = `Executing test 1 of ${totalTests}...`;
+                        } else if (msg.type === 'step') {
+                            const r = msg.result;
+                            stepCount++;
+                            if (msg.total && !totalTests) {
+                                totalTests = msg.total;
+                                countTotal.textContent = totalTests;
+                            }
+
+                            if (r.passed) passed++;
+                            else failed++;
+                            totalLatency += (r.latencyMs || 0);
+
+                            countPassed.textContent = passed;
+                            countFailed.textContent = failed;
+                            avgLatency.textContent = `${Math.round(totalLatency / stepCount)} ms`;
+
+                            const pct = totalTests > 0 ? Math.round((stepCount / totalTests) * 100) : 50;
+                            progressBar.style.width = `${pct}%`;
+                            statusText.textContent = `[${stepCount}/${totalTests || '?'}] Executing: ${r.testName || r.dataType}...`;
+
+                            const tr = buildSuiteResultRow(r);
+                            tbody.appendChild(tr);
+                            if (stepCount === 1) {
+                                applySuiteVisibleRows(document.getElementById('pref-suite-visible-rows')?.value || 12);
+                            }
+                        } else if (msg.type === 'complete') {
+                            progressBar.style.width = '100%';
+                            const durStr = msg.durationMs ? ` in ${(msg.durationMs / 1000).toFixed(1)}s` : '';
+                            statusText.textContent = `Completed ${msg.total} tests from standard_tests.yaml (${msg.passed} passed, ${msg.failed} failed${durStr}).`;
+                        }
+                    }
+                }
+
+                progressBar.style.width = '100%';
+                if (stepCount > 0 && !statusText.textContent.startsWith('Completed')) {
+                    statusText.textContent = `Completed ${stepCount} tests from standard_tests.yaml (${passed} passed, ${failed} failed).`;
+                }
+            } else {
+                // Fallback for non-streaming environments
+                progressBar.style.width = '85%';
+                const results = await res.json();
+                renderSuiteResults(results);
+                statusText.textContent = `Completed ${results.length} tests from standard_tests.yaml.`;
+            }
         } catch (e) {
+            progressBar.style.width = '0%';
             statusText.textContent = 'Error: ' + e.message;
             alert('Failed to execute test suite: ' + e.message);
         } finally {
@@ -931,77 +1117,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (r.passed) passed++;
             else failed++;
             totalLatency += r.latencyMs;
-
-            let detailHtml = '';
-            if (r.passed) {
-                const passMsg = r.validationResult?.message || r.message || 'Validation passed';
-                detailHtml = `<span class="text-secondary" style="font-size: 12px;">${escapeHtml(passMsg)}</span>`;
-            } else {
-                const httpCode = r.statusCode || (r.apiResponse ? r.apiResponse.statusCode : 500);
-                let endpointError = '';
-
-                if (r.apiResponse?.errorMessage) {
-                    endpointError = r.apiResponse.errorMessage;
-                } else if (r.apiResponse?.body) {
-                    try {
-                        const parsed = typeof r.apiResponse.body === 'string' ? JSON.parse(r.apiResponse.body) : r.apiResponse.body;
-                        if (parsed?.error?.message) {
-                            endpointError = parsed.error.message;
-                        } else if (typeof parsed?.error === 'string') {
-                            endpointError = parsed.error;
-                        } else if (parsed?.message) {
-                            endpointError = parsed.message;
-                        } else if (parsed?.error_description) {
-                            endpointError = parsed.error_description;
-                        }
-                    } catch (e) {
-                        // Not JSON
-                    }
-                }
-
-                if (!endpointError && r.message) {
-                    const dashIdx = r.message.indexOf(' - ');
-                    if (dashIdx !== -1) {
-                        endpointError = r.message.substring(dashIdx + 3).trim();
-                    } else if (r.message.startsWith('Failed: HTTP ')) {
-                        const afterHttp = r.message.replace(/^Failed:\s*HTTP\s*\d+\s*:?\s*/i, '').trim();
-                        if (afterHttp) {
-                            endpointError = afterHttp;
-                        } else {
-                            endpointError = r.message;
-                        }
-                    } else {
-                        endpointError = r.message;
-                    }
-                }
-
-                if (!endpointError) {
-                    endpointError = 'Endpoint returned error';
-                }
-
-                detailHtml = `
-                    <div class="suite-error-cell">
-                        <span class="suite-error-code font-mono">
-                            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                            HTTP ${escapeHtml(String(httpCode))} Error
-                        </span>
-                        <span class="suite-error-msg font-mono">${escapeHtml(endpointError)}</span>
-                    </div>
-                `;
-            }
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><span class="pill-badge ${r.passed ? 'pill-success' : 'pill-danger'}">${r.passed ? 'PASS' : 'FAIL'}</span></td>
-                <td><strong>${escapeHtml(r.dataType)}</strong></td>
-                <td><span class="font-mono">${escapeHtml(r.endpoint)}</span></td>
-                <td><span class="pill-badge ${r.statusCode === 200 ? 'pill-success' : 'pill-danger'} font-mono font-semibold">HTTP ${r.statusCode}</span></td>
-                <td>${r.latencyMs} ms</td>
-                <td>${detailHtml}</td>
-                <td><span class="text-muted font-mono" style="font-size: 11px;">${new Date().toLocaleTimeString()}</span></td>
-            `;
-            tbody.appendChild(tr);
+            tbody.appendChild(buildSuiteResultRow(r));
         });
+        applySuiteVisibleRows(document.getElementById('pref-suite-visible-rows')?.value || 12);
 
         document.getElementById('suite-count-total').textContent = total;
         document.getElementById('suite-count-passed').textContent = passed;
@@ -1083,6 +1201,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (enableAllEl) {
                 enableAllEl.checked = !!prefs.enableAllEndpoints;
             }
+            const visibleRowsEl = document.getElementById('pref-suite-visible-rows');
+            const visibleRowsVal = prefs.suiteVisibleRows || 12;
+            if (visibleRowsEl) {
+                visibleRowsEl.value = visibleRowsVal;
+            }
+            applySuiteVisibleRows(visibleRowsVal);
             updateExplorerCurlPreview();
             if (dataTypes && dataTypes.length > 0) {
                 onExplorerDataTypeChanged();
@@ -1102,6 +1226,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const syntax = epUserSelect ? epUserSelect.value : 'me';
         const enableAllEl = document.getElementById('pref-enable-all-endpoints');
         const enableAllVal = enableAllEl ? enableAllEl.checked : false;
+        const visibleRowsEl = document.getElementById('pref-suite-visible-rows');
+        const visibleRowsVal = visibleRowsEl ? parseInt(visibleRowsEl.value, 10) || 12 : 12;
 
         const prefs = {
             clientId: document.getElementById('pref-client-id').value,
@@ -1109,6 +1235,7 @@ document.addEventListener('DOMContentLoaded', () => {
             healthUserId: healthUserEl ? healthUserEl.value.trim() : '',
             endpointUserId: syntax,
             defaultUserId: syntax,
+            suiteVisibleRows: visibleRowsVal,
             redirect_uri: document.getElementById('pref-redirect-uri').value,
             redirectUri: document.getElementById('pref-redirect-uri').value,
             apiBaseUrl: document.getElementById('pref-api-base-url').value,
@@ -1129,7 +1256,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => { saveStatus.style.display = 'none'; }, 3000);
                 if (currentPreferences) {
                     currentPreferences.enableAllEndpoints = enableAllVal;
+                    currentPreferences.suiteVisibleRows = visibleRowsVal;
                 }
+                applySuiteVisibleRows(visibleRowsVal);
                 syncEndpointUserSyntax(syntax, false);
                 await loadAuthStatus();
                 await loadDataTypes();
@@ -1374,6 +1503,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (epUserSelect) {
             epUserSelect.addEventListener('change', (e) => {
                 syncEndpointUserSyntax(e.target.value, true);
+            });
+        }
+
+        const visibleRowsInput = document.getElementById('pref-suite-visible-rows');
+        if (visibleRowsInput) {
+            visibleRowsInput.addEventListener('input', (e) => {
+                applySuiteVisibleRows(e.target.value);
             });
         }
 

@@ -245,6 +245,15 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
+.suite-result-row {
+    animation: fadeInRow 0.2s ease-out;
+}
+
+@keyframes fadeInRow {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 /* Cards */
 .card {
     background: var(--bg-surface);
@@ -615,6 +624,82 @@ textarea.form-control {
     overflow-x: auto;
 }
 
+/* Scrollable Test Execution Results Container */
+.suite-scroll-box {
+    overflow-y: auto;
+    overflow-x: auto;
+    position: relative;
+    max-height: calc(42px + (var(--suite-visible-rows, 12) * 48px) + 1px);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    background: rgba(8, 14, 26, 0.4);
+    border-top: 1px solid var(--border-color);
+    box-sizing: border-box;
+}
+
+.suite-scroll-box thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #0b1325 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    height: 42px;
+    box-sizing: border-box;
+    padding: 11px 16px;
+    white-space: nowrap;
+}
+
+/* Strict uniform row height and single-line cells for suite results */
+.suite-scroll-box .data-table {
+    table-layout: auto;
+}
+
+.suite-scroll-box .data-table tbody tr {
+    height: 48px;
+    box-sizing: border-box;
+}
+
+.suite-scroll-box .data-table td {
+    height: 48px;
+    padding: 8px 16px;
+    box-sizing: border-box;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.suite-scroll-box .data-table td .pill-badge {
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.suite-scroll-box .data-table td:nth-child(6) {
+    max-width: 440px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.suite-scroll-box::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.suite-scroll-box::-webkit-scrollbar-track {
+    background: rgba(11, 19, 37, 0.8);
+    border-radius: 4px;
+}
+
+.suite-scroll-box::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.25);
+    border-radius: 4px;
+}
+
+.suite-scroll-box::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 189, 248, 0.5);
+}
+
 .data-table {
     width: 100%;
     border-collapse: collapse;
@@ -674,11 +759,13 @@ textarea.form-control {
 
 /* Suite Error Details */
 .suite-error-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
     line-height: 1.4;
-    max-width: 480px;
+    white-space: nowrap;
+    max-width: 440px;
 }
 
 .suite-error-code {
@@ -689,16 +776,21 @@ textarea.form-control {
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .suite-error-msg {
     color: #fca5a5;
-    font-size: 12px;
-    word-break: break-word;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     background: rgba(239, 68, 68, 0.08);
     border-left: 2px solid var(--danger);
-    padding: 4px 8px;
+    padding: 2px 6px;
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    max-width: 320px;
 }
 
 /* Scopes Selection Component - Compact Single Column */

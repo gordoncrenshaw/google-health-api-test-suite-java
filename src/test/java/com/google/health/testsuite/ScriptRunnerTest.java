@@ -52,4 +52,18 @@ public class ScriptRunnerTest {
         int exitCode = runner.runScript(scriptFile);
         assertEquals(0, exitCode, "Smoke test script should pass with exit code 0");
     }
+
+    @Test
+    void testRunStandardTestsScript() throws Exception {
+        File scriptFile = new File("scripts/standard_tests.yaml");
+        assertTrue(scriptFile.exists(), "standard_tests.yaml script must exist");
+
+        int exitCode = runner.runScript(scriptFile);
+        assertEquals(0, exitCode, "standard_tests.yaml should pass with exit code 0 in mock mode");
+
+        var results = runner.executeScript(scriptFile);
+        assertEquals(19, results.size(), "Should have 19 test steps (1 auth + 18 list data types)");
+        assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
+                "All standard tests should pass");
+    }
 }
