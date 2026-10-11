@@ -582,3 +582,64 @@ mvn exec:java -Dexec.args="--web 8080"
 # Mode 3: Script Runner
 mvn exec:java -Dexec.args="--script scripts/sample_suite.yaml"
 ```
+
+---
+
+## 🏷️ Application Versioning
+
+The test suite uses a **build-tool independent** versioning architecture (independent of Maven, Gradle, or other build tools). The single source of truth is maintained in:
+
+```
+src/main/java/com/google/health/testsuite/common/AppVersion.java
+```
+
+```java
+public final class AppVersion {
+    public static final String VERSION = "1.0.0";
+    public static final String API_TARGET = "v4";
+    public static final String RELEASE_DATE = "2026-10-10";
+}
+```
+
+- **Runtime Availability**: The version is exposed via `/api/status` and `/api/version` endpoints.
+- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.0` pill badge and in the system information banner).
+- **How to Update**: When adding new functionality or fixes, increment `AppVersion.VERSION` following Semantic Versioning (`MAJOR.MINOR.PATCH`) and document changes in the changelog below.
+
+---
+
+## 📋 Version History & Changelog
+
+### Version 1.0.0 (October 10, 2026) - *Initial Release*
+
+#### 🌟 New Features
+- **Three Execution Modes**:
+  - **Mode 1 (Interactive CLI Menu)**: ANSI-color interactive terminal interface with menus for preferences, tokens, single data types, full test suite, identity/profile, and script running.
+  - **Mode 2 (Modern Web UX)**: Dark-theme glassmorphism dashboard running on embedded HTTP server (`--web [port]`) with real-time test execution streaming.
+  - **Mode 3 (Non-Interactive Script Runner)**: Headless YAML/JSON script executor (`--script <path>`) with status and min/max range assertions, exit code `0` on success and `1` on failure for CI/CD pipelines.
+- **Google Health API v4 Coverage**:
+  - Full support for 19 health/fitness data types: `steps`, `distance`, `heart-rate`, `daily-resting-heart-rate`, `heart-rate-variability`, `electrocardiogram`, `active-energy-burned`, `basal-energy-burned`, `active-zone-minutes`, `altitude`, `body-weight`, `body-height`, `body-fat-percentage`, `blood-oxygen-saturation`, `blood-glucose`, `skin-temperature`, `sleep-sessions`, `exercise-workouts`, `paired-devices`.
+  - Identity, Profile, Irregular Rhythm Notifications (IRN), and Settings endpoints (`get_identity`, `get_profile`, `update_profile`, `get_irn_profile`, `get_settings`, `update_settings`, `list_devices`).
+  - Supported operations: `list`, `get`, `create`, `patch`, `rollup`, `dailyrollup`, `reconcile`, `exportexercisetcx`, and `batchdelete`.
+- **OAuth 2.0 Integration**:
+  - Credential persistence via `com.google.api.client.auth.oauth2.Credential` and `FileDataStoreFactory`.
+  - Automatic token refresh before expiration and on HTTP 401 Unauthorized errors.
+  - Dynamic scope selector in Web UX with real-time OAuth parameter string generation.
+  - One-click token refresh and countdown timers in Web UX.
+- **Data Types Catalog & Validation**:
+  - Single declarative catalog in `config/datatypes.yaml` with min/max range constraints.
+  - Interactive "Add Data Type" feature in Web UX to register new data types into `datatypes.yaml`.
+  - Validation engine checking numerical response boundaries across all test modes.
+- **Web UX Enhancements**:
+  - Real-time streaming test execution via NDJSON chunked HTTP responses.
+  - Configurable scrollable result window with uniform row heights and sticky table header.
+  - Dynamic user syntax switcher between `/users/me` and `/users/{healthUserId}`.
+  - Interactive API Explorer with live payload editor and one-click copyable `curl` command generator.
+  - Build-tool independent version display in the "Preferences & OAuth" tab.
+
+#### 🐛 Bug Fixes & Refinements
+- **Test Runner Results Display**: Changed table column from showing endpoint verbs (`ENDPOINT`) to descriptive test names (`TEST`) for clear identification of executed tests.
+- **Status Badges**: Removed redundant "HTTP" prefix in execution status badges (e.g. `200` instead of `HTTP 200`).
+- **Scroll Box Height Alignment**: Fixed calculation for the configurable scrollable box rows in the Test Suite tab to ensure the visible count matches user preferences exactly.
+- **Action Aliases**: Added aliases for `daily_rollup` / `dailyrollup` and `roll_up` / `rollup` in `SuiteExecutionEngine`.
+- **Script Validation**: Fixed syntax quoting in `scripts/standard_tests.yaml` and ensured strict 404 error handling if script file is missing.
+

@@ -1187,6 +1187,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const prefs = await res.json();
             currentPreferences = prefs;
             document.getElementById('pref-client-id').value = prefs.clientId || '';
+            if (prefs.appVersion) {
+                const versionBadge = document.getElementById('pref-app-version-badge');
+                if (versionBadge) versionBadge.textContent = `App v${prefs.appVersion}`;
+                const versionText = document.getElementById('pref-app-version-text');
+                if (versionText) versionText.textContent = prefs.appVersion;
+            }
+            if (prefs.apiTarget) {
+                const apiTargetEl = document.getElementById('pref-app-api-target');
+                if (apiTargetEl) apiTargetEl.textContent = prefs.apiTarget;
+            }
+            if (prefs.releaseDate) {
+                const releaseDateEl = document.getElementById('pref-app-release-date');
+                if (releaseDateEl) releaseDateEl.textContent = prefs.releaseDate;
+            }
             const healthUserField = document.getElementById('pref-health-user-id');
             if (healthUserField) {
                 healthUserField.value = prefs.healthUserId || '';

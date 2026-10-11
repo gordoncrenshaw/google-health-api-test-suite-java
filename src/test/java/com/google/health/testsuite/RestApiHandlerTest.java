@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.health.testsuite.auth.OAuthService;
 import com.google.health.testsuite.client.HealthApiClient;
+import com.google.health.testsuite.common.AppVersion;
 import com.google.health.testsuite.config.ConfigManager;
 import com.google.health.testsuite.config.DataTypeRegistry;
 import com.google.health.testsuite.config.Preferences;
@@ -216,5 +217,21 @@ public class RestApiHandlerTest {
         assertEquals("complete", lastEvent.get("type").asText());
         assertEquals(36, lastEvent.get("total").asInt());
         assertEquals(36, lastEvent.get("passed").asInt());
+    }
+
+    @Test
+    void testApiVersionReturnsAppVersion() throws Exception {
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/version"))
+                .GET()
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, resp.statusCode());
+
+        JsonNode root = jsonMapper.readTree(resp.body());
+        assertEquals(AppVersion.VERSION, root.get("version").asText());
+        assertEquals("v" + AppVersion.VERSION, root.get("formattedVersion").asText());
+        assertEquals("v4", root.get("apiTarget").asText());
     }
 }

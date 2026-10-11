@@ -607,11 +607,30 @@
 
                 <!-- Application Preferences Configuration Card -->
                 <div class="card glass-card">
-                    <div class="card-header">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                         <h2 class="card-title">Application Preferences Configuration</h2>
-                        <span class="file-badge">config/preferences.yaml</span>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <span id="pref-app-version-badge" class="pill-badge pill-cyan font-mono font-semibold" title="Application Version">App v1.0.0</span>
+                            <span class="file-badge">config/preferences.yaml</span>
+                        </div>
                     </div>
                     <div class="card-body">
+                        <!-- Application Version & Environment Info Banner -->
+                        <div class="mb-4" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="status-indicator status-online" style="width: 10px; height: 10px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);"></div>
+                                <div>
+                                    <div style="font-size: 0.85rem; font-weight: 600; color: #f1f5f9;">Google Health API Test Suite</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">Build-Tool Independent Versioning</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 16px; font-size: 0.8rem;">
+                                <div><strong class="text-muted">App Version:</strong> <span id="pref-app-version-text" class="pill-badge pill-cyan font-mono font-semibold" style="margin-left: 4px;">1.0.0</span></div>
+                                <div><strong class="text-muted">Target API:</strong> <span id="pref-app-api-target" class="pill-badge pill-neutral font-mono" style="margin-left: 4px;">v4</span></div>
+                                <div><strong class="text-muted">Release:</strong> <span id="pref-app-release-date" class="text-secondary font-mono" style="margin-left: 4px;">2026-10-10</span></div>
+                            </div>
+                        </div>
+
                         <form id="preferences-form">
                             <div class="grid-2-col">
                                 <div class="form-group">
