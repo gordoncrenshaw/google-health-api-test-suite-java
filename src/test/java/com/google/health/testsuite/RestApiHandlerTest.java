@@ -163,7 +163,7 @@ public class RestApiHandlerTest {
 
         JsonNode root = jsonMapper.readTree(resp.body());
         assertTrue(root.isArray());
-        assertEquals(37, root.size(), "Should return 37 results from standard_tests.yaml");
+        assertEquals(36, root.size(), "Should return 36 results from standard_tests.yaml");
         for (JsonNode item : root) {
             assertTrue(item.get("passed").asBoolean(), "Step should pass: " + item.get("testName").asText());
         }
@@ -201,11 +201,11 @@ public class RestApiHandlerTest {
         assertEquals(200, resp.statusCode());
 
         String[] lines = resp.body().split("\n");
-        assertTrue(lines.length >= 39, "Should contain start, 37 step events, and complete event");
+        assertTrue(lines.length >= 38, "Should contain start, 36 step events, and complete event");
 
         JsonNode firstEvent = jsonMapper.readTree(lines[0]);
         assertEquals("start", firstEvent.get("type").asText());
-        assertEquals(37, firstEvent.get("total").asInt());
+        assertEquals(36, firstEvent.get("total").asInt());
 
         JsonNode secondEvent = jsonMapper.readTree(lines[1]);
         assertEquals("step", secondEvent.get("type").asText());
@@ -214,7 +214,7 @@ public class RestApiHandlerTest {
 
         JsonNode lastEvent = jsonMapper.readTree(lines[lines.length - 1]);
         assertEquals("complete", lastEvent.get("type").asText());
-        assertEquals(37, lastEvent.get("total").asInt());
-        assertEquals(37, lastEvent.get("passed").asInt());
+        assertEquals(36, lastEvent.get("total").asInt());
+        assertEquals(36, lastEvent.get("passed").asInt());
     }
 }

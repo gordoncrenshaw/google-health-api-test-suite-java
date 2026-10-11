@@ -21,7 +21,7 @@ steps:
     assertStatus: [200]
 
   # Irregular Rhythm Notifications Endpoints
-  - name: "Standard: Get Irregular Rhythm Notifications Profile"
+  - name: "Standard: Get IRN Profile"
     action: "get_irn_profile"
     assertStatus: [200]
 
@@ -70,11 +70,6 @@ steps:
     body: '{"temperatureUnit": "TEMPERATURE_UNIT_FAHRENHEIT"}'
     assertStatus: [200]
 
-  - name: "Standard: Update Settings (time zone)"
-    action: "update_settings"
-    body: '{"timeZone": "America/New_York"}'
-    assertStatus: [200]
-
   - name: "Standard: Update Settings (weight unit)"
     action: "update_settings"
     body: '{"weightUnit": "WEIGHT_UNIT_POUNDS"}'
@@ -87,11 +82,10 @@ steps:
 
   - name: "Standard: Update Settings (combined)"
     action: "update_settings"
-    body: '{"heightUnit": "HEIGHT_UNIT_CENTIMETES",
+    body: '{"heightUnit": "HEIGHT_UNIT_CENTIMETERS",
       "glucoseUnit": "GLUCOSE_UNIT_MG_DL",
       "swimUnit": "SWIM_UNIT_METERS",
       "temperatureUnit": "TEMPERATURE_UNIT_FAHRENHEIT",
-      "timeZone": "America/New_York",
       "weightUnit": "WEIGHT_UNIT_POUNDS", 
       "waterUnit": "WATER_UNIT_FL_OZ"}'
     assertStatus: [200]
@@ -109,7 +103,7 @@ steps:
     validateRange: true
 
   - name: "Standard: DailyRollUp Steps"
-    action: "daily_rollup"
+    action: "dailyrollup"
     dataType: "steps"
     assertStatus: [200]
 

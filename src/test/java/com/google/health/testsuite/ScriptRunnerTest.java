@@ -62,7 +62,7 @@ public class ScriptRunnerTest {
         assertEquals(0, exitCode, "standard_tests.yaml should pass with exit code 0 in mock mode");
 
         var results = runner.executeScript(scriptFile);
-        assertEquals(37, results.size(), "Should have 37 test steps");
+        assertEquals(36, results.size(), "Should have 36 test steps");
         assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
                 "All standard tests should pass");
     }
