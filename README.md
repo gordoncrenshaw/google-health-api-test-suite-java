@@ -595,19 +595,33 @@ src/main/java/com/google/health/testsuite/common/AppVersion.java
 
 ```java
 public final class AppVersion {
-    public static final String VERSION = "1.0.0";
+    public static final String VERSION = "1.0.1";
     public static final String API_TARGET = "v4";
     public static final String RELEASE_DATE = "2026-10-10";
 }
 ```
 
 - **Runtime Availability**: The version is exposed via `/api/status` and `/api/version` endpoints.
-- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.0` pill badge and in the system information banner).
+- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.1` pill badge and in the system information banner).
 - **How to Update**: When adding new functionality or fixes, increment `AppVersion.VERSION` following Semantic Versioning (`MAJOR.MINOR.PATCH`) and document changes in the changelog below.
 
 ---
 
 ## 📋 Version History & Changelog
+
+### Version 1.0.1 (October 10, 2026)
+
+#### 🌟 New Features & Enhancements
+- **Script Runner Detailed Failure Reporting (Issue #14)**:
+  - **REST API (`POST /api/test/script`)**: When script test steps fail, the JSON response now returns:
+    - `failedTestNames`: Array containing the names of all failing test steps (e.g. `["Standard: Update Settings (combined)"]`).
+    - `failedTests`: Detailed array of failing items containing `testName`, `endpoint`, `dataType`, `statusCode`, `latencyMs`, and `message`.
+    - `message`: Formatted summary string explicitly identifying the failing test names (`"One or more script tests failed: <test-name>"`).
+    - Execution metrics: `total`, `passed`, `failed`, and `durationMs`.
+  - **CLI Script Runner (Mode 3)**: At the end of execution, if any tests failed, the execution summary now prints a highlighted `FAILED TESTS (<count>)` section listing each test step name, HTTP status code, and failure message for immediate debugging without scrolling.
+  - **`ScriptRunner.runScriptWithDetails(File)`**: Added programmatic API returning a structured `ScriptRunResult` object containing complete execution statistics and failure lists.
+
+---
 
 ### Version 1.0.0 (October 10, 2026) - *Initial Release*
 

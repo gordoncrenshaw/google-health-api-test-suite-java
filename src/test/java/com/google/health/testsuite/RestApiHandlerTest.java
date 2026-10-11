@@ -49,6 +49,10 @@ public class RestApiHandlerTest {
                 "{\"web\":{\"client_id\":\"test-client-id.apps.googleusercontent.com\",\"client_secret\":\"test-secret\"}}");
 
         configManager = new ConfigManager(tempPrefFile, tempSecretJsonFile);
+        Preferences prefs = configManager.getPreferences();
+        prefs.setMockMode(true);
+        configManager.savePreferences(prefs);
+
         oAuthService = new OAuthService(configManager, tempTokensDir);
         HealthApiClient apiClient = new HealthApiClient(configManager, oAuthService);
         DataTypeRegistry registry = new DataTypeRegistry(new File("config/datatypes.yaml"));
@@ -233,5 +237,96 @@ public class RestApiHandlerTest {
         assertEquals(AppVersion.VERSION, root.get("version").asText());
         assertEquals("v" + AppVersion.VERSION, root.get("formattedVersion").asText());
         assertEquals("v4", root.get("apiTarget").asText());
+    }
+
+    @Test
+    void testRunScriptEndpointSuccess() throws Exception {
+        String reqBody = "{\"scriptPath\":\"scripts/sample_suite.yaml\"}";
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/test/script"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(reqBody))
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, resp.statusCode());
+
+        JsonNode root = jsonMapper.readTree(resp.body());
+        assertEquals(0, root.get("exitCode").asInt());
+        assertTrue(root.get("success").asBoolean());
+        assertEquals(12, root.get("total").asInt());
+        assertEquals(12, root.get("passed").asInt());
+        assertEquals(0, root.get("failed").asInt());
+        assertTrue(root.get("failedTestNames").isArray());
+        assertEquals(0, root.get("failedTestNames").size());
+        assertTrue(root.get("failedTests").isArray());
+        assertEquals(0, root.get("failedTests").size());
+    }
+
+    @Test
+    void testRunScriptEndpointFailureWithFailedTestNames() throws Exception {
+        File tempScript = File.createTempFile("api_failing_script", ".yaml");
+        tempScript.deleteOnExit();
+
+        String yaml = """
+            name: "API Failing Test Suite"
+            stopOnError: false
+            steps:
+              - name: "Step A Passed"
+                action: "get_identity"
+                assertStatus: [200]
+              - name: "Step B Failed Status"
+                action: "get_identity"
+                assertStatus: [404]
+            """;
+        Files.writeString(tempScript.toPath(), yaml);
+
+        String reqBody = "{\"scriptPath\":\"" + tempScript.getAbsolutePath() + "\"}";
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/test/script"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(reqBody))
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, resp.statusCode());
+
+        JsonNode root = jsonMapper.readTree(resp.body());
+        assertEquals(1, root.get("exitCode").asInt());
+        assertFalse(root.get("success").asBoolean());
+        assertEquals(2, root.get("total").asInt());
+        assertEquals(1, root.get("passed").asInt());
+        assertEquals(1, root.get("failed").asInt());
+
+        // Verify Issue #14: failedTestNames array
+        assertTrue(root.has("failedTestNames"));
+        assertTrue(root.get("failedTestNames").isArray());
+        assertEquals(1, root.get("failedTestNames").size());
+        assertEquals("Step B Failed Status", root.get("failedTestNames").get(0).asText());
+
+        // Verify Issue #14: failedTests detailed array
+        assertTrue(root.has("failedTests"));
+        assertTrue(root.get("failedTests").isArray());
+        assertEquals(1, root.get("failedTests").size());
+        JsonNode failedItem = root.get("failedTests").get(0);
+        assertEquals("Step B Failed Status", failedItem.get("testName").asText());
+        assertEquals(200, failedItem.get("statusCode").asInt());
+        assertTrue(failedItem.has("message"));
+
+        // Verify message summary explicitly mentions failed test name
+        assertTrue(root.get("message").asText().contains("Step B Failed Status"));
+    }
+
+    @Test
+    void testRunScriptEndpointFileNotFound() throws Exception {
+        String reqBody = "{\"scriptPath\":\"scripts/non_existent_file.yaml\"}";
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/test/script"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(reqBody))
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        assertEquals(404, resp.statusCode());
     }
 }

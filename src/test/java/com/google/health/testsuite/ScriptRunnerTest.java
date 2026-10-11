@@ -66,4 +66,52 @@ public class ScriptRunnerTest {
         assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
                 "All standard tests should pass");
     }
+
+    @Test
+    void testRunScriptWithDetailsSuccess() {
+        File scriptFile = new File("scripts/sample_suite.yaml");
+        ScriptRunner.ScriptRunResult result = runner.runScriptWithDetails(scriptFile);
+
+        assertEquals(0, result.getExitCode());
+        assertTrue(result.isSuccess());
+        assertEquals(12, result.getTotalSteps());
+        assertEquals(12, result.getPassedCount());
+        assertEquals(0, result.getFailedCount());
+        assertTrue(result.getFailedTestNames().isEmpty());
+        assertTrue(result.getFailedTests().isEmpty());
+    }
+
+    @Test
+    void testRunScriptWithDetailsFailureReportsFailedTestNames() throws Exception {
+        // Create a temporary script containing a step expected to fail status assertion
+        File tempScript = File.createTempFile("failing_test_script", ".yaml");
+        tempScript.deleteOnExit();
+
+        String yaml = """
+            name: "Failing Test Suite"
+            description: "Script with an intentional failure"
+            stopOnError: false
+            steps:
+              - name: "Passing Step 1"
+                action: "get_identity"
+                assertStatus: [200]
+              - name: "Expected Failing Step"
+                action: "get_identity"
+                assertStatus: [999]
+            """;
+        java.nio.file.Files.writeString(tempScript.toPath(), yaml);
+
+        ScriptRunner.ScriptRunResult result = runner.runScriptWithDetails(tempScript);
+
+        assertEquals(1, result.getExitCode());
+        assertFalse(result.isSuccess());
+        assertEquals(2, result.getTotalSteps());
+        assertEquals(1, result.getPassedCount());
+        assertEquals(1, result.getFailedCount());
+        assertEquals(1, result.getFailedTestNames().size());
+        assertEquals("Expected Failing Step", result.getFailedTestNames().get(0));
+        assertEquals(1, result.getFailedTests().size());
+        assertEquals("Expected Failing Step", result.getFailedTests().get(0).getTestName());
+        assertFalse(result.getFailedTests().get(0).isPassed());
+    }
 }
