@@ -12,6 +12,7 @@ import com.google.health.testsuite.config.ConfigManager;
 import com.google.health.testsuite.config.DataTypeRegistry;
 import com.google.health.testsuite.config.Preferences;
 import com.google.health.testsuite.config.UserAuthorization;
+import com.google.health.testsuite.common.AppVersion;
 import com.google.health.testsuite.model.*;
 import com.google.health.testsuite.runner.ScriptRunner;
 import com.google.health.testsuite.runner.SuiteExecutionEngine;
@@ -82,6 +83,7 @@ public class RestApiHandler implements HttpHandler {
                     if ("GET".equals(method)) handleGetScopes(exchange);
                     else sendError(exchange, 405, "Method Not Allowed");
                 }
+                case "/api/version", "/api/status" -> handleGetVersion(exchange);
                 case "/api/auth/status" -> handleGetAuthStatus(exchange);
                 case "/api/auth/refresh" -> handleRefreshToken(exchange);
                 case "/api/auth/url" -> handleGetAuthUrl(exchange);
@@ -161,9 +163,24 @@ public class RestApiHandler implements HttpHandler {
         }
     }
 
+    private void handleGetVersion(HttpExchange exchange) throws IOException {
+        ObjectNode node = jsonMapper.createObjectNode();
+        node.put("version", AppVersion.VERSION);
+        node.put("formattedVersion", AppVersion.getFormattedVersion());
+        node.put("appName", AppVersion.APP_NAME);
+        node.put("apiTarget", AppVersion.API_TARGET);
+        node.put("releaseDate", AppVersion.RELEASE_DATE);
+        sendJson(exchange, 200, node.toPrettyString());
+    }
+
     private void handleGetPreferences(HttpExchange exchange) throws IOException {
         Preferences prefs = configManager.getPreferences();
         ObjectNode node = jsonMapper.valueToTree(prefs);
+        node.put("appVersion", AppVersion.VERSION);
+        node.put("formattedVersion", AppVersion.getFormattedVersion());
+        node.put("apiTarget", AppVersion.API_TARGET);
+        node.put("releaseDate", AppVersion.RELEASE_DATE);
+        node.put("appName", AppVersion.APP_NAME);
         node.put("clientId", prefs.getClientId());
         node.put("endpointUserId", prefs.getEndpointUserId());
         node.put("endpointUserSyntax", prefs.getEndpointUserId());
@@ -248,6 +265,7 @@ public class RestApiHandler implements HttpHandler {
         node.put("effectiveUserId", engine.getApiClient().getEffectiveUserId());
         node.put("useHealthUserId", prefs.isUseHealthUserId());
         node.put("accessToken", auth.getAccessToken() != null ? auth.getAccessToken() : "");
+        node.put("appVersion", AppVersion.VERSION);
 
         sendJson(exchange, 200, node.toPrettyString());
     }
