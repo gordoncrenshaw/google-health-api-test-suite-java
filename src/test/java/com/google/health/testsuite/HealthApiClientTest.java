@@ -295,10 +295,18 @@ public class HealthApiClientTest {
         DataTypeDefinition exercise = registry.getDataType("exercise").orElseThrow();
 
         // 1. Reconcile
-        ApiResponse recResp = client.reconcileDataPoints(steps, "{}");
+        ApiResponse recResp = client.reconcileDataPoints(steps, Map.of("pageSize", "10"));
         assertNotNull(recResp);
+        assertEquals("GET", recResp.getRequestMethod());
         assertTrue(recResp.getRequestUrl().contains("/dataPoints:reconcile"));
+        assertTrue(recResp.getRequestUrl().contains("pageSize=10"));
         assertTrue(recResp.getCurlCommand().contains(":reconcile"));
+        assertTrue(recResp.getCurlCommand().contains("-X GET"));
+
+        ApiResponse defaultRecResp = client.reconcileDataPoints(steps);
+        assertNotNull(defaultRecResp);
+        assertEquals("GET", defaultRecResp.getRequestMethod());
+        assertTrue(defaultRecResp.getRequestUrl().contains("/dataPoints:reconcile"));
 
         // 2. ExportExerciseTcx
         ApiResponse exportResp = client.exportExerciseTcx(exercise, "exercise-dp-1");

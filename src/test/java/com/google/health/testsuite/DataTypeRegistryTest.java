@@ -41,8 +41,9 @@ public class DataTypeRegistryTest {
         assertEquals(0.0, steps.getMinValue());
         assertEquals(1000000.0, steps.getMaxValue());
         assertTrue(steps.supportsEndpoint("list"));
-        assertTrue(steps.supportsEndpoint("create"));
         assertTrue(steps.supportsEndpoint("rollUp"));
+        assertTrue(steps.supportsEndpoint("reconcile"));
+        assertFalse(steps.supportsEndpoint("create"));
         assertTrue(steps.isWithinRange(5000));
         assertFalse(steps.isWithinRange(-1));
         assertFalse(steps.isWithinRange(1000001));
@@ -172,13 +173,13 @@ public class DataTypeRegistryTest {
         // Test specific known endpoint mappings
         DataTypeDefinition steps = registry.getDataType("steps").orElseThrow();
         assertTrue(steps.getEndpointsSupported().get("list"));
-        assertTrue(steps.getEndpointsSupported().get("get"));
-        assertTrue(steps.getEndpointsSupported().get("create"));
-        assertTrue(steps.getEndpointsSupported().get("batchDelete"));
+        assertFalse(steps.getEndpointsSupported().get("get"));
+        assertFalse(steps.getEndpointsSupported().get("create"));
+        assertFalse(steps.getEndpointsSupported().get("batchDelete"));
         assertTrue(steps.getEndpointsSupported().get("rollUp"));
         assertTrue(steps.getEndpointsSupported().get("dailyRollUp"));
         assertFalse(steps.getEndpointsSupported().get("exportExerciseTcx"));
-        assertFalse(steps.getEndpointsSupported().get("reconcile"));
+        assertTrue(steps.getEndpointsSupported().get("reconcile"));
         assertFalse(steps.getEndpointsSupported().get("patch"));
 
         DataTypeDefinition exercise = registry.getDataType("exercise").orElseThrow();

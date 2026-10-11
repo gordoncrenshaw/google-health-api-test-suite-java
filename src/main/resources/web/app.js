@@ -534,7 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (epLower === 'batchdelete') {
             if (qpContainer) qpContainer.style.display = 'none';
-        } else if (epLower === 'list') {
+        } else if (epLower === 'list' || epLower === 'reconcile') {
             if (qpContainer) qpContainer.style.display = 'block';
             if (qpGrid) qpGrid.style.display = 'grid';
             if (qpNoMsg) qpNoMsg.style.display = 'none';
@@ -583,7 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
             scopeEl.textContent = getRequiredScopeForOperation(dt, epLower);
         }
 
-        if (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'reconcile' || epLower === 'patch' || epLower === 'batchdelete') {
+        if (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'patch' || epLower === 'batchdelete') {
             payloadContainer.style.display = 'block';
             if (!payloadInput.value.trim() || payloadInput.dataset.forEp !== epLower) {
                 payloadInput.value = generateSamplePayload(selName, epLower);
@@ -704,7 +704,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const epLower = (ep || '').toLowerCase();
 
         let method = 'GET';
-        if (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'batchdelete' || epLower === 'reconcile') {
+        if (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'batchdelete') {
             method = 'POST';
         } else if (epLower === 'patch') {
             method = 'PATCH';
@@ -721,11 +721,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (epLower === 'rollup') path += ':rollUp';
         else if (epLower === 'dailyrollup') path += ':dailyRollUp';
         else if (epLower === 'batchdelete') path += ':batchDelete';
-        else if (epLower === 'reconcile') path += ':reconcile';
         else if (epLower === 'exportexercisetcx') path += '/sample-dp-1:exportExerciseTcx';
         else if (epLower === 'get') path += '/sample-dp-1';
         else if (epLower === 'patch') path += '/sample-dp-1';
-        else if (epLower === 'list') {
+        else if (epLower === 'list' || epLower === 'reconcile') {
+            if (epLower === 'reconcile') path += ':reconcile';
             const queryParams = [];
             const pageSizeVal = (document.getElementById('explorer-page-size')?.value || '').trim();
             const filterVal = (document.getElementById('explorer-filter-param')?.value || '').trim();
@@ -778,7 +778,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.textContent = 'Sending...';
 
         try {
-            const hasBody = (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'reconcile' || epLower === 'patch' || epLower === 'batchdelete');
+            const hasBody = (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'patch' || epLower === 'batchdelete');
             let bodyToSend = payload;
             if (epLower === 'batchdelete' && (!payload || !payload.trim())) {
                 bodyToSend = `{\n  "names": [\n    string\n  ]\n}`;
@@ -788,7 +788,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const params = {};
-            if (epLower === 'list') {
+            if (epLower === 'list' || epLower === 'reconcile') {
                 const pageSizeVal = (document.getElementById('explorer-page-size')?.value || '').trim();
                 const filterVal = (document.getElementById('explorer-filter-param')?.value || '').trim();
                 const pageTokenVal = (document.getElementById('explorer-page-token')?.value || '').trim();
