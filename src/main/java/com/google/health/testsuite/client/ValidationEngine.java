@@ -39,8 +39,11 @@ public class ValidationEngine {
             JsonNode root = jsonMapper.readTree(responseBody);
             List<Double> extractedValues = new ArrayList<>();
 
-            // 1. Check dataPoints array (ListDataPoints response)
+            // 1. Check dataPoints array (ListDataPoints or RollUp response)
             JsonNode dataPoints = root.get("dataPoints");
+            if (dataPoints == null || !dataPoints.isArray()) {
+                dataPoints = root.get("rollupDataPoints");
+            }
             if (dataPoints != null && dataPoints.isArray()) {
                 if (dataPoints.isEmpty()) {
                     return ValidationResult.pass("Response has 0 data points (empty range)", null, def.getMinValue(), def.getMaxValue());

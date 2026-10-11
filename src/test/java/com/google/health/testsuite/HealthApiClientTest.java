@@ -381,5 +381,47 @@ public class HealthApiClientTest {
         assertNotNull(engineResult);
         assertTrue(engineResult.isPassed(), engineResult.getMessage());
     }
+
+    @Test
+    void testBuildDefaultRollUpBody() {
+        String body = HealthApiClient.buildDefaultRollUpBody();
+        assertNotNull(body);
+        assertTrue(body.contains("\"range\""));
+        assertTrue(body.contains("\"startTime\""));
+        assertTrue(body.contains("\"endTime\""));
+        assertTrue(body.contains("\"windowSize\":\"3600s\""));
+    }
+
+    @Test
+    void testBuildDefaultDailyRollUpBody() {
+        String body = HealthApiClient.buildDefaultDailyRollUpBody();
+        assertNotNull(body);
+        assertTrue(body.contains("\"range\""));
+        assertTrue(body.contains("\"start\""));
+        assertTrue(body.contains("\"end\""));
+        assertTrue(body.contains("\"year\""));
+        assertTrue(body.contains("\"month\""));
+        assertTrue(body.contains("\"day\""));
+        assertTrue(body.contains("\"windowSizeDays\":1"));
+    }
+
+    @Test
+    void testRollUpAndDailyRollUpSmartDefaultExecution() {
+        DataTypeDefinition steps = registry.getDataType("steps").orElseThrow();
+
+        // 1. rollUp with null body uses smart default
+        ApiResponse rollupResp = client.rollUpDataPoints(steps, null);
+        assertNotNull(rollupResp);
+        assertEquals(200, rollupResp.getStatusCode());
+        assertTrue(rollupResp.getRequestBody().contains("\"windowSize\":\"3600s\""));
+        assertTrue(rollupResp.getRequestBody().contains("\"startTime\""));
+
+        // 2. dailyRollUp with null body uses smart default
+        ApiResponse dailyResp = client.dailyRollUpDataPoints(steps, null);
+        assertNotNull(dailyResp);
+        assertEquals(200, dailyResp.getStatusCode());
+        assertTrue(dailyResp.getRequestBody().contains("\"windowSizeDays\":1"));
+        assertTrue(dailyResp.getRequestBody().contains("\"start\""));
+    }
 }
 

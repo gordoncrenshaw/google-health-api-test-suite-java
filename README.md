@@ -595,19 +595,34 @@ src/main/java/com/google/health/testsuite/common/AppVersion.java
 
 ```java
 public final class AppVersion {
-    public static final String VERSION = "1.0.1";
+    public static final String VERSION = "1.0.2";
     public static final String API_TARGET = "v4";
-    public static final String RELEASE_DATE = "2026-10-10";
+    public static final String RELEASE_DATE = "2026-10-11";
 }
 ```
 
 - **Runtime Availability**: The version is exposed via `/api/status` and `/api/version` endpoints.
-- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.1` pill badge and in the system information banner).
+- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.2` pill badge and in the system information banner).
 - **How to Update**: When adding new functionality or fixes, increment `AppVersion.VERSION` following Semantic Versioning (`MAJOR.MINOR.PATCH`) and document changes in the changelog below.
 
 ---
 
 ## 📋 Version History & Changelog
+
+### Version 1.0.2 (October 11, 2026)
+
+#### 🐛 Bug Fixes & API Enhancements
+- **Fix "Standard: DailyRollUp Steps" Failure (Issue #15)**:
+  - Added smart dynamic civil time range defaults (`buildDefaultDailyRollUpBody()`) in `HealthApiClient` when `dailyRollUp` is executed without a request body. Automatically computes a valid 7-day `CivilTimeInterval` (`start` and `end` with `date` and `time` objects) relative to UTC, preventing `HTTP 400 Invalid argument in request`.
+  - Updated Web UX API Explorer in `app.js` to pre-populate valid `CivilTimeInterval` and `windowSizeDays: 1` template payloads when `dailyrollup` is selected.
+- **Fix "Standard: RollUp Steps" Failure (Issue #16)**:
+  - Added smart dynamic physical time range defaults (`buildDefaultRollUpBody()`) in `HealthApiClient` when `rollUp` is executed without a request body. Automatically computes a rolling 24-hour UTC window (`startTime` and `endTime` in RFC 3339 format) with `windowSize: "3600s"`, preventing `HTTP 400 Invalid time range`.
+  - Updated Web UX API Explorer in `app.js` to pre-populate valid RFC 3339 `range` and `windowSize: "3600s"` template payloads when `rollup` is selected.
+- **Validation Engine Enhancements**:
+  - Updated `ValidationEngine` to parse and validate `rollupDataPoints` arrays in addition to standard `dataPoints` arrays for range check assertions.
+  - Updated `MockHealthBackend` to include `rollupDataPoints` array in mock mode.
+
+---
 
 ### Version 1.0.1 (October 10, 2026)
 
