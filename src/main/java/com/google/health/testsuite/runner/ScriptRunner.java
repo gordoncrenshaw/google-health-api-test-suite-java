@@ -83,12 +83,94 @@ public class ScriptRunner {
     }
 
     /**
+     * Execution summary for a script execution run.
+     */
+    public static class ScriptRunResult {
+        private final int exitCode;
+        private final boolean success;
+        private final int totalSteps;
+        private final int passedCount;
+        private final int failedCount;
+        private final long durationMs;
+        private final List<TestResult> allResults;
+        private final List<TestResult> failedTests;
+        private final List<String> failedTestNames;
+        private final String errorMessage;
+
+        public ScriptRunResult(int exitCode, int totalSteps, int passedCount, int failedCount,
+                               long durationMs, List<TestResult> allResults,
+                               List<TestResult> failedTests, List<String> failedTestNames,
+                               String errorMessage) {
+            this.exitCode = exitCode;
+            this.success = exitCode == 0;
+            this.totalSteps = totalSteps;
+            this.passedCount = passedCount;
+            this.failedCount = failedCount;
+            this.durationMs = durationMs;
+            this.allResults = allResults != null ? allResults : java.util.Collections.emptyList();
+            this.failedTests = failedTests != null ? failedTests : java.util.Collections.emptyList();
+            this.failedTestNames = failedTestNames != null ? failedTestNames : java.util.Collections.emptyList();
+            this.errorMessage = errorMessage;
+        }
+
+        public int getExitCode() {
+            return exitCode;
+        }
+
+        public boolean isSuccess() {
+            return success;
+        }
+
+        public int getTotalSteps() {
+            return totalSteps;
+        }
+
+        public int getPassedCount() {
+            return passedCount;
+        }
+
+        public int getFailedCount() {
+            return failedCount;
+        }
+
+        public long getDurationMs() {
+            return durationMs;
+        }
+
+        public List<TestResult> getAllResults() {
+            return allResults;
+        }
+
+        public List<TestResult> getFailedTests() {
+            return failedTests;
+        }
+
+        public List<String> getFailedTestNames() {
+            return failedTestNames;
+        }
+
+        public String getErrorMessage() {
+            return errorMessage;
+        }
+    }
+
+    /**
      * Executes the given script file and returns exit code (0 = success, 1 = failure).
      */
     public int runScript(File scriptFile) {
+        return runScriptWithDetails(scriptFile).getExitCode();
+    }
+
+    /**
+     * Executes the given script file, prints progress and summary to stdout,
+     * and returns a detailed ScriptRunResult containing failed test names and results.
+     */
+    public ScriptRunResult runScriptWithDetails(File scriptFile) {
         if (!scriptFile.exists()) {
             System.err.println("Error: Script file does not exist: " + scriptFile.getAbsolutePath());
-            return 1;
+            return new ScriptRunResult(1, 0, 0, 1, 0, java.util.Collections.emptyList(),
+                    java.util.Collections.emptyList(), java.util.Collections.emptyList(),
+                    "Script file does not exist: " + scriptFile.getAbsolutePath());
         }
 
         TestSuiteScript script;
@@ -100,7 +182,9 @@ public class ScriptRunner {
             }
         } catch (IOException e) {
             System.err.println("Error parsing script file " + scriptFile.getName() + ": " + e.getMessage());
-            return 1;
+            return new ScriptRunResult(1, 0, 0, 1, 0, java.util.Collections.emptyList(),
+                    java.util.Collections.emptyList(), java.util.Collections.emptyList(),
+                    "Error parsing script file: " + e.getMessage());
         }
 
         System.out.println("================================================================================");
@@ -113,6 +197,8 @@ public class ScriptRunner {
         System.out.println("================================================================================");
 
         List<TestResult> results = new ArrayList<>();
+        List<TestResult> failedTests = new ArrayList<>();
+        List<String> failedTestNames = new ArrayList<>();
         long totalStartTime = System.currentTimeMillis();
 
         int passedCount = 0;
@@ -130,6 +216,8 @@ public class ScriptRunner {
                 System.out.printf("\u001B[32mPASS\u001B[0m (HTTP %d, %dms)\n", result.getStatusCode(), result.getLatencyMs());
             } else {
                 failedCount++;
+                failedTests.add(result);
+                failedTestNames.add(result.getTestName());
                 System.out.printf("\u001B[31mFAIL\u001B[0m (HTTP %d, %dms) - %s\n", result.getStatusCode(), result.getLatencyMs(), result.getMessage());
                 if (result.getApiResponse() != null) {
                     System.out.println("       URL: " + result.getApiResponse().getRequestUrl());
@@ -147,8 +235,17 @@ public class ScriptRunner {
         System.out.println("================================================================================");
         System.out.printf(" EXECUTION SUMMARY: Total: %d | \u001B[32mPassed: %d\u001B[0m | \u001B[31mFailed: %d\u001B[0m | Time: %dms\n",
                 results.size(), passedCount, failedCount, totalDuration);
+        if (failedCount > 0) {
+            System.out.println("\n\u001B[31mFAILED TESTS (" + failedCount + "):\u001B[0m");
+            for (TestResult r : failedTests) {
+                System.out.printf("  - \u001B[31m%s\u001B[0m (HTTP %d): %s\n",
+                        r.getTestName(), r.getStatusCode(), r.getMessage());
+            }
+        }
         System.out.println("================================================================================");
 
-        return failedCount == 0 ? 0 : 1;
+        int exitCode = failedCount == 0 ? 0 : 1;
+        return new ScriptRunResult(exitCode, script.getSteps().size(), passedCount, failedCount,
+                totalDuration, results, failedTests, failedTestNames, null);
     }
 }

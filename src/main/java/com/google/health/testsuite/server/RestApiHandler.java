@@ -558,12 +558,42 @@ public class RestApiHandler implements HttpHandler {
         }
 
         ScriptRunner runner = new ScriptRunner(engine);
-        int exitCode = runner.runScript(scriptFile);
+        ScriptRunner.ScriptRunResult result = runner.runScriptWithDetails(scriptFile);
 
         ObjectNode resp = jsonMapper.createObjectNode();
-        resp.put("exitCode", exitCode);
-        resp.put("success", exitCode == 0);
-        resp.put("message", exitCode == 0 ? "All script tests passed successfully." : "One or more script tests failed.");
+        resp.put("exitCode", result.getExitCode());
+        resp.put("success", result.isSuccess());
+        resp.put("total", result.getTotalSteps());
+        resp.put("passed", result.getPassedCount());
+        resp.put("failed", result.getFailedCount());
+        resp.put("durationMs", result.getDurationMs());
+
+        if (result.isSuccess()) {
+            resp.put("message", "All script tests passed successfully.");
+        } else {
+            String namesStr = String.join(", ", result.getFailedTestNames());
+            resp.put("message", "One or more script tests failed: " + namesStr);
+        }
+
+        ArrayNode namesArray = resp.putArray("failedTestNames");
+        for (String name : result.getFailedTestNames()) {
+            namesArray.add(name);
+        }
+
+        ArrayNode testsArray = resp.putArray("failedTests");
+        for (TestResult tr : result.getFailedTests()) {
+            ObjectNode item = testsArray.addObject();
+            item.put("testName", tr.getTestName());
+            if (tr.getDataType() != null) {
+                item.put("dataType", tr.getDataType());
+            }
+            if (tr.getEndpoint() != null) {
+                item.put("endpoint", tr.getEndpoint());
+            }
+            item.put("statusCode", tr.getStatusCode());
+            item.put("latencyMs", tr.getLatencyMs());
+            item.put("message", tr.getMessage());
+        }
 
         sendJson(exchange, 200, resp.toPrettyString());
     }
