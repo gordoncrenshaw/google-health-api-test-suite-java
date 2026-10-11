@@ -105,11 +105,13 @@ steps:
   - name: "Standard: DailyRollUp Steps"
     action: "dailyrollup"
     dataType: "steps"
+    body: '{"range": {"start": {"date": {"year": 2026, "month": 10, "day": 1}, "time": {"hours": 0, "minutes": 0, "seconds": 0}}, "end": {"date": {"year": 2026, "month": 10, "day": 8}, "time": {"hours": 23, "minutes": 59, "seconds": 59}}}, "windowSizeDays": 1}'
     assertStatus: [200]
 
   - name: "Standard: RollUp Steps"
     action: "rollup"
     dataType: "steps"
+    body: '{"range": {"startTime": "2026-10-01T00:00:00Z", "endTime": "2026-10-02T00:00:00Z"}, "windowSize": "3600s"}'
     assertStatus: [200]
 
   # Datatype List Endpoints

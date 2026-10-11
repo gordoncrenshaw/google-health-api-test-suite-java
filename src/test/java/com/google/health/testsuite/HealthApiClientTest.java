@@ -383,45 +383,51 @@ public class HealthApiClientTest {
     }
 
     @Test
-    void testBuildDefaultRollUpBody() {
-        String body = HealthApiClient.buildDefaultRollUpBody();
-        assertNotNull(body);
-        assertTrue(body.contains("\"range\""));
-        assertTrue(body.contains("\"startTime\""));
-        assertTrue(body.contains("\"endTime\""));
-        assertTrue(body.contains("\"windowSize\":\"3600s\""));
-    }
-
-    @Test
-    void testBuildDefaultDailyRollUpBody() {
-        String body = HealthApiClient.buildDefaultDailyRollUpBody();
-        assertNotNull(body);
-        assertTrue(body.contains("\"range\""));
-        assertTrue(body.contains("\"start\""));
-        assertTrue(body.contains("\"end\""));
-        assertTrue(body.contains("\"year\""));
-        assertTrue(body.contains("\"month\""));
-        assertTrue(body.contains("\"day\""));
-        assertTrue(body.contains("\"windowSizeDays\":1"));
-    }
-
-    @Test
-    void testRollUpAndDailyRollUpSmartDefaultExecution() {
+    void testRollUpAndDailyRollUpExplicitBodyExecution() {
         DataTypeDefinition steps = registry.getDataType("steps").orElseThrow();
 
-        // 1. rollUp with null body uses smart default
-        ApiResponse rollupResp = client.rollUpDataPoints(steps, null);
+        String rollupBody = "{\"range\":{\"startTime\":\"2026-10-01T00:00:00Z\",\"endTime\":\"2026-10-02T00:00:00Z\"},\"windowSize\":\"3600s\"}";
+        ApiResponse rollupResp = client.rollUpDataPoints(steps, rollupBody);
         assertNotNull(rollupResp);
         assertEquals(200, rollupResp.getStatusCode());
-        assertTrue(rollupResp.getRequestBody().contains("\"windowSize\":\"3600s\""));
-        assertTrue(rollupResp.getRequestBody().contains("\"startTime\""));
+        assertEquals(rollupBody, rollupResp.getRequestBody());
 
-        // 2. dailyRollUp with null body uses smart default
-        ApiResponse dailyResp = client.dailyRollUpDataPoints(steps, null);
+        String dailyBody = "{\"range\":{\"start\":{\"date\":{\"year\":2026,\"month\":10,\"day\":1},\"time\":{\"hours\":0,\"minutes\":0,\"seconds\":0}},\"end\":{\"date\":{\"year\":2026,\"month\":10,\"day\":8},\"time\":{\"hours\":23,\"minutes\":59,\"seconds\":59}}},\"windowSizeDays\":1}";
+        ApiResponse dailyResp = client.dailyRollUpDataPoints(steps, dailyBody);
         assertNotNull(dailyResp);
         assertEquals(200, dailyResp.getStatusCode());
-        assertTrue(dailyResp.getRequestBody().contains("\"windowSizeDays\":1"));
-        assertTrue(dailyResp.getRequestBody().contains("\"start\""));
+        assertEquals(dailyBody, dailyResp.getRequestBody());
+    }
+
+    @Test
+    void testTestStepBodyDeserialization() throws Exception {
+        com.fasterxml.jackson.dataformat.yaml.YAMLMapper yamlMapper = new com.fasterxml.jackson.dataformat.yaml.YAMLMapper();
+
+        // 1. Quoted JSON string
+        String yamlStringBody = """
+            name: "Test String Body"
+            action: "rollup"
+            dataType: "steps"
+            body: '{"range":{"startTime":"2026-10-01T00:00:00Z","endTime":"2026-10-02T00:00:00Z"},"windowSize":"3600s"}'
+            """;
+        com.google.health.testsuite.model.TestStep step1 = yamlMapper.readValue(yamlStringBody, com.google.health.testsuite.model.TestStep.class);
+        assertNotNull(step1.getBody());
+        assertTrue(step1.getBody().contains("\"windowSize\":\"3600s\""));
+
+        // 2. Structured YAML mapping
+        String yamlObjectBody = """
+            name: "Test Object Body"
+            action: "rollup"
+            dataType: "steps"
+            body:
+              range:
+                startTime: "2026-10-01T00:00:00Z"
+                endTime: "2026-10-02T00:00:00Z"
+              windowSize: "3600s"
+            """;
+        com.google.health.testsuite.model.TestStep step2 = yamlMapper.readValue(yamlObjectBody, com.google.health.testsuite.model.TestStep.class);
+        assertNotNull(step2.getBody());
+        assertTrue(step2.getBody().contains("\"windowSize\":\"3600s\""));
     }
 }
 

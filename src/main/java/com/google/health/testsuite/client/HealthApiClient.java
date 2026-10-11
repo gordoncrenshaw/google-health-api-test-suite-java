@@ -302,34 +302,6 @@ public class HealthApiClient {
     }
 
     /**
-     * Builds default physical time rollup body (UTC rolling 24-hour window with 1-hour buckets).
-     */
-    public static String buildDefaultRollUpBody() {
-        Instant now = Instant.now().truncatedTo(ChronoUnit.SECONDS);
-        Instant start = now.minus(24, ChronoUnit.HOURS);
-        return String.format(
-                "{\"range\":{\"startTime\":\"%s\",\"endTime\":\"%s\"},\"windowSize\":\"3600s\"}",
-                DateTimeFormatter.ISO_INSTANT.format(start),
-                DateTimeFormatter.ISO_INSTANT.format(now)
-        );
-    }
-
-    /**
-     * Builds default civil time daily rollup body (rolling 7-day civil window with 1-day buckets).
-     */
-    public static String buildDefaultDailyRollUpBody() {
-        LocalDate end = LocalDate.now(ZoneOffset.UTC);
-        LocalDate start = end.minusDays(7);
-        return String.format(
-                "{\"range\":{\"start\":{\"date\":{\"year\":%d,\"month\":%d,\"day\":%d},\"time\":{\"hours\":0,\"minutes\":0,\"seconds\":0}}," +
-                "\"end\":{\"date\":{\"year\":%d,\"month\":%d,\"day\":%d},\"time\":{\"hours\":23,\"minutes\":59,\"seconds\":59}}}," +
-                "\"windowSizeDays\":1}",
-                start.getYear(), start.getMonthValue(), start.getDayOfMonth(),
-                end.getYear(), end.getMonthValue(), end.getDayOfMonth()
-        );
-    }
-
-    /**
      * Standard Physical Rollup request.
      * Syntax: POST /{version}/users/{userId}/dataTypes/{dataType}/dataPoints:rollUp
      */
@@ -337,10 +309,7 @@ public class HealthApiClient {
         String version = getEffectiveVersion(def);
         String userId = getEffectiveUserId();
         String path = "/" + version + "/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints:rollUp";
-        String effectiveBody = (jsonBody != null && !jsonBody.trim().isEmpty() && !jsonBody.trim().equals("{}"))
-                ? jsonBody
-                : buildDefaultRollUpBody();
-        return execute("POST", path, null, effectiveBody, def);
+        return execute("POST", path, null, jsonBody != null ? jsonBody : "{}", def);
     }
 
     /**
@@ -351,10 +320,7 @@ public class HealthApiClient {
         String version = getEffectiveVersion(def);
         String userId = getEffectiveUserId();
         String path = "/" + version + "/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints:dailyRollUp";
-        String effectiveBody = (jsonBody != null && !jsonBody.trim().isEmpty() && !jsonBody.trim().equals("{}"))
-                ? jsonBody
-                : buildDefaultDailyRollUpBody();
-        return execute("POST", path, null, effectiveBody, def);
+        return execute("POST", path, null, jsonBody != null ? jsonBody : "{}", def);
     }
 
     /**

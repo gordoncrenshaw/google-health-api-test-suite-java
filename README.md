@@ -613,10 +613,11 @@ public final class AppVersion {
 
 #### 🐛 Bug Fixes & API Enhancements
 - **Fix "Standard: DailyRollUp Steps" Failure (Issue #15)**:
-  - Added smart dynamic civil time range defaults (`buildDefaultDailyRollUpBody()`) in `HealthApiClient` when `dailyRollUp` is executed without a request body. Automatically computes a valid 7-day `CivilTimeInterval` (`start` and `end` with `date` and `time` objects) relative to UTC, preventing `HTTP 400 Invalid argument in request`.
+  - Added request payload `body` in `scripts/standard_tests.yaml` defining a valid `CivilTimeInterval` (`start` and `end` with `date` and `time` objects) and `windowSizeDays: 1`, preventing `HTTP 400 Invalid argument in request`.
+  - Updated `TestStep` with custom `BodyDeserializer` to ensure the script execution engine accurately deserializes and transmits the payload value (`body`), supporting both quoted JSON strings and YAML object mappings.
   - Updated Web UX API Explorer in `app.js` to pre-populate valid `CivilTimeInterval` and `windowSizeDays: 1` template payloads when `dailyrollup` is selected.
 - **Fix "Standard: RollUp Steps" Failure (Issue #16)**:
-  - Added smart dynamic physical time range defaults (`buildDefaultRollUpBody()`) in `HealthApiClient` when `rollUp` is executed without a request body. Automatically computes a rolling 24-hour UTC window (`startTime` and `endTime` in RFC 3339 format) with `windowSize: "3600s"`, preventing `HTTP 400 Invalid time range`.
+  - Added request payload `body` in `scripts/standard_tests.yaml` (and `scripts/sample_suite.yaml`) defining a valid RFC 3339 physical time `range` (`startTime` and `endTime`) and `windowSize: "3600s"`, preventing `HTTP 400 Invalid time range`.
   - Updated Web UX API Explorer in `app.js` to pre-populate valid RFC 3339 `range` and `windowSize: "3600s"` template payloads when `rollup` is selected.
 - **Validation Engine Enhancements**:
   - Updated `ValidationEngine` to parse and validate `rollupDataPoints` arrays in addition to standard `dataPoints` arrays for range check assertions.

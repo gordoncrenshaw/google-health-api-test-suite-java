@@ -87,4 +87,5 @@ steps:
   - name: "RollUp Steps Aggregation"
     action: "rollup"
     dataType: "steps"
+    body: '{"range": {"startTime": "2026-10-01T00:00:00Z", "endTime": "2026-10-02T00:00:00Z"}, "windowSize": "3600s"}'
     assertStatus: [200]
