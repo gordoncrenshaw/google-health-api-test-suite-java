@@ -522,7 +522,7 @@ dataTypes:
       exportExerciseTcx: false
       reconcile: true
       patch: false
-    filterParameterName: "run_vo2_max.interval.start_time"
+    filterParameterName: "run_vo2_max.sample_time.physical_time"
     webhooksSupported: true
     minValue: 10
     maxValue: 100
@@ -610,7 +610,7 @@ dataTypes:
       exportExerciseTcx: false
       reconcile: true
       patch: false
-    filterParameterName: "vo2_max.interval.start_time"
+    filterParameterName: "vo2_max.sample_time.physical_time"
     webhooksSupported: true
     minValue: 10.0
     maxValue: 100.0
