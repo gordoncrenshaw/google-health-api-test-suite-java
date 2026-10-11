@@ -1,0 +1,579 @@
+# Quick smoke test for verifying Google Health API basic connectivity
+name: "Google Health API Smoke Test"
+description: "Quick sanity checks on all endpoints"
+stopOnError: false
+
+steps:
+  - name: "Standard: Check Auth Status"
+    action: "check_auth"
+    assertStatus: [200]
+
+  # Datatype Tests
+  - name: "Standard: Active Energy Burned List (Default)"
+    action: "list"
+    dataType: "active-energy-burned"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned List (pageSize)"
+    action: "list"
+    dataType: "active-energy-burned"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned List (pageToken)"
+    action: "list"
+    dataType: "active-energy-burned"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned List (filter: civil_start_time)"
+    action: "list"
+    dataType: "active-energy-burned"
+    queryParams:
+      filter: 'active_energy_burned.interval.civil_start_time >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned List (filter: start_time)"
+    action: "list"
+    dataType: "active-energy-burned"
+    queryParams:
+      filter: 'active_energy_burned.interval.start_time >= "2026-10-01T00:00:00Z" AND active_energy_burned.interval.start_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "active-energy-burned"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "active-energy-burned"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "active-energy-burned"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned List (combined)"
+    action: "list"
+    dataType: "active-energy-burned"
+    queryParams:
+      filter: 'active_energy_burned.interval.start_time >= "2026-10-01T00:00:00Z" AND active_energy_burned.interval.start_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned DailyRollUp (Default)"
+    action: "dailyrollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        }
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Active Energy Burned DailyRollUp (windowSizeDays)"
+    action: "dailyrollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "windowSizeDays": 1
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Active Energy Burned DailyRollUp (pageSize)"
+    action: "dailyrollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "pageSize": 25
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Active Energy Burned DailyRollUp (pageToken)"
+    action: "dailyrollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "pageToken": ""
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Active Energy Burned DailyRollUp (dataSourceFamily: all-sources)"
+    action: "dailyrollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/all-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Active Energy Burned DailyRollUp (dataSourceFamily: google-wearables)"
+    action: "dailyrollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Active Energy Burned DailyRollUp (dataSourceFamily: google-sources)"
+    action: "dailyrollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Active Energy Burned DailyRollUp (dataSourceFamily: self-sources)"
+    action: "dailyrollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/self-sources"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Active Energy Burned DailyRollUp (combined)"
+    action: "dailyrollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "windowSizeDays": 1,
+        "pageSize": 25,
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Active Energy Burned RollUp (Default)"
+    action: "rollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+       "windowSize": "60s"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Active Energy Burned RollUp (pageSize)"
+    action: "rollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "pageSize": 25
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Active Energy Burned RollUp (pageToken)"
+    action: "rollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s","pageToken": ""
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Active Energy Burned RollUp (dataSourceFamily: all-sources)"
+    action: "rollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/all-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Active Energy Burned RollUp (dataSourceFamily: google-wearables)"
+    action: "rollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Active Energy Burned RollUp (dataSourceFamily: google-sources)"
+    action: "rollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Active Energy Burned RollUp (dataSourceFamily: self-sources)"
+    action: "rollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/self-sources"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Active Energy Burned RollUp (combined)"
+    action: "rollup"
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "pageSize": 25,
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Active Energy Burned Reconcile (Default)"
+    action: "reconcile"
+    dataType: "active-energy-burned"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "active-energy-burned"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "active-energy-burned"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned Reconcile (filter: civil_start_time)"
+    action: "reconcile"
+    dataType: "active-energy-burned"
+    queryParams:
+      filter: 'active_energy_burned.interval.civil_start_time >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned Reconcile (filter: start_time)"
+    action: "reconcile"
+    dataType: "active-energy-burned"
+    queryParams:
+      filter: 'active_energy_burned.interval.start_time >= "2026-10-01T00:00:00Z" AND active_energy_burned.interval.start_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "active-energy-burned"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "active-energy-burned"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "active-energy-burned"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Active Energy Burned Reconcile (combined)"
+    action: "reconcile"
+    dataType: "active-energy-burned"
+    queryParams:
+      filter: 'active_energy_burned.interval.start_time >= "2026-10-01T00:00:00Z" AND active_energy_burned.interval.start_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

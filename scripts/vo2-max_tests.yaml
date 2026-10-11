@@ -1,0 +1,152 @@
+# Quick smoke test for verifying Google Health API basic connectivity
+name: "Google Health API Smoke Test"
+description: "Quick sanity checks on all endpoints"
+stopOnError: false
+
+steps:
+  - name: "Standard: Check Auth Status"
+    action: "check_auth"
+    assertStatus: [200]
+
+  # Datatype Tests
+  - name: "Standard: Steps List (Default)"
+    action: "list"
+    dataType: "steps"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps List (pageSize)"
+    action: "list"
+    dataType: "steps"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps List (pageToken)"
+    action: "list"
+    dataType: "steps"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps List (filter: civil_start_time)"
+    action: "list"
+    dataType: "steps"
+    queryParams:
+      filter: 'steps.interval.civil_start_time >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps List (filter: start_time)"
+    action: "list"
+    dataType: "steps"
+    queryParams:
+      filter: 'steps.interval.start_time >= "2026-10-01T00:00:00Z" AND steps.interval.start_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "steps"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "steps"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "steps"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps List (combined)"
+    action: "list"
+    dataType: "steps"
+    queryParams:
+      filter: 'steps.interval.start_time >= "2026-10-01T00:00:00Z" AND steps.interval.start_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (Default)"
+    action: "reconcile"
+    dataType: "steps"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "steps"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "steps"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (filter: civil_start_time)"
+    action: "reconcile"
+    dataType: "steps"
+    queryParams:
+      filter: 'steps.interval.civil_start_time >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (filter: start_time)"
+    action: "reconcile"
+    dataType: "steps"
+    queryParams:
+      filter: 'steps.interval.start_time >= "2026-10-01T00:00:00Z" AND steps.interval.start_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "steps"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "steps"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "steps"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (combined)"
+    action: "reconcile"
+    dataType: "steps"
+    queryParams:
+      filter: 'steps.interval.start_time >= "2026-10-01T00:00:00Z" AND steps.interval.start_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
