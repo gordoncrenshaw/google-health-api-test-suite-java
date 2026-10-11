@@ -31,19 +31,19 @@ steps:
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max List (filter: civil_start_time)"
+  - name: "Standard: Run VO2 Max List (filter: civil_time)"
     action: "list"
     dataType: "run-vo2-max"
     queryParams:
-      filter: 'run_vo2_max.interval.civil_start_time >= "2026-10-01"'
+      filter: 'run_vo2_max.sample_time.civil_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max List (filter: start_time)"
+  - name: "Standard: Run VO2 Max List (filter: physical_time)"
     action: "list"
     dataType: "run-vo2-max"
     queryParams:
-      filter: 'run_vo2_max.interval.start_time >= "2026-10-01T00:00:00Z" AND run_vo2_max.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'run_vo2_max.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND run_vo2_max.sample_time.physical_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
@@ -75,7 +75,7 @@ steps:
     action: "list"
     dataType: "run-vo2-max"
     queryParams:
-      filter: 'run_vo2_max.interval.start_time >= "2026-10-01T00:00:00Z" AND run_vo2_max.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'run_vo2_max.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND run_vo2_max.sample_time.physical_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true
@@ -529,19 +529,19 @@ steps:
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max Reconcile (filter: civil_start_time)"
+  - name: "Standard: Run VO2 Max Reconcile (filter: civil_time)"
     action: "reconcile"
     dataType: "run-vo2-max"
     queryParams:
-      filter: 'run_vo2_max.interval.civil_start_time >= "2026-10-01"'
+      filter: 'run_vo2_max.sample_time.civil_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max Reconcile (filter: start_time)"
+  - name: "Standard: Run VO2 Max Reconcile (filter: physical_time)"
     action: "reconcile"
     dataType: "run-vo2-max"
     queryParams:
-      filter: 'run_vo2_max.interval.start_time >= "2026-10-01T00:00:00Z" AND run_vo2_max.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'run_vo2_max.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND run_vo2_max.sample_time.physical_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
@@ -573,7 +573,7 @@ steps:
     action: "reconcile"
     dataType: "run-vo2-max"
     queryParams:
-      filter: 'run_vo2_max.interval.start_time >= "2026-10-01T00:00:00Z" AND run_vo2_max.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'run_vo2_max.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND run_vo2_max.sample_time.physical_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true
