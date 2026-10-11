@@ -1,0 +1,508 @@
+# Quick smoke test for verifying Google Health API basic connectivity
+name: "Google Health API Smoke Test"
+description: "Quick sanity checks on all endpoints"
+stopOnError: false
+
+steps:
+  - name: "Standard: Check Auth Status"
+    action: "check_auth"
+    assertStatus: [200]
+
+  # Datatype Tests
+  - name: "Standard: Steps DailyRollUp (Default)"
+    action: "dailyrollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        }
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Steps DailyRollUp (windowSizeDays)"
+    action: "dailyrollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "windowSizeDays": 1
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Steps DailyRollUp (pageSize)"
+    action: "dailyrollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "pageSize": 25
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Steps DailyRollUp (pageToken)"
+    action: "dailyrollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "pageToken": ""
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Steps DailyRollUp (dataSourceFamily: all-sources)"
+    action: "dailyrollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/all-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Steps DailyRollUp (dataSourceFamily: google-wearables)"
+    action: "dailyrollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Steps DailyRollUp (dataSourceFamily: google-sources)"
+    action: "dailyrollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Steps DailyRollUp (dataSourceFamily: self-sources)"
+    action: "dailyrollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/self-sources"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Steps DailyRollUp (combined)"
+    action: "dailyrollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "windowSizeDays": 1,
+        "pageSize": 25,
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Steps RollUp (Default)"
+    action: "rollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+       "windowSize": "60s"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Steps RollUp (pageSize)"
+    action: "rollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "pageSize": 25
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Steps RollUp (pageToken)"
+    action: "rollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s","pageToken": ""
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Steps RollUp (dataSourceFamily: all-sources)"
+    action: "rollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/all-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Steps RollUp (dataSourceFamily: google-wearables)"
+    action: "rollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Steps RollUp (dataSourceFamily: google-sources)"
+    action: "rollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Steps RollUp (dataSourceFamily: self-sources)"
+    action: "rollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/self-sources"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Steps RollUp (combined)"
+    action: "rollup"
+    dataType: "steps"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "pageSize": 25,
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Steps Reconcile (Default)"
+    action: "reconcile"
+    dataType: "steps"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "steps"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "steps"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (filter: civil_start_time)"
+    action: "reconcile"
+    dataType: "steps"
+    queryParams:
+      filter: 'steps.interval.civil_start_time >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (filter: start_time)"
+    action: "reconcile"
+    dataType: "steps"
+    queryParams:
+      filter: 'steps.interval.start_time >= "2026-10-01T00:00:00Z" AND steps.interval.start_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "steps"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "steps"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "steps"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Steps Reconcile (combined)"
+    action: "reconcile"
+    dataType: "steps"
+    queryParams:
+      filter: 'steps.interval.start_time >= "2026-10-01T00:00:00Z" AND steps.interval.start_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

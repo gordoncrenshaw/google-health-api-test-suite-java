@@ -595,19 +595,44 @@ src/main/java/com/google/health/testsuite/common/AppVersion.java
 
 ```java
 public final class AppVersion {
-    public static final String VERSION = "1.0.3";
+    public static final String VERSION = "1.0.4";
     public static final String API_TARGET = "v4";
     public static final String RELEASE_DATE = "2026-10-11";
 }
 ```
 
 - **Runtime Availability**: The version is exposed via `/api/status` and `/api/version` endpoints.
-- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.3` pill badge and in the system information banner).
+- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.4` pill badge and in the system information banner).
 - **How to Update**: When adding new functionality or fixes, increment `AppVersion.VERSION` following Semantic Versioning (`MAJOR.MINOR.PATCH`) and document changes in the changelog below.
 
 ---
 
 ## 📋 Version History & Changelog
+
+### Version 1.0.4 (October 11, 2026)
+
+#### 🌟 New Features & API Enhancements
+- **Add Standard Tests for Activity Data Types (Issue #20)**:
+  - Added individual standard test suite scripts across all activity-related Google Health API data types:
+    - [`scripts/active-minutes_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/active-minutes_tests.yaml): Full test suite for `active-minutes` (`list`, `dailyrollup`, `rollup`, `reconcile`).
+    - [`scripts/active-zone-minutes_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/active-zone-minutes_tests.yaml): Full test suite for `active-zone-minutes` (`list`, `dailyrollup`, `rollup`, `reconcile`).
+    - [`scripts/activity-energy-burned_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/activity-energy-burned_tests.yaml): Full test suite for `active-energy-burned` (`list`, `dailyrollup`, `rollup`, `reconcile`).
+    - [`scripts/activity-level_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/activity-level_tests.yaml): Full test suite for `activity-level` (`list`, `dailyrollup`, `rollup`, `reconcile`).
+    - [`scripts/altitude_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/altitude_tests.yaml): Full test suite for `altitude` (`list`, `dailyrollup`, `rollup`, `reconcile`).
+    - [`scripts/calories-in-heart-rate-zone_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/calories-in-heart-rate-zone_tests.yaml): Aggregate test suite for `calories-in-heart-rate-zone` (`dailyrollup`, `rollup`).
+    - [`scripts/daily-vo2-max_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/daily-vo2-max_tests.yaml): Point-in-time test suite for `daily-vo2-max` (`list`, `reconcile`).
+    - [`scripts/distance_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/distance_tests.yaml): Full test suite for `distance` (`list`, `dailyrollup`, `rollup`, `reconcile`).
+    - [`scripts/floors_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/floors_tests.yaml): Full aggregate & reconcile test suite for `floors` (`dailyrollup`, `rollup`, `reconcile`).
+    - [`scripts/run-vo2-max_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/run-vo2-max_tests.yaml): Full test suite for `run-vo2-max` (`list`, `dailyrollup`, `rollup`, `reconcile`).
+    - [`scripts/sedentary-period_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/sedentary-period_tests.yaml): Full test suite for `sedentary-period` (`list`, `dailyrollup`, `rollup`, `reconcile`).
+    - [`scripts/swim-lengths-data_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/swim-lengths-data_tests.yaml): Full test suite for `swim-lengths-data` (`list`, `dailyrollup`, `rollup`, `reconcile`).
+    - [`scripts/time-in-heart-rate-zone_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/time-in-heart-rate-zone_tests.yaml): Full test suite for `time-in-heart-rate-zone` (`list`, `dailyrollup`, `rollup`, `reconcile`).
+    - [`scripts/total-calories_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/total-calories_tests.yaml): Aggregate test suite for `total-calories` (`dailyrollup`, `rollup`).
+    - [`scripts/vo2-max_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/vo2-max_tests.yaml): Point-in-time test suite for `vo2-max` (`list`, `reconcile`).
+  - Standardized naming convention `Standard: <DisplayName> <Endpoint> (<param>)` across all test suites.
+  - Tailored endpoint test definitions to each data type's API capabilities (omitting rollups for point-in-time metrics, omitting raw list for aggregate-only metrics).
+
+---
 
 ### Version 1.0.3 (October 11, 2026)
 
