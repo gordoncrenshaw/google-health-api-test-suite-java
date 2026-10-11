@@ -130,7 +130,7 @@ public class ValidationEngine {
             for (String field : new String[]{"count", "beatsPerMinute", "millimeters", "gainMeters",
                     "kcal", "percentage", "bloodGlucoseMilligramsPerDeciliter", "weightGrams",
                     "heightMillimeters", "activeZoneMinutes", "durationSeconds", "rmssd", "value",
-                    "temperatureCelsius"}) {
+                    "temperatureCelsius", "minutes", "vo2Max", "strokeCount"}) {
                 JsonNode fNode = typeSubNode.get(field);
                 if (fNode != null && fNode.isValueNode()) {
                     try {
