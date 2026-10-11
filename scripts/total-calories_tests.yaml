@@ -9,9 +9,9 @@ steps:
     assertStatus: [200]
 
   # Datatype Tests
-  - name: "Standard: Steps DailyRollUp (Default)"
+  - name: "Standard: Total Calories DailyRollUp (Default)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {
@@ -43,9 +43,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps DailyRollUp (windowSizeDays)"
+  - name: "Standard: Total Calories DailyRollUp (windowSizeDays)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {
@@ -78,9 +78,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps DailyRollUp (pageSize)"
+  - name: "Standard: Total Calories DailyRollUp (pageSize)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {
@@ -113,9 +113,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps DailyRollUp (pageToken)"
+  - name: "Standard: Total Calories DailyRollUp (pageToken)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {
@@ -148,9 +148,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps DailyRollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Total Calories DailyRollUp (dataSourceFamily: all-sources)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {
@@ -183,9 +183,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps DailyRollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Total Calories DailyRollUp (dataSourceFamily: google-wearables)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {
@@ -218,9 +218,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps DailyRollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Total Calories DailyRollUp (dataSourceFamily: google-sources)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {
@@ -253,9 +253,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps DailyRollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Total Calories DailyRollUp (dataSourceFamily: self-sources)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {
@@ -288,9 +288,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps DailyRollUp (combined)"
+  - name: "Standard: Total Calories DailyRollUp (combined)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {
@@ -325,9 +325,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps RollUp (Default)"
+  - name: "Standard: Total Calories RollUp (Default)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {
@@ -338,9 +338,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps RollUp (pageSize)"
+  - name: "Standard: Total Calories RollUp (pageSize)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {
@@ -352,9 +352,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps RollUp (pageToken)"
+  - name: "Standard: Total Calories RollUp (pageToken)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {
@@ -365,9 +365,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps RollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Total Calories RollUp (dataSourceFamily: all-sources)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {
@@ -379,9 +379,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps RollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Total Calories RollUp (dataSourceFamily: google-wearables)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {
@@ -393,9 +393,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps RollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Total Calories RollUp (dataSourceFamily: google-sources)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {
@@ -407,9 +407,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps RollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Total Calories RollUp (dataSourceFamily: self-sources)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {
@@ -421,9 +421,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps RollUp (combined)"
+  - name: "Standard: Total Calories RollUp (combined)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "total-calories"
     body: |
       {
         "range": {

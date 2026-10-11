@@ -9,9 +9,9 @@ steps:
     assertStatus: [200]
 
   # Datatype Tests
-  - name: "Standard: Steps DailyRollUp (Default)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (Default)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -43,9 +43,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps DailyRollUp (windowSizeDays)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (windowSizeDays)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -78,9 +78,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps DailyRollUp (pageSize)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (pageSize)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -113,9 +113,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps DailyRollUp (pageToken)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (pageToken)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -148,9 +148,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps DailyRollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (dataSourceFamily: all-sources)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -183,9 +183,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps DailyRollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (dataSourceFamily: google-wearables)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -218,9 +218,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps DailyRollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (dataSourceFamily: google-sources)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -253,9 +253,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps DailyRollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (dataSourceFamily: self-sources)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -288,9 +288,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps DailyRollUp (combined)"
+  - name: "Standard: Calories In Heart Rate Zone DailyRollUp (combined)"
     action: "dailyrollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -325,9 +325,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps RollUp (Default)"
+  - name: "Standard: Calories In Heart Rate Zone RollUp (Default)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -338,9 +338,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps RollUp (pageSize)"
+  - name: "Standard: Calories In Heart Rate Zone RollUp (pageSize)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -352,9 +352,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps RollUp (pageToken)"
+  - name: "Standard: Calories In Heart Rate Zone RollUp (pageToken)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -365,9 +365,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps RollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Calories In Heart Rate Zone RollUp (dataSourceFamily: all-sources)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -379,9 +379,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps RollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Calories In Heart Rate Zone RollUp (dataSourceFamily: google-wearables)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -393,9 +393,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps RollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Calories In Heart Rate Zone RollUp (dataSourceFamily: google-sources)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -407,9 +407,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Steps RollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Calories In Heart Rate Zone RollUp (dataSourceFamily: self-sources)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -421,9 +421,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Steps RollUp (combined)"
+  - name: "Standard: Calories In Heart Rate Zone RollUp (combined)"
     action: "rollup"
-    dataType: "steps"
+    dataType: "calories-in-heart-rate-zone"
     body: |
       {
         "range": {
