@@ -4,9 +4,9 @@ This document defines standard instructions and operational workflows for Antigr
 
 ---
 
-## 🚀 GitHub Push & Release Workflow
+## 🚀 Development, Testing & GitHub Release Workflow
 
-Whenever asked to push changes to GitHub, cut a release, or resolve an issue, **always** follow this 5-step checklist:
+Whenever implementing changes, fixing bugs, or resolving issues, **always** follow this workflow:
 
 ### 1. Branching Strategy
 - **Never push directly to `master`** unless explicitly requested by the user.
@@ -16,32 +16,38 @@ Whenever asked to push changes to GitHub, cut a release, or resolve an issue, **
   `release/<version>` (e.g., `release/1.0.1`)
 - Base new branches off the latest `origin/master`.
 
-### 2. Validation & Build Verification
-- **Run the test suite**: Execute `mvn test`. Ensure all unit and integration tests pass with 0 failures before committing.
+### 2. Implementation & Local Validation
+- **Run the test suite**: Execute `mvn test`. Ensure all unit and integration tests pass with 0 failures.
 - **Rebuild the shaded executable JAR**: Execute `mvn clean package -DskipTests` to ensure `target/health-api-testsuite.jar` is updated.
-- If the background web server daemon is running, restart it with the updated JAR so live testing reflects the latest code.
+- If the background web server daemon is running, restart it with the updated JAR so the user can immediately test live changes in their browser or API.
+- Report the implementation details and test results to the user so they can test the changes.
 
-### 3. Versioning & Release Documentation
-- When introducing new features, fixes, or releases:
+### 3. 🛑 User Testing & Approval Gate (CRITICAL RULE)
+- **DO NOT commit or push any changes to GitHub** until:
+  1. The user has tested the changes themselves first.
+  2. The user explicitly asks to commit and upload/push changes to GitHub.
+- Keep all modifications in the working tree/branch until the user provides this explicit confirmation.
+
+### 4. Versioning & Release Documentation (After User Approval)
+- Once the user confirms testing and requests the upload:
   - **Single Source of Truth**: Update `AppVersion.VERSION` in [`src/main/java/com/google/health/testsuite/common/AppVersion.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/common/AppVersion.java) following Semantic Versioning (`MAJOR.MINOR.PATCH`).
   - **Release Notes / Changelog**: Add the release notes section under `## 📋 Version History & Changelog` in [`README.md`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/README.md) documenting:
     - Target issue number and title.
     - Summary of new features, bug fixes, API endpoint additions, or UI enhancements.
 
-### 4. Clean Staging, Commits & Push
+### 5. Clean Staging, Commits & Push
 - **Review git status**: Inspect `git status` and `git diff` before adding files.
 - **Do NOT stage runtime or sensitive files**:
   - `tokens/` (OAuth credential store)
   - `client_secret.json` (Google Cloud OAuth secrets)
   - Local runtime changes in `config/preferences.yaml`
 - **Commit Message Format**:
-  - Provide a concise, descriptive commit title.
-  - Reference the issue number (e.g., `(Closes #14)`).
+  - Provide a concise, descriptive commit title referencing the issue number (e.g., `(Closes #14)`).
   - Example: `git commit -m "List failed tests and failure details in script runner response (Closes #14) - Release v1.0.1"`
 - **Push to Remote**: Push the branch to GitHub:
   `git push -u origin <branch-name>`
 
-### 5. GitHub Issue & PR Updates
+### 6. GitHub Issue & PR Updates
 - **Update GitHub Issue**: Post a clear comment on the associated GitHub issue detailing:
   - Branch and commit hash where the change is located.
   - Bulleted summary of the changes made.

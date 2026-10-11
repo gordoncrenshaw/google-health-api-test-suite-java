@@ -325,13 +325,17 @@ public class HealthApiClient {
 
     /**
      * Standard Reconcile Data Points request.
-     * Syntax: POST /{version}/users/{userId}/dataTypes/{dataType}/dataPoints:reconcile
+     * Syntax: GET /{version}/users/{userId}/dataTypes/{dataType}/dataPoints:reconcile
      */
-    public ApiResponse reconcileDataPoints(DataTypeDefinition def, String jsonBody) {
+    public ApiResponse reconcileDataPoints(DataTypeDefinition def, Map<String, String> queryParams) {
         String version = getEffectiveVersion(def);
         String userId = getEffectiveUserId();
         String path = "/" + version + "/users/" + userId + "/dataTypes/" + def.getName() + "/dataPoints:reconcile";
-        return execute("POST", path, null, jsonBody != null ? jsonBody : "{}", def);
+        return execute("GET", path, queryParams, null, def);
+    }
+
+    public ApiResponse reconcileDataPoints(DataTypeDefinition def) {
+        return reconcileDataPoints(def, Collections.emptyMap());
     }
 
     /**

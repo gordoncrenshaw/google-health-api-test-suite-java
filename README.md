@@ -247,7 +247,7 @@ Each test step entry in `steps` supports the following attribute names and value
 | `dataPointId` | String | Conditional | `"default-dp"` / `"sample-dp-1"` | Identifier of the specific data point. Used by single-point operations (`get`, `patch`, `exportexercisetcx`). |
 | `userId` | String | No | `null` (active pref) | User identifier in URL syntax (`/v4/users/{userId}/...`). Supported values: `"me"`, a specific numeric Health User ID (e.g., `"7226778021918831098"`), or `"auto"` (falls back to active `endpointUserId` from `config/preferences.yaml`). |
 | `queryParams` | Map / Object | No | `{}` | Key-value pairs appended as URL query parameters (e.g., `pageSize: "25"`, `pageToken: "..."`, `filter: "..."`). |
-| `body` | String | Conditional | `null` | Raw JSON string payload for requests that send data (`create`, `update_profile`, `update_settings`, `rollup`, `dailyrollup`, `reconcile`, `patch`, `batchdelete`). |
+| `body` | String | Conditional | `null` | Raw JSON string payload for requests that send data (`create`, `update_profile`, `update_settings`, `rollup`, `dailyrollup`, `patch`, `batchdelete`). |
 | `assertStatus` | Integer or List of Integers | No | `[200]` | Expected HTTP status codes for the step to pass. Accepts a single integer (e.g., `200`) or a YAML list of integers (e.g., `[200]`, `[200, 204]`, `[404]`). |
 | `validateRange` | Boolean | No | `true` | Validates returned numerical measurements in the response payload against the `minValue` and `maxValue` defined in `config/datatypes.yaml`. Supported values: `true` or `false`. |
 | `assertContains` | List of Strings | No | `[]` | List of substrings that must be present in the raw HTTP response body for the test to pass (e.g., `["dataPoints"]`, `["temperatureUnit"]`). |
@@ -266,7 +266,7 @@ The `action` attribute supports the following operations and alias names:
 | `create` | `create_datapoint` | `POST /v4/users/{userId}/dataTypes/{dataType}/dataPoints` | Inserts a new data point using JSON in `body`. |
 | `rollup` | - | `POST /v4/users/{userId}/dataTypes/{dataType}/dataPoints:rollUp` | Computes physical aggregate rollups over intervals. Optional JSON in `body`. |
 | `dailyrollup` | `daily_rollup` | `POST /v4/users/{userId}/dataTypes/{dataType}/dataPoints:dailyRollUp` | Computes daily aggregate rollups. Optional JSON in `body`. |
-| `reconcile` | - | `POST /v4/users/{userId}/dataTypes/{dataType}/dataPoints:reconcile` | Reconciles data points (e.g., sleep stage timeline records). Sends JSON `body`. |
+| `reconcile` | - | `GET /v4/users/{userId}/dataTypes/{dataType}/dataPoints:reconcile` | Reconciles deduplicated data points across sources. Accepts optional `queryParams` (`pageSize`, `pageToken`, `filter`, `dataSourceFamily`). |
 | `patch` | `patch_datapoint` | `PATCH /v4/users/{userId}/dataTypes/{dataType}/dataPoints/{dataPointId}` | Updates an existing data point by ID with JSON `body`. |
 | `exportexercisetcx` | `export_exercise_tcx` | `GET /v4/users/{userId}/dataTypes/{dataType}/dataPoints/{dataPointId}:exportTcx` | Exports GPS and heart rate TCX track XML for an exercise data point. |
 | `batchdelete` | `batch_delete` | `POST /v4/users/{userId}/dataTypes/{dataType}/dataPoints:batchDelete` | Deletes multiple data points by name. Sends JSON `body` or `queryParams.names`. |
@@ -595,19 +595,42 @@ src/main/java/com/google/health/testsuite/common/AppVersion.java
 
 ```java
 public final class AppVersion {
-    public static final String VERSION = "1.0.2";
+    public static final String VERSION = "1.0.3";
     public static final String API_TARGET = "v4";
     public static final String RELEASE_DATE = "2026-10-11";
 }
 ```
 
 - **Runtime Availability**: The version is exposed via `/api/status` and `/api/version` endpoints.
-- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.2` pill badge and in the system information banner).
+- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.3` pill badge and in the system information banner).
 - **How to Update**: When adding new functionality or fixes, increment `AppVersion.VERSION` following Semantic Versioning (`MAJOR.MINOR.PATCH`) and document changes in the changelog below.
 
 ---
 
 ## 📋 Version History & Changelog
+
+### Version 1.0.3 (October 11, 2026)
+
+#### 🌟 New Features & API Enhancements
+- **Add Standard Tests for "steps" Data Type (Issue #19)**:
+  - Expanded test coverage for the `steps` data type across all supported endpoints in [`scripts/standard_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests.yaml) and [`scripts/steps_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/steps_tests.yaml).
+  - Adopted standardized test naming convention: `Standard: Steps <Endpoint> (<param>)`.
+  - Added comprehensive step configurations for:
+    - **List Endpoint**: Default, `pageSize: 5`, `pageToken`, `filter: civil_start_time`, `filter: start_time`, `dataSourceFamily: all-sources`, `dataSourceFamily: google-wearables`, `dataSourceFamily: google-sources`, and combined parameters.
+    - **DailyRollUp Endpoint**: Default, `windowSizeDays: 1`, `pageSize: 25`, `pageToken`, `dataSourceFamily` variants, and combined parameters.
+    - **RollUp Endpoint**: Default, `pageSize: 25`, `pageToken`, `dataSourceFamily` variants, and combined parameters.
+    - **Reconcile Endpoint**: Default, `pageSize: 5`, `pageToken`, `filter` variants, `dataSourceFamily` variants, and combined parameters.
+- **Reconcile Endpoint Implementation & Query Parameter Alignment**:
+  - Implemented `reconcile` in [`HealthApiClient.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/client/HealthApiClient.java) as an HTTP `GET` operation (`/v4/users/{userId}/dataTypes/{dataType}/dataPoints:reconcile`) taking query parameters (`pageSize`, `pageToken`, `filter`, `dataSourceFamily`), matching the Google Health API specification.
+  - Updated [`SuiteExecutionEngine.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/runner/SuiteExecutionEngine.java) to pass query parameters to `reconcileDataPoints` in both single-test and script execution modes.
+  - Updated Web UX API Explorer in [`app.js`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/resources/web/app.js) to treat `reconcile` as a `GET` operation using query parameters and hiding JSON payload boxes.
+  - Updated CLI runner operations prompt in [`CliMenuRunner.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/runner/CliMenuRunner.java) to include `reconcile`.
+- **YAML Script Syntax Error Reporting**:
+  - Enhanced [`RestApiHandler.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/server/RestApiHandler.java) to return detailed YAML parser/syntax error messages in `message` and `errorMessage` response fields when script files contain malformed syntax.
+- **Data Types Registry Configuration**:
+  - Updated [`config/datatypes.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/config/datatypes.yaml) to enable `reconcile: true` for the `steps` data type and align supported endpoints.
+
+---
 
 ### Version 1.0.2 (October 11, 2026)
 

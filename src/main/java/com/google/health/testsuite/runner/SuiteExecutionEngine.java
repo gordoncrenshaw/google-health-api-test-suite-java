@@ -66,7 +66,7 @@ public class SuiteExecutionEngine {
                         response = apiClient.batchDeleteDataPoints(def, "{\"names\":[]}");
                     }
                 }
-                case "reconcile" -> response = apiClient.reconcileDataPoints(def, requestBody);
+                case "reconcile" -> response = apiClient.reconcileDataPoints(def, queryParams);
                 case "exportexercisetcx" -> {
                     String dpId = (queryParams != null) ? queryParams.getOrDefault("dataPointId", "sample-dp-1") : "sample-dp-1";
                     response = apiClient.exportExerciseTcx(def, dpId);
@@ -173,7 +173,7 @@ public class SuiteExecutionEngine {
                 }
                 case "reconcile" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
-                    response = apiClient.reconcileDataPoints(def, step.getBody());
+                    response = apiClient.reconcileDataPoints(def, step.getQueryParams());
                 }
                 case "exportexercisetcx", "export_exercise_tcx" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);

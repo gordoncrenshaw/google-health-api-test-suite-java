@@ -475,10 +475,21 @@ public class RestApiHandler implements HttpHandler {
             ScriptRunner runner = new ScriptRunner(engine);
 
             TestSuiteScript script;
-            if (scriptFile.getName().endsWith(".json")) {
-                script = jsonMapper.readValue(scriptFile, TestSuiteScript.class);
-            } else {
-                script = yamlMapper.readValue(scriptFile, TestSuiteScript.class);
+            try {
+                if (scriptFile.getName().endsWith(".json")) {
+                    script = jsonMapper.readValue(scriptFile, TestSuiteScript.class);
+                } else {
+                    script = yamlMapper.readValue(scriptFile, TestSuiteScript.class);
+                }
+            } catch (Exception e) {
+                logger.error("Error parsing script file {}: {}", scriptFile.getName(), e.getMessage());
+                ObjectNode errNode = jsonMapper.createObjectNode();
+                errNode.put("type", "error");
+                errNode.put("message", "Error parsing script file: " + e.getMessage());
+                errNode.put("errorMessage", e.getMessage());
+                os.write((errNode.toString() + "\n").getBytes(StandardCharsets.UTF_8));
+                os.flush();
+                return;
             }
 
             int totalSteps = script.getSteps().size();
@@ -568,8 +579,14 @@ public class RestApiHandler implements HttpHandler {
         resp.put("failed", result.getFailedCount());
         resp.put("durationMs", result.getDurationMs());
 
+        if (result.getErrorMessage() != null && !result.getErrorMessage().isBlank()) {
+            resp.put("errorMessage", result.getErrorMessage());
+        }
+
         if (result.isSuccess()) {
             resp.put("message", "All script tests passed successfully.");
+        } else if (result.getErrorMessage() != null && !result.getErrorMessage().isBlank() && result.getFailedTestNames().isEmpty()) {
+            resp.put("message", result.getErrorMessage());
         } else {
             String namesStr = String.join(", ", result.getFailedTestNames());
             resp.put("message", "One or more script tests failed: " + namesStr);

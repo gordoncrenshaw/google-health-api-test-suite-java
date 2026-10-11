@@ -593,7 +593,7 @@ public class CliMenuRunner {
 
             System.out.println("\nSelected: " + BOLD + def.getName() + RESET + " (Version: " + CYAN + def.getEndpointVersion() + RESET + ")");
             System.out.println("Supported endpoints: " + (enableAll ? "ALL (override enabled via preferences)" : String.join(", ", def.getSupportedEndpointNames())));
-            System.out.print("Enter operation (list/get/create/rollup/dailyrollup) [default: list]: ");
+            System.out.print("Enter operation (list/get/create/rollup/dailyrollup/reconcile) [default: list]: ");
             String ep = scanner.nextLine().trim();
             if (ep.isEmpty()) ep = "list";
 

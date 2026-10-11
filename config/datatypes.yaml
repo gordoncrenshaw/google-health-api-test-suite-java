@@ -36,13 +36,13 @@ dataTypes:
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
     endpointsSupported:
       list: true
-      get: true
-      create: true
-      batchDelete: true
+      get: false
+      create: false
+      batchDelete: false
       rollUp: true
       dailyRollUp: true
       exportExerciseTcx: false
-      reconcile: false
+      reconcile: true
       patch: false
     filterParameterName: "steps.interval.start_time"
     webhooksSupported: true
