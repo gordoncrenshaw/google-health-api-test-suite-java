@@ -616,7 +616,7 @@ public final class AppVersion {
   - Added individual standard test suite scripts across all activity-related Google Health API data types:
     - [`scripts/active-minutes_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/active-minutes_tests.yaml): Full test suite for `active-minutes` (`list`, `dailyrollup`, `rollup`, `reconcile`).
     - [`scripts/active-zone-minutes_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/active-zone-minutes_tests.yaml): Full test suite for `active-zone-minutes` (`list`, `dailyrollup`, `rollup`, `reconcile`).
-    - [`scripts/activity-energy-burned_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/activity-energy-burned_tests.yaml): Full test suite for `active-energy-burned` (`list`, `dailyrollup`, `rollup`, `reconcile`).
+    - [`scripts/active-energy-burned_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/active-energy-burned_tests.yaml): Full test suite for `active-energy-burned` (`list`, `dailyrollup`, `rollup`, `reconcile`).
     - [`scripts/activity-level_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/activity-level_tests.yaml): Full test suite for `activity-level` (`list`, `dailyrollup`, `rollup`, `reconcile`).
     - [`scripts/altitude_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/altitude_tests.yaml): Full test suite for `altitude` (`list`, `dailyrollup`, `rollup`, `reconcile`).
     - [`scripts/calories-in-heart-rate-zone_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/calories-in-heart-rate-zone_tests.yaml): Aggregate test suite for `calories-in-heart-rate-zone` (`dailyrollup`, `rollup`).
@@ -631,6 +631,13 @@ public final class AppVersion {
     - [`scripts/vo2-max_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/vo2-max_tests.yaml): Point-in-time test suite for `vo2-max` (`list`, `reconcile`).
   - Standardized naming convention `Standard: <DisplayName> <Endpoint> (<param>)` across all test suites.
   - Tailored endpoint test definitions to each data type's API capabilities (omitting rollups for point-in-time metrics, omitting raw list for aggregate-only metrics).
+- **Data Types Registry Expansion & Mock Engine Support**:
+  - Registered 8 additional Google Health API data types in [`config/datatypes.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/config/datatypes.yaml): `activity-level`, `time-in-heart-rate-zone`, `swim-lengths-data`, `run-vo2-max`, `active-minutes`, `sedentary-period`, `total-calories`, and `vo2-max`.
+  - Added sample data generation support in [`MockHealthBackend.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/client/MockHealthBackend.java) for the newly registered types (`minutes`, `vo2Max`, `strokeCount`, `activityLevelType`).
+  - Added fallback metric field extractions in [`ValidationEngine.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/client/ValidationEngine.java).
+  - Added registry unit tests in [`DataTypeRegistryTest.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/test/java/com/google/health/testsuite/DataTypeRegistryTest.java) (`testNewlyAddedDataTypes`).
+- **Standard Operations Test Suite Organization**:
+  - Organized [`scripts/standard_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests.yaml) with comprehensive endpoint sections and headers for all data types.
 
 ---
 

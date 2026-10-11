@@ -109,47 +109,47 @@ public class DataTypeRegistryTest {
 
         DataTypeRegistry testReg = new DataTypeRegistry(tempFile);
         int initialCount = testReg.getAllDataTypes().size();
-        assertFalse(testReg.hasDataType("vo2_max"));
+        assertFalse(testReg.hasDataType("respiratory_rate"));
 
-        DataTypeDefinition vo2 = new DataTypeDefinition("vo2_max", "VO2 Max", "v4",
+        DataTypeDefinition respRate = new DataTypeDefinition("respiratory_rate", "Respiratory Rate", "v4",
                 "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
                 List.of("list", "get", "create", "batchDelete"),
-                "vo2_max.sample_time.physical_time", true, 10.0, 95.0, "mL/kg/min");
+                "respiratory_rate.sample_time.physical_time", true, 10.0, 95.0, "breaths/min");
 
-        boolean added = testReg.addDataType(vo2);
+        boolean added = testReg.addDataType(respRate);
         assertTrue(added, "addDataType should succeed for new definition");
         assertEquals(initialCount + 1, testReg.getAllDataTypes().size());
-        assertTrue(testReg.hasDataType("vo2_max"));
+        assertTrue(testReg.hasDataType("respiratory_rate"));
 
-        Optional<DataTypeDefinition> fetched = testReg.getDataType("vo2_max");
+        Optional<DataTypeDefinition> fetched = testReg.getDataType("respiratory_rate");
         assertTrue(fetched.isPresent());
-        assertEquals("VO2 Max", fetched.get().getDisplayName());
+        assertEquals("Respiratory Rate", fetched.get().getDisplayName());
         assertEquals("v4", fetched.get().getEndpointVersion());
-        assertEquals("mL/kg/min", fetched.get().getUnit());
+        assertEquals("breaths/min", fetched.get().getUnit());
         assertTrue(fetched.get().isWebhooksSupported());
 
         // Test rejecting duplicate
-        boolean duplicateAdded = testReg.addDataType(vo2);
+        boolean duplicateAdded = testReg.addDataType(respRate);
         assertFalse(duplicateAdded, "addDataType should reject duplicate data type identifier");
 
         // Verify fresh registry instance reading tempFile sees the persisted data type
         DataTypeRegistry reloadedReg = new DataTypeRegistry(tempFile);
-        assertTrue(reloadedReg.hasDataType("vo2_max"));
+        assertTrue(reloadedReg.hasDataType("respiratory_rate"));
         assertEquals(initialCount + 1, reloadedReg.getAllDataTypes().size());
 
-        // Verify vo2_max endpointsSupported is a map listing all endpoints with true/false
-        DataTypeDefinition reloadedVo2 = reloadedReg.getDataType("vo2_max").get();
-        assertNotNull(reloadedVo2.getEndpointsSupported());
+        // Verify respiratory_rate endpointsSupported is a map listing all endpoints with true/false
+        DataTypeDefinition reloadedResp = reloadedReg.getDataType("respiratory_rate").get();
+        assertNotNull(reloadedResp.getEndpointsSupported());
         for (String ep : DataTypeDefinition.ALL_ENDPOINTS) {
-            assertTrue(reloadedVo2.getEndpointsSupported().containsKey(ep), "vo2_max endpointsSupported must contain " + ep);
+            assertTrue(reloadedResp.getEndpointsSupported().containsKey(ep), "respiratory_rate endpointsSupported must contain " + ep);
         }
-        assertTrue(reloadedVo2.getEndpointsSupported().get("list"));
-        assertTrue(reloadedVo2.getEndpointsSupported().get("get"));
-        assertTrue(reloadedVo2.getEndpointsSupported().get("create"));
-        assertTrue(reloadedVo2.getEndpointsSupported().get("batchDelete"));
-        assertFalse(reloadedVo2.getEndpointsSupported().get("rollUp"));
-        assertFalse(reloadedVo2.getEndpointsSupported().get("exportExerciseTcx"));
-        assertFalse(reloadedVo2.getEndpointsSupported().get("reconcile"));
+        assertTrue(reloadedResp.getEndpointsSupported().get("list"));
+        assertTrue(reloadedResp.getEndpointsSupported().get("get"));
+        assertTrue(reloadedResp.getEndpointsSupported().get("create"));
+        assertTrue(reloadedResp.getEndpointsSupported().get("batchDelete"));
+        assertFalse(reloadedResp.getEndpointsSupported().get("rollUp"));
+        assertFalse(reloadedResp.getEndpointsSupported().get("exportExerciseTcx"));
+        assertFalse(reloadedResp.getEndpointsSupported().get("reconcile"));
 
         tempFile.deleteOnExit();
     }
@@ -227,6 +227,65 @@ public class DataTypeRegistryTest {
                 assertTrue(dt.supportsEndpoint(ep), dt.getName() + " must support " + ep + " when enableAll is true");
             }
         }
+    }
+
+    @Test
+    void testNewlyAddedDataTypes() {
+        String[] newTypes = new String[]{
+                "activity-level", "time-in-heart-rate-zone", "swim-lengths-data",
+                "run-vo2-max", "active-minutes", "sedentary-period",
+                "total-calories", "vo2-max"
+        };
+
+        for (String name : newTypes) {
+            assertTrue(registry.hasDataType(name), "Registry must contain data type: " + name);
+            DataTypeDefinition def = registry.getDataType(name).orElseThrow();
+            assertEquals(name, def.getName());
+            assertEquals("v4", def.getEndpointVersion());
+            assertEquals("https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly", def.getScopeRequired());
+            assertEquals("https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly", def.getWriteScopeRequired());
+            assertNotNull(def.getFilterParameterName());
+            assertTrue(def.getFilterParameterName().contains(name.replace('-', '_')));
+            assertNotNull(def.getEndpointsSupported());
+            for (String ep : DataTypeDefinition.ALL_ENDPOINTS) {
+                assertTrue(def.getEndpointsSupported().containsKey(ep));
+            }
+        }
+
+        // Test specific fields
+        DataTypeDefinition actLevel = registry.getDataType("activity-level").orElseThrow();
+        assertEquals("Activity Level", actLevel.getDisplayName());
+        assertTrue(actLevel.isWebhooksSupported());
+
+        DataTypeDefinition timeInHrZone = registry.getDataType("time-in-heart-rate-zone").orElseThrow();
+        assertEquals("Time In Heart Rate Zone", timeInHrZone.getDisplayName());
+        assertEquals(0.0, timeInHrZone.getMinValue());
+        assertEquals(86400.0, timeInHrZone.getMaxValue());
+        assertEquals("seconds", timeInHrZone.getUnit());
+        assertTrue(timeInHrZone.isWebhooksSupported());
+
+        DataTypeDefinition swim = registry.getDataType("swim-lengths-data").orElseThrow();
+        assertEquals("Swim Lengths Data", swim.getDisplayName());
+        assertFalse(swim.isWebhooksSupported());
+        assertEquals("count", swim.getUnit());
+
+        DataTypeDefinition runVo2 = registry.getDataType("run-vo2-max").orElseThrow();
+        assertEquals("Run VO2 Max", runVo2.getDisplayName());
+        assertEquals(10.0, runVo2.getMinValue());
+        assertEquals(100.0, runVo2.getMaxValue());
+        assertEquals("ml/kg/min", runVo2.getUnit());
+        assertTrue(runVo2.isWebhooksSupported());
+
+        DataTypeDefinition actMin = registry.getDataType("active-minutes").orElseThrow();
+        assertEquals("Active Minutes", actMin.getDisplayName());
+        assertEquals(0.0, actMin.getMinValue());
+        assertEquals(1440.0, actMin.getMaxValue());
+        assertEquals("minutes", actMin.getUnit());
+        assertFalse(actMin.isWebhooksSupported());
+
+        DataTypeDefinition sed = registry.getDataType("sedentary-period").orElseThrow();
+        assertEquals("Sedentary Period", sed.getDisplayName());
+        assertTrue(sed.isWebhooksSupported());
     }
 }
 

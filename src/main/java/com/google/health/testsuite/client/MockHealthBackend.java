@@ -250,11 +250,24 @@ public class MockHealthBackend {
         } else if ("blood-pressure".equals(normName)) {
             typeNode.put("systolic", (long) sampleVal);
             typeNode.put("diastolic", 80L);
-        } else if ("active-energy-burned".equals(normName) || "basal-energy-burned".equals(normName)) {
+        } else if ("active-energy-burned".equals(normName) || "basal-energy-burned".equals(normName) || "total-calories".equals(normName)) {
             typeNode.put("kcal", sampleVal);
         } else if ("active-zone-minutes".equals(normName)) {
             typeNode.put("activeZoneMinutes", (int) sampleVal);
         } else if ("sleep".equals(normName) || "exercise".equals(normName) || "mindfulness".equals(normName)) {
+            typeNode.put("durationSeconds", (long) sampleVal);
+        } else if ("active-minutes".equals(normName)) {
+            typeNode.put("minutes", (long) sampleVal);
+        } else if ("swim-lengths-data".equals(normName)) {
+            typeNode.put("strokeCount", (long) sampleVal);
+        } else if ("run-vo2-max".equals(normName) || "vo2-max".equals(normName) || "daily-vo2-max".equals(normName)) {
+            typeNode.put("vo2Max", sampleVal);
+        } else if ("time-in-heart-rate-zone".equals(normName)) {
+            typeNode.put("durationSeconds", (long) sampleVal);
+            typeNode.put("heartRateZoneType", "LIGHT");
+        } else if ("activity-level".equals(normName)) {
+            typeNode.put("activityLevelType", "SEDENTARY");
+        } else if ("sedentary-period".equals(normName)) {
             typeNode.put("durationSeconds", (long) sampleVal);
         } else {
             typeNode.put("value", sampleVal);
@@ -282,8 +295,13 @@ public class MockHealthBackend {
         if ("oxygen-saturation".equals(normDefName)) return 98.0;
         if ("blood-glucose".equals(normDefName)) return 95.0;
         if ("body-fat".equals(normDefName)) return 18.5;
-        if ("active-energy-burned".equals(normDefName)) return 350.0;
+        if ("active-energy-burned".equals(normDefName) || "total-calories".equals(normDefName)) return 350.0;
         if ("sleep".equals(normDefName)) return 28800.0; // 8 hours in seconds
+        if ("active-minutes".equals(normDefName)) return 45.0 + (offset * 5.0);
+        if ("run-vo2-max".equals(normDefName) || "vo2-max".equals(normDefName) || "daily-vo2-max".equals(normDefName)) return 48.5;
+        if ("swim-lengths-data".equals(normDefName)) return 14.0 + offset;
+        if ("time-in-heart-rate-zone".equals(normDefName)) return 1800.0;
+        if ("sedentary-period".equals(normDefName)) return 3600.0;
 
         return Math.max(min, Math.min(max, (min + max) / 2.0));
     }
