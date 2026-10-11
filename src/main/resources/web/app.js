@@ -961,7 +961,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tr.innerHTML = `
             <td><span class="pill-badge ${r.passed ? 'pill-success' : 'pill-danger'}">${r.passed ? 'PASS' : 'FAIL'}</span></td>
             <td><strong>${escapeHtml(r.dataType || 'api')}</strong></td>
-            <td><span class="font-mono">${escapeHtml(r.endpoint || 'list')}</span></td>
+            <td title="${escapeHtml(r.testName || r.name || r.endpoint || 'Test')}"><span>${escapeHtml(r.testName || r.name || r.endpoint || 'Test')}</span></td>
             <td><span class="pill-badge ${(r.statusCode === 200 || (r.passed && !r.statusCode)) ? 'pill-success' : 'pill-danger'} font-mono font-semibold">${escapeHtml(String(r.statusCode !== undefined && r.statusCode !== null ? r.statusCode : 200))}</span></td>
             <td>${r.latencyMs} ms</td>
             <td title="${r.passed ? escapeHtml(r.validationResult?.message || r.message || '') : escapeHtml(r.message || '')}">${detailHtml}</td>

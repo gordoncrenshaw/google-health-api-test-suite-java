@@ -163,11 +163,11 @@ public class SuiteExecutionEngine {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
                     response = apiClient.createDataPoint(def, step.getBody());
                 }
-                case "rollup" -> {
+                case "rollup", "roll_up" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
                     response = apiClient.rollUpDataPoints(def, step.getBody());
                 }
-                case "dailyrollup" -> {
+                case "dailyrollup", "daily_rollup" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
                     response = apiClient.dailyRollUpDataPoints(def, step.getBody());
                 }

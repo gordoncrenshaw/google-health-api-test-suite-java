@@ -17,37 +17,88 @@ steps:
 
   # Identity Endpoints
   - name: "Standard: Get Identity"
-    action: "identity"
+    action: "get_identity"
     assertStatus: [200]
 
   # Irregular Rhythm Notifications Endpoints
   - name: "Standard: Get Irregular Rhythm Notifications Profile"
-    action: "irn_profile"
+    action: "get_irn_profile"
     assertStatus: [200]
 
   # Profile Endpoints
   - name: "Standard: Get Profile"
-    action: "profile"
+    action: "get_profile"
     assertStatus: [200]
 
-  - name: "Standard: Update Profile"
+  - name: "Standard: Update Profile (walking stride length)"
     action: "update_profile"
     body: '{"userConfiguredWalkingStrideLengthMm": "745"}'
     assertStatus: [200]
 
-  # Settings Endpoints
-  - name: "Standard: Get Settings"
-    action: "settings"
+  - name: "Standard: Update Profile (running stride length)"
+    action: "update_profile"
+    body: '{"userConfiguredRunningStrideLengthMm": "765"}'
     assertStatus: [200]
 
-  - name: "Standard: Update Settings"
+  - name: "Standard: Update Profile (combined)"
+    action: "update_profile"
+    body: '{"userConfiguredWalkingStrideLengthMm": "745", "userConfiguredRunningStrideLengthMm": "765"}'
+    assertStatus: [200]
+
+  # Settings Endpoints
+  - name: "Standard: Get Settings"
+    action: "get_settings"
+    assertStatus: [200]
+
+  - name: "Standard: Update Settings (height unit)"
+    action: "update_settings"
+    body: '{"heightUnit": "HEIGHT_UNIT_CENTIMETERS"}'
+    assertStatus: [200]
+
+  - name: "Standard: Update Settings (glucose unit)"
+    action: "update_settings"
+    body: '{"glucoseUnit": "GLUCOSE_UNIT_MG_DL"}'
+    assertStatus: [200]
+
+  - name: "Standard: Update Settings (swim unit)"
+    action: "update_settings"
+    body: '{"swimUnit": "SWIM_UNIT_METERS"}'
+    assertStatus: [200]
+
+  - name: "Standard: Update Settings (temperature unit)"
     action: "update_settings"
     body: '{"temperatureUnit": "TEMPERATURE_UNIT_FAHRENHEIT"}'
     assertStatus: [200]
 
+  - name: "Standard: Update Settings (time zone)"
+    action: "update_settings"
+    body: '{"timeZone": "America/New_York"}'
+    assertStatus: [200]
+
+  - name: "Standard: Update Settings (weight unit)"
+    action: "update_settings"
+    body: '{"weightUnit": "WEIGHT_UNIT_POUNDS"}'
+    assertStatus: [200]
+
+  - name: "Standard: Update Settings (water unit)"
+    action: "update_settings"
+    body: '{"waterUnit": "WATER_UNIT_FL_OZ"}'
+    assertStatus: [200]
+
+  - name: "Standard: Update Settings (combined)"
+    action: "update_settings"
+    body: '{"heightUnit": "HEIGHT_UNIT_CENTIMETES",
+      "glucoseUnit": "GLUCOSE_UNIT_MG_DL",
+      "swimUnit": "SWIM_UNIT_METERS",
+      "temperatureUnit": "TEMPERATURE_UNIT_FAHRENHEIT",
+      "timeZone": "America/New_York",
+      "weightUnit": "WEIGHT_UNIT_POUNDS", 
+      "waterUnit": "WATER_UNIT_FL_OZ"}'
+    assertStatus: [200]
+
   # Paired Devices Endpoints
   - name: "Standard: List Paired Devices"
-    action: "devices"
+    action: "list_devices"
     assertStatus: [200]
 
   # Steps Datatype Tests
