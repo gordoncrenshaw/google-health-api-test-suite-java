@@ -607,5 +607,130 @@ public class RestApiHandlerTest {
             }
         }
     }
+
+    @Test
+    void testListScriptsReturnsAlphabeticallySortedFiles() throws Exception {
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/scripts"))
+                .GET()
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, resp.statusCode());
+
+        JsonNode scriptsNode = jsonMapper.readTree(resp.body());
+        assertTrue(scriptsNode.isArray());
+        assertTrue(scriptsNode.size() > 1, "There should be multiple scripts returned");
+
+        String prevName = null;
+        for (JsonNode script : scriptsNode) {
+            String currentName = script.get("filename").asText();
+            if (prevName != null) {
+                assertTrue(currentName.compareToIgnoreCase(prevName) >= 0,
+                        "Scripts must be in alphabetical order! Expected '" + currentName + "' to be >= '" + prevName + "'");
+            }
+            prevName = currentName;
+        }
+    }
+
+    @Test
+    void testGetDataTypesReturnsAlphabeticallySortedDataTypes() throws Exception {
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/datatypes"))
+                .GET()
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, resp.statusCode());
+
+        JsonNode typesNode = jsonMapper.readTree(resp.body());
+        assertTrue(typesNode.isArray());
+        assertTrue(typesNode.size() > 1, "There should be multiple data types returned");
+
+        String prevName = null;
+        for (JsonNode dt : typesNode) {
+            String currentName = dt.get("name").asText();
+            if (prevName != null) {
+                assertTrue(currentName.compareToIgnoreCase(prevName) >= 0,
+                        "Data types must be in alphabetical order! Expected '" + currentName + "' to be >= '" + prevName + "'");
+            }
+            prevName = currentName;
+        }
+    }
+
+    @Test
+    void testUpdateAndDeleteDataTypeEndpoints() throws Exception {
+        String testDtName = "test-endpoint-crud-dt";
+
+        // 1. POST a temporary data type
+        String createJson = """
+            {
+              "name": "%s",
+              "displayName": "Initial Temp DT",
+              "endpointVersion": "v4",
+              "unit": "count",
+              "endpointsSupported": {
+                "list": true,
+                "get": true
+              }
+            }
+            """.formatted(testDtName);
+
+        HttpRequest createReq = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/datatypes"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(createJson))
+                .build();
+
+        HttpResponse<String> createResp = httpClient.send(createReq, HttpResponse.BodyHandlers.ofString());
+        assertEquals(201, createResp.statusCode());
+
+        // 2. PUT to update the data type
+        String updateJson = """
+            {
+              "name": "%s",
+              "displayName": "Updated Temp DT Display",
+              "endpointVersion": "v4",
+              "unit": "samples",
+              "endpointsSupported": {
+                "list": true,
+                "get": true,
+                "create": true
+              }
+            }
+            """.formatted(testDtName);
+
+        HttpRequest updateReq = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/datatypes"))
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(updateJson))
+                .build();
+
+        HttpResponse<String> updateResp = httpClient.send(updateReq, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, updateResp.statusCode());
+        JsonNode updateBody = jsonMapper.readTree(updateResp.body());
+        assertTrue(updateBody.get("success").asBoolean());
+        assertEquals("Updated Temp DT Display", updateBody.get("dataType").get("displayName").asText());
+
+        // 3. DELETE query parameter
+        HttpRequest deleteReq = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/datatypes?name=" + testDtName))
+                .DELETE()
+                .build();
+
+        HttpResponse<String> deleteResp = httpClient.send(deleteReq, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, deleteResp.statusCode());
+        JsonNode deleteBody = jsonMapper.readTree(deleteResp.body());
+        assertTrue(deleteBody.get("success").asBoolean());
+
+        // 4. DELETE again should return 404
+        HttpResponse<String> deleteAgainResp = httpClient.send(deleteReq, HttpResponse.BodyHandlers.ofString());
+        assertEquals(404, deleteAgainResp.statusCode());
+
+        // 5. PUT non-existent should return 404
+        HttpResponse<String> updateNonExistent = httpClient.send(updateReq, HttpResponse.BodyHandlers.ofString());
+        assertEquals(404, updateNonExistent.statusCode());
+    }
 }
+
 

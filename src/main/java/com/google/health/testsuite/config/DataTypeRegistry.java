@@ -9,6 +9,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 /**
@@ -85,13 +88,15 @@ public class DataTypeRegistry {
     }
 
     public List<DataTypeDefinition> getAllDataTypes(boolean enableAllEndpoints) {
-        if (!enableAllEndpoints) {
-            return new ArrayList<>(dataTypesMap.values());
-        }
         List<DataTypeDefinition> list = new ArrayList<>();
-        for (DataTypeDefinition def : dataTypesMap.values()) {
-            list.add(def.withAllEndpointsEnabled());
+        if (!enableAllEndpoints) {
+            list.addAll(dataTypesMap.values());
+        } else {
+            for (DataTypeDefinition def : dataTypesMap.values()) {
+                list.add(def.withAllEndpointsEnabled());
+            }
         }
+        list.sort(Comparator.comparing(d -> d.getName() != null ? d.getName() : "", String.CASE_INSENSITIVE_ORDER));
         return list;
     }
 
@@ -119,18 +124,107 @@ public class DataTypeRegistry {
             return false;
         }
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("\n  - name: \"").append(escapeYaml(cleanName)).append("\"\n");
-        sb.append("    displayName: \"").append(escapeYaml(newDef.getDisplayName())).append("\"\n");
-        sb.append("    endpointVersion: \"").append(escapeYaml(newDef.getEndpointVersion())).append("\"\n");
-        if (newDef.getScopeRequired() != null && !newDef.getScopeRequired().trim().isEmpty()) {
-            sb.append("    scopeRequired: \"").append(escapeYaml(newDef.getScopeRequired().trim())).append("\"\n");
+        dataTypesMap.put(cleanName, newDef);
+        boolean ok = saveAll();
+        if (!ok) {
+            load();
+            return false;
         }
-        if (newDef.getWriteScopeRequired() != null && !newDef.getWriteScopeRequired().trim().isEmpty()) {
-            sb.append("    writeScopeRequired: \"").append(escapeYaml(newDef.getWriteScopeRequired().trim())).append("\"\n");
+        return true;
+    }
+
+    public synchronized boolean updateDataType(DataTypeDefinition updatedDef) {
+        if (updatedDef == null || updatedDef.getName() == null || updatedDef.getName().trim().isEmpty()) {
+            return false;
+        }
+        String cleanName = updatedDef.getName().trim().toLowerCase();
+        if (!dataTypesMap.containsKey(cleanName)) {
+            logger.warn("Data type '{}' does not exist in registry.", cleanName);
+            return false;
+        }
+
+        dataTypesMap.put(cleanName, updatedDef);
+        boolean ok = saveAll();
+        if (!ok) {
+            load();
+            return false;
+        }
+        return true;
+    }
+
+    public synchronized boolean deleteDataType(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return false;
+        }
+        String cleanName = name.trim().toLowerCase();
+        if (!dataTypesMap.containsKey(cleanName)) {
+            logger.warn("Data type '{}' does not exist in registry.", cleanName);
+            return false;
+        }
+
+        dataTypesMap.remove(cleanName);
+        boolean ok = saveAll();
+        if (!ok) {
+            load();
+            return false;
+        }
+        return true;
+    }
+
+    public synchronized boolean saveAll() {
+        if (dataTypesFile == null) return false;
+        try {
+            String header = null;
+            if (dataTypesFile.exists()) {
+                String existing = Files.readString(dataTypesFile.toPath(), StandardCharsets.UTF_8);
+                int idx = existing.indexOf("dataTypes:");
+                if (idx != -1) {
+                    header = existing.substring(0, idx + "dataTypes:".length());
+                }
+            }
+            if (header == null || header.trim().isEmpty()) {
+                header = "# ==============================================================================\n" +
+                         "# Google Health API - Supported Data Types Definition\n" +
+                         "# ==============================================================================\n\n" +
+                         "version: \"1.0\"\n" +
+                         "dataTypes:";
+            }
+
+            StringBuilder sb = new StringBuilder(header.stripTrailing());
+            sb.append("\n");
+
+            List<DataTypeDefinition> sorted = new ArrayList<>(dataTypesMap.values());
+            sorted.sort(Comparator.comparing(d -> d.getName() != null ? d.getName() : "", String.CASE_INSENSITIVE_ORDER));
+
+            for (DataTypeDefinition def : sorted) {
+                serializeDefinition(def, sb);
+            }
+
+            File tempFile = new File(dataTypesFile.getAbsolutePath() + ".tmp");
+            Files.writeString(tempFile.toPath(), sb.toString(), StandardCharsets.UTF_8);
+            Files.move(tempFile.toPath(), dataTypesFile.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            load();
+            return true;
+        } catch (IOException e) {
+            logger.error("Failed to save data types to {}: {}", dataTypesFile.getAbsolutePath(), e.getMessage(), e);
+            return false;
+        }
+    }
+
+    private void serializeDefinition(DataTypeDefinition def, StringBuilder sb) {
+        String cleanName = def.getName() != null ? def.getName().trim().toLowerCase() : "";
+        sb.append("\n  - name: \"").append(escapeYaml(cleanName)).append("\"\n");
+        sb.append("    displayName: \"").append(escapeYaml(def.getDisplayName())).append("\"\n");
+        sb.append("    endpointVersion: \"").append(escapeYaml(def.getEndpointVersion() != null ? def.getEndpointVersion() : "v4")).append("\"\n");
+        if (def.getScopeRequired() != null && !def.getScopeRequired().trim().isEmpty()) {
+            sb.append("    scopeRequired: \"").append(escapeYaml(def.getScopeRequired().trim())).append("\"\n");
+        }
+        if (def.getWriteScopeRequired() != null && !def.getWriteScopeRequired().trim().isEmpty()) {
+            sb.append("    writeScopeRequired: \"").append(escapeYaml(def.getWriteScopeRequired().trim())).append("\"\n");
         }
         sb.append("    endpointsSupported:\n");
-        Map<String, Boolean> epMap = newDef.getEndpointsSupported();
+        Map<String, Boolean> epMap = def.getEndpointsSupported();
         if (epMap == null || epMap.isEmpty()) {
             epMap = DataTypeDefinition.createDefaultEndpointsMap();
             epMap.put("list", true);
@@ -145,35 +239,21 @@ public class DataTypeRegistry {
                 sb.append("      ").append(entry.getKey()).append(": ").append(Boolean.TRUE.equals(entry.getValue())).append("\n");
             }
         }
-        if (newDef.getFilterParameterName() != null && !newDef.getFilterParameterName().trim().isEmpty()) {
-            sb.append("    filterParameterName: \"").append(escapeYaml(newDef.getFilterParameterName().trim())).append("\"\n");
+        if (def.getFilterParameterName() != null && !def.getFilterParameterName().trim().isEmpty()) {
+            sb.append("    filterParameterName: \"").append(escapeYaml(def.getFilterParameterName().trim())).append("\"\n");
         }
-        sb.append("    webhooksSupported: ").append(newDef.isWebhooksSupported()).append("\n");
-        if (newDef.getMinValue() != null) {
-            sb.append("    minValue: ").append(formatNumber(newDef.getMinValue())).append("\n");
+        sb.append("    webhooksSupported: ").append(def.isWebhooksSupported()).append("\n");
+        if (def.getMinValue() != null) {
+            sb.append("    minValue: ").append(formatNumber(def.getMinValue())).append("\n");
         }
-        if (newDef.getMaxValue() != null) {
-            sb.append("    maxValue: ").append(formatNumber(newDef.getMaxValue())).append("\n");
+        if (def.getMaxValue() != null) {
+            sb.append("    maxValue: ").append(formatNumber(def.getMaxValue())).append("\n");
         }
-        if (newDef.getUnit() != null && !newDef.getUnit().trim().isEmpty()) {
-            sb.append("    unit: \"").append(escapeYaml(newDef.getUnit().trim())).append("\"\n");
+        if (def.getUnit() != null && !def.getUnit().trim().isEmpty()) {
+            sb.append("    unit: \"").append(escapeYaml(def.getUnit().trim())).append("\"\n");
         }
-        if (newDef.getSampleValueField() != null && !newDef.getSampleValueField().trim().isEmpty()) {
-            sb.append("    sampleValueField: \"").append(escapeYaml(newDef.getSampleValueField().trim())).append("\"\n");
-        }
-
-        try {
-            java.nio.file.Files.writeString(
-                    dataTypesFile.toPath(),
-                    sb.toString(),
-                    java.nio.file.StandardOpenOption.CREATE,
-                    java.nio.file.StandardOpenOption.APPEND
-            );
-            load();
-            return true;
-        } catch (IOException e) {
-            logger.error("Failed to append new data type to {}: {}", dataTypesFile.getAbsolutePath(), e.getMessage(), e);
-            return false;
+        if (def.getSampleValueField() != null && !def.getSampleValueField().trim().isEmpty()) {
+            sb.append("    sampleValueField: \"").append(escapeYaml(def.getSampleValueField().trim())).append("\"\n");
         }
     }
 

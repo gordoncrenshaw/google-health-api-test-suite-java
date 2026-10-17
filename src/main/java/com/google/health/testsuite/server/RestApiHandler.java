@@ -74,11 +74,24 @@ public class RestApiHandler implements HttpHandler {
             return;
         }
 
+        if (path.startsWith("/api/datatypes/")) {
+            String subName = path.substring("/api/datatypes/".length()).trim();
+            if ("DELETE".equals(method)) {
+                handleDeleteDataType(exchange, subName);
+                return;
+            } else if ("PUT".equals(method)) {
+                handleUpdateDataType(exchange);
+                return;
+            }
+        }
+
         try {
             switch (path) {
                 case "/api/datatypes" -> {
                     if ("GET".equals(method)) handleGetDataTypes(exchange);
                     else if ("POST".equals(method)) handleAddDataType(exchange);
+                    else if ("PUT".equals(method)) handleUpdateDataType(exchange);
+                    else if ("DELETE".equals(method)) handleDeleteDataType(exchange, null);
                     else sendError(exchange, 405, "Method Not Allowed");
                 }
                 case "/api/preferences" -> {
@@ -177,6 +190,100 @@ public class RestApiHandler implements HttpHandler {
             sendJson(exchange, 201, resp.toPrettyString());
         } else {
             sendError(exchange, 500, "Failed to persist new data type to datatypes.yaml.");
+        }
+    }
+
+    private void handleUpdateDataType(HttpExchange exchange) throws IOException {
+        String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        if (body == null || body.trim().isEmpty()) {
+            sendError(exchange, 400, "Request body is empty.");
+            return;
+        }
+
+        DataTypeDefinition updatedDef;
+        try {
+            updatedDef = jsonMapper.readValue(body, DataTypeDefinition.class);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON data type payload: " + e.getMessage());
+            return;
+        }
+
+        if (updatedDef.getName() == null || updatedDef.getName().trim().isEmpty()) {
+            sendError(exchange, 400, "Property 'name' (identifier) is required.");
+            return;
+        }
+
+        String name = updatedDef.getName().trim().toLowerCase();
+        if (!dataTypeRegistry.hasDataType(name)) {
+            sendError(exchange, 404, "Data type '" + name + "' does not exist in registry.");
+            return;
+        }
+
+        if (updatedDef.getDisplayName() == null || updatedDef.getDisplayName().trim().isEmpty()) {
+            updatedDef.setDisplayName(name);
+        }
+        if (updatedDef.getEndpointVersion() == null || updatedDef.getEndpointVersion().trim().isEmpty()) {
+            updatedDef.setEndpointVersion("v4");
+        }
+
+        boolean ok = dataTypeRegistry.updateDataType(updatedDef);
+        if (ok) {
+            ObjectNode resp = jsonMapper.createObjectNode();
+            resp.put("success", true);
+            resp.put("message", "Data type '" + name + "' successfully updated in registry and datatypes.yaml.");
+            resp.set("dataType", jsonMapper.valueToTree(updatedDef));
+            sendJson(exchange, 200, resp.toPrettyString());
+        } else {
+            sendError(exchange, 500, "Failed to persist updated data type to datatypes.yaml.");
+        }
+    }
+
+    private void handleDeleteDataType(HttpExchange exchange, String pathName) throws IOException {
+        String name = pathName;
+        if (name == null || name.trim().isEmpty()) {
+            String query = exchange.getRequestURI().getQuery();
+            if (query != null) {
+                for (String param : query.split("&")) {
+                    String[] pair = param.split("=", 2);
+                    if ("name".equalsIgnoreCase(pair[0]) && pair.length > 1) {
+                        name = java.net.URLDecoder.decode(pair[1], StandardCharsets.UTF_8);
+                    }
+                }
+            }
+        }
+        if (name == null || name.trim().isEmpty()) {
+            String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            if (body != null && !body.trim().isEmpty()) {
+                try {
+                    JsonNode node = jsonMapper.readTree(body);
+                    if (node.has("name")) {
+                        name = node.get("name").asText();
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+
+        if (name == null || name.trim().isEmpty()) {
+            sendError(exchange, 400, "Property or query parameter 'name' is required to delete a data type.");
+            return;
+        }
+
+        String cleanName = name.trim().toLowerCase();
+        if (!dataTypeRegistry.hasDataType(cleanName)) {
+            sendError(exchange, 404, "Data type '" + cleanName + "' not found in registry.");
+            return;
+        }
+
+        boolean ok = dataTypeRegistry.deleteDataType(cleanName);
+        if (ok) {
+            ObjectNode resp = jsonMapper.createObjectNode();
+            resp.put("success", true);
+            resp.put("message", "Data type '" + cleanName + "' successfully deleted from registry and datatypes.yaml.");
+            resp.put("name", cleanName);
+            sendJson(exchange, 200, resp.toPrettyString());
+        } else {
+            sendError(exchange, 500, "Failed to delete data type from datatypes.yaml.");
         }
     }
 
@@ -715,6 +822,7 @@ public class RestApiHandler implements HttpHandler {
         if (scriptsDir.exists() && scriptsDir.isDirectory()) {
             File[] files = scriptsDir.listFiles((dir, name) -> name.endsWith(".yaml") || name.endsWith(".json"));
             if (files != null) {
+                Arrays.sort(files, Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER));
                 for (File f : files) {
                     ObjectNode sNode = arr.addObject();
                     sNode.put("filename", f.getName());
