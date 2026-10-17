@@ -18,7 +18,8 @@ public class TestSuiteScript {
     private String description = "";
 
     @JsonProperty("userId")
-    private String userId = "me";
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private String userId = null;
 
     @JsonProperty("stopOnError")
     private boolean stopOnError = false;
@@ -45,7 +46,14 @@ public class TestSuiteScript {
         this.description = description;
     }
 
+    @JsonProperty("userId")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     public String getUserId() {
+        return userId;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public String getEffectiveUserId() {
         return userId != null && !userId.trim().isEmpty() ? userId.trim() : "me";
     }
 
@@ -74,9 +82,10 @@ public class TestSuiteScript {
      * userId "both" (either explicitly on the step or inherited from the script) into
      * separate steps for "me" and "healthUserId".
      */
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public List<TestStep> getExpandedSteps() {
         List<TestStep> expanded = new ArrayList<>();
-        String scriptUser = getUserId();
+        String scriptUser = getEffectiveUserId();
 
         for (TestStep step : steps) {
             String stepUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty())

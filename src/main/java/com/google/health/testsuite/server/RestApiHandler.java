@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.google.health.testsuite.auth.BrowserUtil;
 import com.google.health.testsuite.auth.LocalOAuthReceiver;
 import com.google.health.testsuite.auth.OAuthService;
@@ -49,7 +50,13 @@ public class RestApiHandler implements HttpHandler {
         this.dataTypeRegistry = engine.getDataTypeRegistry();
         this.oAuthService = oAuthService;
         this.jsonMapper = new ObjectMapper();
-        this.yamlMapper = new ObjectMapper(new YAMLFactory());
+        YAMLFactory yamlFactory = YAMLFactory.builder()
+                .enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE)
+                .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
+                .enable(YAMLGenerator.Feature.INDENT_ARRAYS_WITH_INDICATOR)
+                .disable(YAMLGenerator.Feature.SPLIT_LINES)
+                .build();
+        this.yamlMapper = new ObjectMapper(yamlFactory);
     }
 
     @Override
@@ -98,6 +105,11 @@ public class RestApiHandler implements HttpHandler {
                 case "/api/test/run-all", "/api/test/run-stream" -> handleRunAllTests(exchange);
                 case "/api/test/script" -> handleRunScript(exchange);
                 case "/api/scripts" -> handleListScripts(exchange);
+                case "/api/custom-tests" -> {
+                    if ("POST".equals(method)) handleSaveCustomTest(exchange);
+                    else if ("GET".equals(method)) handleListCustomTests(exchange);
+                    else sendError(exchange, 405, "Method Not Allowed");
+                }
                 case "/api/health/profile" -> {
                     if ("POST".equals(method) || "PATCH".equals(method)) handleUpdateProfile(exchange);
                     else handleGetProfile(exchange);
@@ -712,6 +724,169 @@ public class RestApiHandler implements HttpHandler {
             }
         }
         sendJson(exchange, 200, arr.toPrettyString());
+    }
+
+    private void handleListCustomTests(HttpExchange exchange) throws IOException {
+        File scriptsDir = new File("scripts");
+        ArrayNode arr = jsonMapper.createArrayNode();
+        if (scriptsDir.exists() && scriptsDir.isDirectory()) {
+            File[] files = scriptsDir.listFiles((dir, name) -> name.startsWith("custom_tests_") && (name.endsWith(".yaml") || name.endsWith(".json")));
+            if (files != null) {
+                Arrays.sort(files, Comparator.comparing(File::getName));
+                for (File f : files) {
+                    ObjectNode sNode = arr.addObject();
+                    sNode.put("filename", f.getName());
+                    sNode.put("path", f.getPath());
+                    sNode.put("sizeBytes", f.length());
+                    try {
+                        TestSuiteScript s = yamlMapper.readValue(f, TestSuiteScript.class);
+                        sNode.put("name", s.getName());
+                        sNode.put("description", s.getDescription());
+                        sNode.put("totalSteps", s.getSteps() != null ? s.getSteps().size() : 0);
+                    } catch (Exception ignored) {
+                        sNode.put("name", f.getName());
+                        sNode.put("totalSteps", 0);
+                    }
+                }
+            }
+        }
+        sendJson(exchange, 200, arr.toPrettyString());
+    }
+
+    private void handleSaveCustomTest(HttpExchange exchange) throws IOException {
+        String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        if (body == null || body.trim().isEmpty()) {
+            sendError(exchange, 400, "Request body is empty.");
+            return;
+        }
+
+        JsonNode json = jsonMapper.readTree(body);
+
+        String rawFileName = json.path("fileName").asText("").trim();
+        if (rawFileName.isEmpty()) {
+            sendError(exchange, 400, "File name is required.");
+            return;
+        }
+
+        // Clean up filename: ensure starts with 'custom_tests_' and ends with '.yaml'
+        String fileName = rawFileName;
+        if (fileName.startsWith("scripts/")) {
+            fileName = fileName.substring("scripts/".length());
+        }
+        if (!fileName.startsWith("custom_tests_")) {
+            fileName = "custom_tests_" + fileName;
+        }
+        if (!fileName.endsWith(".yaml") && !fileName.endsWith(".json")) {
+            fileName = fileName + ".yaml";
+        }
+
+        File scriptsDir = new File("scripts");
+        if (!scriptsDir.exists()) {
+            scriptsDir.mkdirs();
+        }
+        File scriptFile = new File(scriptsDir, fileName);
+
+        String mode = json.path("mode").asText("create").trim().toLowerCase(); // "create" or "append"
+        boolean autoAddToManifest = json.path("autoAddToManifest").asBoolean(true);
+
+        TestSuiteScript script;
+        if ("append".equals(mode) && scriptFile.exists() && scriptFile.length() > 0) {
+            try {
+                script = yamlMapper.readValue(scriptFile, TestSuiteScript.class);
+            } catch (Exception e) {
+                sendError(exchange, 400, "Failed to parse existing custom test file for appending: " + e.getMessage());
+                return;
+            }
+        } else {
+            script = new TestSuiteScript();
+            String suiteName = json.path("suiteName").asText("").trim();
+            if (suiteName.isEmpty()) {
+                String baseTitle = fileName.replace("custom_tests_", "").replace(".yaml", "").replace(".json", "");
+                suiteName = "Custom Tests: " + baseTitle;
+            }
+            script.setName(suiteName);
+            script.setDescription(json.path("description").asText("Custom test suite created via API Explorer"));
+            // CRITICAL REQUIREMENT: userId is specific to the test step, NOT the YAML file top-level
+            script.setUserId(null);
+        }
+
+        // Parse TestStep from payload
+        JsonNode stepNode = json.path("step");
+        if (stepNode.isMissingNode() || !stepNode.isObject()) {
+            sendError(exchange, 400, "Step definition object 'step' is required.");
+            return;
+        }
+
+        TestStep step;
+        try {
+            step = jsonMapper.treeToValue(stepNode, TestStep.class);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid step configuration: " + e.getMessage());
+            return;
+        }
+
+        if (step.getName() == null || step.getName().trim().isEmpty()) {
+            step.setName("Custom: " + (step.getDataType() != null ? step.getDataType() : "Unknown") + " " + step.getAction());
+        }
+
+        // Ensure step has userId set directly on the step
+        if (step.getUserId() == null || step.getUserId().trim().isEmpty()) {
+            String stepUserId = json.path("userId").asText("").trim();
+            step.setUserId(!stepUserId.isEmpty() ? stepUserId : "me");
+        }
+
+        if (script.getSteps() == null) {
+            script.setSteps(new ArrayList<>());
+        }
+        script.getSteps().add(step);
+
+        // Ensure all step bodies with valid JSON are formatted as pretty JSON for clean YAML literal block output
+        for (TestStep s : script.getSteps()) {
+            if (s.getBody() != null && !s.getBody().trim().isEmpty()) {
+                try {
+                    JsonNode bodyJson = jsonMapper.readTree(s.getBody());
+                    s.setBody(jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(bodyJson));
+                } catch (Exception ignored) {
+                    // Keep original text if not valid JSON
+                }
+            }
+        }
+
+        // Write script to file
+        try {
+            yamlMapper.writeValue(scriptFile, script);
+            logger.info("Saved custom test suite to {} with {} steps", scriptFile.getPath(), script.getSteps().size());
+        } catch (Exception e) {
+            logger.error("Failed to write custom test file {}: {}", scriptFile.getPath(), e.getMessage(), e);
+            sendError(exchange, 500, "Failed to write custom test file: " + e.getMessage());
+            return;
+        }
+
+        // Auto add to manifest if requested
+        boolean manifestUpdated = false;
+        if (autoAddToManifest) {
+            try {
+                TestSuiteManifest manifest = configManager.loadTestSuiteManifest();
+                String relativeScriptPath = "scripts/" + fileName;
+                if (!manifest.getScripts().contains(relativeScriptPath)) {
+                    manifest.getScripts().add(relativeScriptPath);
+                    configManager.saveTestSuiteManifest(manifest);
+                    manifestUpdated = true;
+                    logger.info("Added {} to test suite manifest", relativeScriptPath);
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to auto-add {} to manifest: {}", fileName, e.getMessage());
+            }
+        }
+
+        ObjectNode resp = jsonMapper.createObjectNode();
+        resp.put("success", true);
+        resp.put("fileName", fileName);
+        resp.put("filePath", "scripts/" + fileName);
+        resp.put("totalSteps", script.getSteps().size());
+        resp.put("manifestUpdated", manifestUpdated);
+        resp.put("message", "Custom test step saved to scripts/" + fileName + " (" + script.getSteps().size() + " total steps).");
+        sendJson(exchange, 200, jsonMapper.writeValueAsString(resp));
     }
 
     private void handleRunScript(HttpExchange exchange) throws IOException {

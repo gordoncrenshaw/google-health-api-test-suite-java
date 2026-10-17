@@ -149,7 +149,7 @@
                             <textarea id="explorer-payload-input" class="form-control font-mono" rows="6" placeholder="{&#10;  &quot;names&quot;: [&#10;    string&#10;  ]&#10;}"></textarea>
                         </div>
 
-                        <div class="action-buttons mt-4">
+                        <div class="action-buttons mt-4" style="flex-wrap: wrap;">
                             <button id="btn-send-request" class="btn btn-primary btn-lg">
                                 <svg viewBox="0 0 24 24" class="btn-icon"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                                 Send HTTP Request
@@ -157,6 +157,10 @@
                             <button id="btn-copy-curl" class="btn btn-secondary">
                                 <svg viewBox="0 0 24 24" class="btn-icon"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
                                 Copy cURL
+                            </button>
+                            <button id="btn-open-custom-test-modal" class="btn btn-secondary" style="border-color: #38bdf8; color: #38bdf8;" title="Save current endpoint request and parameters as an automated test">
+                                <svg viewBox="0 0 24 24" class="btn-icon" style="fill: currentColor;"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                                Save as a custom test
                             </button>
                         </div>
                     </div>
@@ -761,6 +765,235 @@
         </main>
     </div>
 
-    <script src="app.js?v=20261004_7"></script>
+    <!-- Modal: Save as Custom Test -->
+    <div id="modal-custom-test" class="modal-backdrop" style="display: none;">
+        <div class="modal-dialog glass-card">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">Save as Custom Test</h2>
+                    <p class="text-muted" style="font-size: 13px; margin-top: 2px;">Convert current API Explorer request into an automated test step</p>
+                </div>
+                <button type="button" id="btn-close-custom-test-modal" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Target File Selection -->
+                <div class="form-group mb-3">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="font-weight: 600; margin-bottom: 0;">File Name: <span class="text-danger">*</span></label>
+                        <div style="display: flex; gap: 16px; font-size: 13px;">
+                            <label class="radio-label" style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="radio" name="custom-file-source" id="source-new-file" value="new" checked>
+                                <span>Use New File Name</span>
+                            </label>
+                            <label class="radio-label" style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="radio" name="custom-file-source" id="source-existing-file" value="existing">
+                                <span>Select Existing File</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- New File Name Input -->
+                    <div id="group-new-file">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span class="font-mono text-muted" style="font-size: 13px; background: rgba(0,0,0,0.3); padding: 7px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); white-space: nowrap;">scripts/custom_tests_</span>
+                            <input type="text" id="custom-test-filename" class="form-control font-mono" placeholder="my_test" style="flex: 1;" required>
+                            <span class="font-mono text-muted" style="font-size: 13px; background: rgba(0,0,0,0.3); padding: 7px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">.yaml</span>
+                        </div>
+                        <small class="text-muted" style="font-size: 11px; margin-top: 4px; display: block;">Full path will be <code id="custom-test-full-path-preview">scripts/custom_tests_my_test.yaml</code></small>
+                    </div>
+
+                    <!-- Existing File Dropdown -->
+                    <div id="group-existing-file" style="display: none;">
+                        <select id="custom-existing-files-select" class="form-control font-mono">
+                            <option value="">(Loading existing custom test files...)</option>
+                        </select>
+                        <small class="text-muted" style="font-size: 11px; margin-top: 4px; display: block;">Select an existing custom test file to save to</small>
+                    </div>
+                </div>
+
+                <!-- Suite Name & Description (for new file) -->
+                <div id="group-suite-meta" class="form-grid mb-3" style="grid-template-columns: 1fr 1fr;">
+                    <div class="form-group mb-0">
+                        <label for="custom-suite-name">Suite Title:</label>
+                        <input type="text" id="custom-suite-name" class="form-control" placeholder="e.g. Custom Steps Tests">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="custom-suite-desc">Suite Description:</label>
+                        <input type="text" id="custom-suite-desc" class="form-control" placeholder="e.g. Tests custom filter and page size combinations">
+                    </div>
+                </div>
+
+                <!-- Test Step Details -->
+                <div class="card p-3 mb-3" style="background: rgba(10, 16, 30, 0.6); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                    <div style="font-weight: 600; font-size: 13px; margin-bottom: 12px; color: var(--primary); display: flex; align-items: center; justify-content: space-between;">
+                        <span>Test Step Definition</span>
+                        <span class="pill-badge pill-cyan" id="custom-step-badge">Step 1</span>
+                    </div>
+
+                    <div class="form-grid mb-3" style="grid-template-columns: 2fr 1fr;">
+                        <div class="form-group mb-0">
+                            <label for="custom-step-name">Test Step Name: <span class="text-danger">*</span></label>
+                            <input type="text" id="custom-step-name" class="form-control" placeholder="e.g. Custom: Steps List (pageSize=25)" required>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="custom-step-ticket">Ticket / Bug ID <span class="text-muted">(Optional)</span>:</label>
+                            <input type="text" id="custom-step-ticket" class="form-control font-mono" placeholder="e.g. b/12345678 or #32">
+                        </div>
+                    </div>
+
+                    <div class="form-grid mb-3" style="grid-template-columns: 1fr 1fr 1fr;">
+                        <div class="form-group mb-0">
+                            <label for="custom-step-datatype">Data Type:</label>
+                            <select id="custom-step-datatype" class="form-control"></select>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="custom-step-action">Action / Endpoint:</label>
+                            <select id="custom-step-action" class="form-control">
+                                <option value="list">list</option>
+                                <option value="get">get</option>
+                                <option value="create">create</option>
+                                <option value="patch">patch</option>
+                                <option value="dailyRollUp">dailyRollUp</option>
+                                <option value="rollUp">rollUp</option>
+                                <option value="reconcile">reconcile</option>
+                                <option value="batchDelete">batchDelete</option>
+                                <option value="exportExerciseTcx">exportExerciseTcx</option>
+                                <option value="getProfile">getProfile</option>
+                                <option value="getIdentity">getIdentity</option>
+                                <option value="getIrnProfile">getIrnProfile</option>
+                                <option value="getSettings">getSettings</option>
+                                <option value="listDevices">listDevices</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="custom-step-userid">User ID:</label>
+                            <select id="custom-step-userid" class="form-control font-mono">
+                                <option value="me">me (Default)</option>
+                                <option value="healthUserId">healthUserId</option>
+                                <option value="both">both (me &amp; healthUserId)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Query Parameters -->
+                    <div id="custom-step-qp-group" class="form-grid mb-3" style="grid-template-columns: 1fr 2fr 1fr;">
+                        <div class="form-group mb-0">
+                            <label for="custom-step-pagesize">pageSize:</label>
+                            <input type="text" id="custom-step-pagesize" class="form-control font-mono" placeholder="25">
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="custom-step-filter">filter:</label>
+                            <input type="text" id="custom-step-filter" class="form-control font-mono" placeholder="e.g. steps.interval.start_time &gt; &quot;2026-01-01T00:00:00Z&quot;">
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="custom-step-pagetoken">pageToken:</label>
+                            <input type="text" id="custom-step-pagetoken" class="form-control font-mono" placeholder="Optional continuation token">
+                        </div>
+                    </div>
+
+                    <!-- Data Point ID -->
+                    <div id="custom-step-dpid-group" class="form-group mb-3" style="display: none;">
+                        <label for="custom-step-datapointid">dataPointId:</label>
+                        <input type="text" id="custom-step-datapointid" class="form-control font-mono" placeholder="sample-dp-1">
+                    </div>
+
+                    <!-- Request Body -->
+                    <div id="custom-step-body-group" class="form-group mb-3" style="display: none;">
+                        <label for="custom-step-body">Request Body (JSON):</label>
+                        <textarea id="custom-step-body" class="form-control font-mono" rows="4" placeholder="{ ... }"></textarea>
+                    </div>
+
+                    <!-- Assertions -->
+                    <div class="form-grid mb-1" style="grid-template-columns: 1fr 1fr;">
+                        <div class="form-group mb-0">
+                            <label for="custom-step-assert-status">Expected HTTP Status(es):</label>
+                            <input type="text" id="custom-step-assert-status" class="form-control font-mono" value="200" placeholder="e.g. 200 or 200, 204">
+                            <small class="text-muted" style="font-size: 10px;">Comma-separated status codes</small>
+                        </div>
+                        <div class="form-group mb-0" style="display: flex; align-items: center; margin-top: 18px;">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="custom-step-validate-range" checked>
+                                <span class="checkbox-label"><strong>Validate Numerical Range</strong> against datatypes.yaml</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manifest Auto-Add Option -->
+                <div class="form-group mb-3">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="custom-step-auto-manifest" checked>
+                        <span class="checkbox-label"><strong>Automatically add to Full Test Suite Manifest</strong> (<code style="font-size: 11px;">config/test_suite_manifest.yaml</code>)</span>
+                    </label>
+                </div>
+
+                <!-- Live YAML Preview -->
+                <div class="card p-3 mb-3" style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Live YAML Preview (Generated Output)</span>
+                        <button type="button" id="btn-copy-custom-yaml" class="btn btn-secondary btn-sm" style="font-size: 11px; padding: 2px 8px;">Copy YAML</button>
+                    </div>
+                    <pre id="custom-test-yaml-preview" class="code-viewer font-mono" style="max-height: 160px; overflow-y: auto; font-size: 12px; margin-bottom: 0;"></pre>
+                </div>
+
+                <div id="custom-test-feedback" style="display: none; padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 12px; font-size: 13px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btn-cancel-custom-test" class="btn btn-secondary">Cancel</button>
+                <button type="button" id="btn-save-custom-test-submit" class="btn btn-primary">
+                    <svg viewBox="0 0 24 24" class="btn-icon"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                    Save Custom Test Step
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Overwrite or Append Confirmation -->
+    <div id="modal-custom-test-confirm" class="modal-backdrop" style="display: none; z-index: 10050;">
+        <div class="modal-dialog glass-card" style="max-width: 500px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title" style="font-size: 17px; display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: #f59e0b;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                        File Already Exists
+                    </h3>
+                </div>
+                <button type="button" id="btn-close-confirm-modal" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 18px 24px;">
+                <p style="margin-bottom: 12px; font-size: 14px; line-height: 1.5;">
+                    The file <code id="confirm-file-name" class="font-mono text-cyan" style="font-size: 13px; font-weight: 600;">scripts/custom_tests_...yaml</code> already exists <span id="confirm-file-steps-info" class="text-muted"></span>.
+                </p>
+                <p style="margin-bottom: 18px; font-size: 13px; color: var(--text-secondary);">
+                    Do you want to <strong>overwrite</strong> the existing file with this test step, or <strong>append</strong> this test step to the file?
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button type="button" id="btn-confirm-append" class="btn btn-primary" style="justify-content: flex-start; padding: 12px 16px; text-align: left;">
+                        <div style="display: flex; flex-direction: column; gap: 3px;">
+                            <div style="font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                                <svg viewBox="0 0 24 24" class="btn-icon" style="width: 16px; height: 16px;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                                Append Test Step
+                            </div>
+                            <small style="font-weight: 400; opacity: 0.85; font-size: 11px;">Keep existing steps and add this test step to the end of the file</small>
+                        </div>
+                    </button>
+                    <button type="button" id="btn-confirm-overwrite" class="btn btn-secondary" style="justify-content: flex-start; padding: 12px 16px; text-align: left; border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.08);">
+                        <div style="display: flex; flex-direction: column; gap: 3px;">
+                            <div style="font-weight: 600; display: flex; align-items: center; gap: 8px; color: #f87171;">
+                                <svg viewBox="0 0 24 24" class="btn-icon" style="width: 16px; height: 16px; fill: #f87171;"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                                Overwrite Existing File
+                            </div>
+                            <small style="font-weight: 400; opacity: 0.85; font-size: 11px; color: var(--text-secondary);">Replace the entire file with a new test suite containing only this step</small>
+                        </div>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 12px 24px;">
+                <button type="button" id="btn-confirm-cancel" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=20261004_8"></script>
 </body>
 </html>
