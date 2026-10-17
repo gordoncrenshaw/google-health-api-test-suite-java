@@ -595,19 +595,44 @@ src/main/java/com/google/health/testsuite/common/AppVersion.java
 
 ```java
 public final class AppVersion {
-    public static final String VERSION = "1.0.6";
+    public static final String VERSION = "1.0.7";
     public static final String API_TARGET = "v4";
     public static final String RELEASE_DATE = "2026-10-17";
 }
 ```
 
 - **Runtime Availability**: The version is exposed via `/api/status` and `/api/version` endpoints.
-- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.6` pill badge and in the system information banner).
+- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.7` pill badge and in the system information banner).
 - **How to Update**: When adding new functionality or fixes, increment `AppVersion.VERSION` following Semantic Versioning (`MAJOR.MINOR.PATCH`) and document changes in the changelog below.
 
 ---
 
 ## 📋 Version History & Changelog
+
+### Version 1.0.7 (October 17, 2026)
+
+#### 🌟 New Features & API Enhancements
+- **Custom Test Suite Builder in API Explorer (Issue #32)**:
+  - Added **"Save as a custom test"** action button in the API Explorer directly adjacent to the cURL generation button.
+  - Allows developers to seamlessly convert ad-hoc API Explorer queries and test payloads into automated custom test suite scripts.
+  - Interactive **"Save as Custom Test"** modal pre-populates all query parameters, HTTP method, endpoint, headers, and request body directly from the current API Explorer state.
+  - **Dynamic File Selection & Destination Modes**:
+    - Supports saving to a brand-new custom test script file (`scripts/custom_tests_<name>.yaml`).
+    - Supports selecting existing custom test files from a dynamic dropdown listing all custom test suites with their current step counts.
+    - Integrated conflict handling modal prompting developers to **Append** or **Overwrite** when an existing test file is targeted.
+  - **Formatted JSON Payloads**:
+    - Formatted YAML serialization outputs request bodies in clean literal block style (`body: |-`) with standard multi-line JSON indentation, preventing escaped quote clutter while maintaining complete parsing compatibility with the Google Health API.
+  - **Per-Step User ID Assignment**:
+    - Standardized field label to `User ID:` and mapped `userId` directly to individual test steps (e.g. `me`, `healthUserId`, or specific UUIDs) rather than top-level file scope.
+  - **Automatic Test Suite Manifest Integration**:
+    - Optional **"Add to Test Suite Manifest"** checkbox automatically registers new custom test scripts in [`config/test_suite_manifest.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/config/test_suite_manifest.yaml) so they are immediately executed during "Run Full Test Suite".
+- **Backend API Endpoints for Custom Tests**:
+  - `GET /api/custom-tests`: Lists all available custom test files under `scripts/custom_tests_*.yaml` along with their script name, file path, and step count.
+  - `POST /api/custom-tests`: Creates, appends, or overwrites custom test scripts with validation, step deduplication/naming, and automated manifest synchronization.
+- **Automated Unit & Integration Testing**:
+  - Added comprehensive test coverage in [`RestApiHandlerTest.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/test/java/com/google/health/testsuite/RestApiHandlerTest.java) validating custom test creation, appending, overwriting, pretty JSON formatting, and script execution.
+
+---
 
 ### Version 1.0.6 (October 17, 2026)
 

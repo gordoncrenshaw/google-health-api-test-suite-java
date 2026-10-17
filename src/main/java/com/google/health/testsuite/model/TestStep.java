@@ -11,6 +11,7 @@ import java.util.Map;
  * Represents a single test step in a test script file (Mode 3).
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
 public class TestStep {
 
     @JsonProperty("name")
@@ -26,9 +27,15 @@ public class TestStep {
     private String dataPointId;
 
     @JsonProperty("userId")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
     private String userId;
 
+    @JsonProperty("ticketId")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
+    private String ticketId;
+
     @JsonProperty("queryParams")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
     private Map<String, String> queryParams = new HashMap<>();
 
     @JsonProperty("body")
@@ -163,6 +170,14 @@ public class TestStep {
         this.assertContains = assertContains != null ? assertContains : new ArrayList<>();
     }
 
+    public String getTicketId() {
+        return ticketId;
+    }
+
+    public void setTicketId(String ticketId) {
+        this.ticketId = ticketId;
+    }
+
     public TestStep copy() {
         TestStep copy = new TestStep();
         copy.setName(this.name);
@@ -170,6 +185,7 @@ public class TestStep {
         copy.setDataType(this.dataType);
         copy.setDataPointId(this.dataPointId);
         copy.setUserId(this.userId);
+        copy.setTicketId(this.ticketId);
         if (this.queryParams != null) {
             copy.setQueryParams(new HashMap<>(this.queryParams));
         }

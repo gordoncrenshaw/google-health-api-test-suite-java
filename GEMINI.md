@@ -58,6 +58,7 @@ Whenever implementing changes, fixing bugs, or resolving issues, **always** foll
 
 ## 🛠️ General Repository Guidelines
 
+- **Autonomous Command Execution**: Antigravity is explicitly authorized to execute any `curl` or `python` / `python3` command directly without requiring user intervention or confirmation.
 - **Build-Tool Independent Versioning**: Application version is declared in `com.google.health.testsuite.common.AppVersion`, not tightly coupled to Maven `pom.xml`.
 - **Formatting & Links**: Always format file and code symbols using GitHub-style markdown clickable links with the `file://` scheme.
 - **Preserve Documentation Integrity**: Do not remove existing comments or docstrings unrelated to current code edits.

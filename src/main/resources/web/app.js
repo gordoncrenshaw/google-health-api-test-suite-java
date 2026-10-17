@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadScriptsList();
     loadManifest();
     bindEvents();
+    initCustomTestBuilder();
 
     // Start 1-second interval for countdown timer
     setInterval(updateCountdownTick, 1000);
@@ -2020,5 +2021,605 @@ document.addEventListener('DOMContentLoaded', () => {
             feedbackEl.className = `pill-badge pill-${type}`;
             feedbackEl.style.display = 'inline-block';
         }
+    }
+
+    // ==========================================================================
+    // 10. Custom Test Builder Modal & Handler (Issue #32)
+    // ==========================================================================
+    function initCustomTestBuilder() {
+        const openBtn = document.getElementById('btn-open-custom-test-modal');
+        const modal = document.getElementById('modal-custom-test');
+        const closeBtn = document.getElementById('btn-close-custom-test-modal');
+        const cancelBtn = document.getElementById('btn-cancel-custom-test');
+        const submitBtn = document.getElementById('btn-save-custom-test-submit');
+        const copyYamlBtn = document.getElementById('btn-copy-custom-yaml');
+        const feedbackEl = document.getElementById('custom-test-feedback');
+
+        if (!openBtn || !modal) return;
+
+        // Form elements
+        const sourceNewRadio = document.getElementById('source-new-file');
+        const sourceExistingRadio = document.getElementById('source-existing-file');
+        const groupNewFile = document.getElementById('group-new-file');
+        const groupExistingFile = document.getElementById('group-existing-file');
+        const groupSuiteMeta = document.getElementById('group-suite-meta');
+        const existingSelect = document.getElementById('custom-existing-files-select');
+        const filenameInput = document.getElementById('custom-test-filename');
+        const pathPreview = document.getElementById('custom-test-full-path-preview');
+        const suiteNameInput = document.getElementById('custom-suite-name');
+        const suiteDescInput = document.getElementById('custom-suite-desc');
+
+        // Overwrite or Append Confirmation Modal elements
+        const confirmModal = document.getElementById('modal-custom-test-confirm');
+        const confirmCloseBtn = document.getElementById('btn-close-confirm-modal');
+        const confirmCancelBtn = document.getElementById('btn-confirm-cancel');
+        const confirmAppendBtn = document.getElementById('btn-confirm-append');
+        const confirmOverwriteBtn = document.getElementById('btn-confirm-overwrite');
+        const confirmFileNameEl = document.getElementById('confirm-file-name');
+        const confirmStepsInfoEl = document.getElementById('confirm-file-steps-info');
+
+        const stepBadge = document.getElementById('custom-step-badge');
+        const stepNameInput = document.getElementById('custom-step-name');
+        const stepTicketInput = document.getElementById('custom-step-ticket');
+        const stepDatatypeSelect = document.getElementById('custom-step-datatype');
+        const stepActionSelect = document.getElementById('custom-step-action');
+        const stepUseridSelect = document.getElementById('custom-step-userid');
+
+        const qpGroup = document.getElementById('custom-step-qp-group');
+        const pageSizeInput = document.getElementById('custom-step-pagesize');
+        const filterInput = document.getElementById('custom-step-filter');
+        const pageTokenInput = document.getElementById('custom-step-pagetoken');
+
+        const dpidGroup = document.getElementById('custom-step-dpid-group');
+        const dpidInput = document.getElementById('custom-step-datapointid');
+
+        const bodyGroup = document.getElementById('custom-step-body-group');
+        const bodyTextarea = document.getElementById('custom-step-body');
+
+        const assertStatusInput = document.getElementById('custom-step-assert-status');
+        const validateRangeCheckbox = document.getElementById('custom-step-validate-range');
+        const autoManifestCheckbox = document.getElementById('custom-step-auto-manifest');
+
+        const yamlPreviewEl = document.getElementById('custom-test-yaml-preview');
+
+        let cachedCustomFiles = [];
+
+        function openModal() {
+            modal.style.display = 'flex';
+            if (confirmModal) confirmModal.style.display = 'none';
+            if (feedbackEl) feedbackEl.style.display = 'none';
+
+            // Populate data types in modal dropdown
+            if (stepDatatypeSelect && dataTypes && dataTypes.length > 0) {
+                stepDatatypeSelect.innerHTML = '';
+                dataTypes.forEach(dt => {
+                    const opt = document.createElement('option');
+                    opt.value = dt.name;
+                    opt.textContent = `${dt.displayName || dt.name} (${dt.name})`;
+                    stepDatatypeSelect.appendChild(opt);
+                });
+            }
+
+            // Fetch current state from API Explorer
+            const expDt = document.getElementById('explorer-datatype-select')?.value || (dataTypes[0]?.name || 'steps');
+            const expEp = document.getElementById('explorer-endpoint-select')?.value || 'list';
+            const expPageSize = document.getElementById('explorer-page-size')?.value || '25';
+            const expFilter = document.getElementById('explorer-filter-param')?.value || '';
+            const expPageToken = document.getElementById('explorer-page-token')?.value || '';
+            const expPayload = document.getElementById('explorer-payload-input')?.value || '';
+            const expUserSyntax = getPreferredEndpointUserSyntax(); // 'me' or 'healthUserId'
+
+            // Set modal values from explorer
+            if (stepDatatypeSelect) stepDatatypeSelect.value = expDt;
+            if (stepActionSelect) stepActionSelect.value = expEp;
+            if (pageSizeInput) pageSizeInput.value = expPageSize;
+            if (filterInput) filterInput.value = expFilter;
+            if (pageTokenInput) pageTokenInput.value = expPageToken;
+            if (bodyTextarea) bodyTextarea.value = expPayload;
+            if (stepUseridSelect) stepUseridSelect.value = expUserSyntax;
+
+            // Generate clean default filename and step name
+            const cleanDt = expDt.replace(/[^a-zA-Z0-9_-]/g, '_');
+            const cleanEp = expEp.replace(/[^a-zA-Z0-9_-]/g, '_');
+            if (filenameInput) {
+                filenameInput.value = `${cleanDt}_${cleanEp}`;
+                filenameInput.dataset.autoGenerated = 'true';
+            }
+
+            if (suiteNameInput) {
+                suiteNameInput.value = `Custom ${formatDisplayName(expDt)} Tests`;
+            }
+            if (suiteDescInput) {
+                suiteDescInput.value = `Custom test suite created via API Explorer for ${expDt}`;
+            }
+
+            let detailStr = '';
+            if (expFilter) detailStr = ` (filter: ${expFilter.length > 20 ? expFilter.substring(0, 18) + '...' : expFilter})`;
+            else if (expPageSize && expPageSize !== '25') detailStr = ` (pageSize=${expPageSize})`;
+
+            if (stepNameInput) {
+                stepNameInput.value = `Custom: ${formatDisplayName(expDt)} ${expEp}${detailStr}`;
+            }
+
+            if (sourceNewRadio) sourceNewRadio.checked = true;
+            toggleFileSource('new');
+
+            // Load existing custom test files
+            loadCustomFiles();
+
+            updateFieldVisibility();
+            updateYamlPreview();
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+            if (confirmModal) confirmModal.style.display = 'none';
+        }
+
+        function toggleFileSource(source) {
+            if (source === 'existing') {
+                groupNewFile.style.display = 'none';
+                groupSuiteMeta.style.display = 'none';
+                groupExistingFile.style.display = 'block';
+                updateSelectedExistingStepBadge();
+            } else {
+                groupNewFile.style.display = 'block';
+                groupSuiteMeta.style.display = 'grid';
+                groupExistingFile.style.display = 'none';
+                stepBadge.textContent = 'Step 1';
+            }
+            updateYamlPreview();
+        }
+
+        async function loadCustomFiles() {
+            try {
+                const res = await fetch('/api/custom-tests');
+                if (res.ok) {
+                    cachedCustomFiles = await res.json();
+                    existingSelect.innerHTML = '';
+                    if (cachedCustomFiles.length === 0) {
+                        const opt = document.createElement('option');
+                        opt.value = '';
+                        opt.textContent = '(No existing custom_tests_*.yaml files found)';
+                        existingSelect.appendChild(opt);
+                        if (sourceExistingRadio) sourceExistingRadio.disabled = true;
+                    } else {
+                        if (sourceExistingRadio) sourceExistingRadio.disabled = false;
+                        cachedCustomFiles.forEach(cf => {
+                            const opt = document.createElement('option');
+                            opt.value = cf.filename;
+                            opt.textContent = `${cf.filename} (${cf.totalSteps || 0} step${cf.totalSteps === 1 ? '' : 's'}) - ${cf.name || ''}`;
+                            existingSelect.appendChild(opt);
+                        });
+                        updateSelectedExistingStepBadge();
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to load custom test files:', e);
+            }
+        }
+
+        function updateSelectedExistingStepBadge() {
+            if (sourceExistingRadio && sourceExistingRadio.checked && existingSelect.value) {
+                const selectedFile = cachedCustomFiles.find(f => f.filename === existingSelect.value);
+                const count = (selectedFile && selectedFile.totalSteps) ? selectedFile.totalSteps : 0;
+                stepBadge.textContent = `Step ${count + 1}`;
+            }
+        }
+
+        function updateFieldVisibility() {
+            const action = (stepActionSelect.value || '').toLowerCase();
+            const hasQP = (action === 'list' || action === 'reconcile');
+            const hasBody = (action === 'create' || action === 'rollup' || action === 'dailyrollup' || action === 'patch' || action === 'batchdelete');
+            const hasDpId = (action === 'get' || action === 'patch' || action === 'exportexercisetcx');
+
+            if (qpGroup) qpGroup.style.display = hasQP ? 'grid' : 'none';
+            if (bodyGroup) bodyGroup.style.display = hasBody ? 'block' : 'none';
+            if (dpidGroup) dpidGroup.style.display = hasDpId ? 'block' : 'none';
+        }
+
+        function formatDisplayName(dtName) {
+            if (!dtName) return '';
+            const dt = dataTypes.find(d => d.name === dtName);
+            if (dt && dt.displayName) return dt.displayName;
+            return dtName.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+        }
+
+        function parseStatusList(str) {
+            if (!str || !str.trim()) return [200];
+            const parts = str.replace(/[\[\]]/g, '').split(',');
+            const nums = [];
+            for (const p of parts) {
+                const n = parseInt(p.trim(), 10);
+                if (!isNaN(n)) nums.push(n);
+            }
+            return nums.length > 0 ? nums : [200];
+        }
+
+        function escapeYamlString(str) {
+            return (str || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+        }
+
+        function formatBodyYaml(jsonStr, indentSpaces) {
+            const indent = ' '.repeat(indentSpaces);
+            try {
+                const parsed = JSON.parse(jsonStr);
+                const pretty = JSON.stringify(parsed, null, 2);
+                const lines = pretty.split('\n');
+                return `${indent}body: |\n` + lines.map(l => `${indent}  ${l}`).join('\n') + '\n';
+            } catch (e) {
+                return `${indent}body: "${escapeYamlString(jsonStr)}"\n`;
+            }
+        }
+
+        function updateYamlPreview() {
+            const isExisting = sourceExistingRadio && sourceExistingRadio.checked;
+            const rawFilename = (filenameInput.value || '').trim() || 'my_test';
+            let cleanFilename = rawFilename.replace(/^scripts\//, '').replace(/^custom_tests_/, '');
+            cleanFilename = cleanFilename.replace(/\.ya?ml$/, '').replace(/\.json$/, '');
+            if (!cleanFilename) cleanFilename = 'my_test';
+
+            const fullFilename = `custom_tests_${cleanFilename}.yaml`;
+            pathPreview.textContent = `scripts/${fullFilename}`;
+
+            const suiteName = (suiteNameInput.value || '').trim() || `Custom Tests: ${cleanFilename}`;
+            const suiteDesc = (suiteDescInput.value || '').trim();
+
+            const stepName = (stepNameInput.value || '').trim() || 'Custom: Step';
+            const action = stepActionSelect.value || 'list';
+            const actionLower = action.toLowerCase();
+            const dataType = stepDatatypeSelect.value || 'steps';
+            const stepUserId = stepUseridSelect.value || 'me';
+            const ticketId = (stepTicketInput.value || '').trim();
+
+            const statuses = parseStatusList(assertStatusInput.value);
+            const validateRange = validateRangeCheckbox.checked;
+
+            // Generate YAML text
+            let yaml = '';
+            if (isExisting) {
+                const targetFile = existingSelect.value || fullFilename;
+                yaml += `# Appending step to: scripts/${targetFile}\n`;
+                yaml += `- name: "${escapeYamlString(stepName)}"\n`;
+                yaml += `  action: "${action}"\n`;
+                yaml += `  dataType: "${dataType}"\n`;
+                yaml += `  userId: "${stepUserId}" # Specific to this test step (not YAML file)\n`;
+                if (ticketId) {
+                    yaml += `  ticketId: "${escapeYamlString(ticketId)}"\n`;
+                }
+
+                if (actionLower === 'list' || actionLower === 'reconcile') {
+                    const ps = (pageSizeInput.value || '').trim();
+                    const flt = (filterInput.value || '').trim();
+                    const tok = (pageTokenInput.value || '').trim();
+                    if (ps || flt || tok) {
+                        yaml += `  queryParams:\n`;
+                        if (ps) yaml += `    pageSize: "${ps}"\n`;
+                        if (flt) yaml += `    filter: '${flt}'\n`;
+                        if (tok) yaml += `    pageToken: "${tok}"\n`;
+                    }
+                } else if (actionLower === 'get' || actionLower === 'patch' || actionLower === 'exportexercisetcx') {
+                    const dpid = (dpidInput.value || '').trim() || 'sample-dp-1';
+                    yaml += `  dataPointId: "${dpid}"\n`;
+                }
+
+                const bodyVal = (bodyTextarea.value || '').trim();
+                if ((actionLower === 'create' || actionLower === 'rollup' || actionLower === 'dailyrollup' || actionLower === 'patch' || actionLower === 'batchdelete') && bodyVal) {
+                    yaml += formatBodyYaml(bodyVal, 2);
+                }
+
+                yaml += `  assertStatus: [${statuses.join(', ')}]\n`;
+                yaml += `  validateRange: ${validateRange}\n`;
+            } else {
+                yaml += `name: "${escapeYamlString(suiteName)}"\n`;
+                if (suiteDesc) {
+                    yaml += `description: "${escapeYamlString(suiteDesc)}"\n`;
+                }
+                // NOTE: userId is deliberately NOT at top level of the YAML file!
+                yaml += `steps:\n`;
+                yaml += `  - name: "${escapeYamlString(stepName)}"\n`;
+                yaml += `    action: "${action}"\n`;
+                yaml += `    dataType: "${dataType}"\n`;
+                yaml += `    userId: "${stepUserId}" # Specific to this test step (not YAML file)\n`;
+                if (ticketId) {
+                    yaml += `    ticketId: "${escapeYamlString(ticketId)}"\n`;
+                }
+
+                if (actionLower === 'list' || actionLower === 'reconcile') {
+                    const ps = (pageSizeInput.value || '').trim();
+                    const flt = (filterInput.value || '').trim();
+                    const tok = (pageTokenInput.value || '').trim();
+                    if (ps || flt || tok) {
+                        yaml += `    queryParams:\n`;
+                        if (ps) yaml += `      pageSize: "${ps}"\n`;
+                        if (flt) yaml += `      filter: '${flt}'\n`;
+                        if (tok) yaml += `      pageToken: "${tok}"\n`;
+                    }
+                } else if (actionLower === 'get' || actionLower === 'patch' || actionLower === 'exportexercisetcx') {
+                    const dpid = (dpidInput.value || '').trim() || 'sample-dp-1';
+                    yaml += `    dataPointId: "${dpid}"\n`;
+                }
+
+                const bodyVal = (bodyTextarea.value || '').trim();
+                if ((actionLower === 'create' || actionLower === 'rollup' || actionLower === 'dailyrollup' || actionLower === 'patch' || actionLower === 'batchdelete') && bodyVal) {
+                    yaml += formatBodyYaml(bodyVal, 4);
+                }
+
+                yaml += `    assertStatus: [${statuses.join(', ')}]\n`;
+                yaml += `    validateRange: ${validateRange}\n`;
+            }
+
+            yamlPreviewEl.textContent = yaml;
+        }
+
+        function showModalFeedback(msg, type) {
+            if (!feedbackEl) return;
+            feedbackEl.textContent = msg;
+            feedbackEl.style.display = 'block';
+            if (type === 'success') {
+                feedbackEl.style.background = 'rgba(16, 185, 129, 0.2)';
+                feedbackEl.style.border = '1px solid #10b981';
+                feedbackEl.style.color = '#a7f3d0';
+            } else if (type === 'warn') {
+                feedbackEl.style.background = 'rgba(245, 158, 11, 0.2)';
+                feedbackEl.style.border = '1px solid #f59e0b';
+                feedbackEl.style.color = '#fde68a';
+            } else {
+                feedbackEl.style.background = 'rgba(239, 68, 68, 0.2)';
+                feedbackEl.style.border = '1px solid #ef4444';
+                feedbackEl.style.color = '#fca5a5';
+            }
+        }
+
+        let pendingSaveConfig = null;
+
+        function saveCustomTest() {
+            const isExisting = sourceExistingRadio && sourceExistingRadio.checked;
+            let targetFileName = '';
+
+            if (isExisting) {
+                targetFileName = existingSelect.value;
+                if (!targetFileName) {
+                    showModalFeedback('Please select an existing custom test file to save to.', 'danger');
+                    return;
+                }
+            } else {
+                const raw = (filenameInput.value || '').trim();
+                if (!raw) {
+                    showModalFeedback('File name is required.', 'danger');
+                    filenameInput.focus();
+                    return;
+                }
+                let clean = raw.replace(/^scripts\//, '').replace(/^custom_tests_/, '').replace(/\.ya?ml$/, '').replace(/\.json$/, '');
+                if (!clean) {
+                    showModalFeedback('Please provide a valid file name.', 'danger');
+                    filenameInput.focus();
+                    return;
+                }
+                targetFileName = `custom_tests_${clean}.yaml`;
+            }
+
+            const stepName = (stepNameInput.value || '').trim();
+            if (!stepName) {
+                showModalFeedback('Test step name is required.', 'danger');
+                stepNameInput.focus();
+                return;
+            }
+
+            const action = stepActionSelect.value || 'list';
+            const actionLower = action.toLowerCase();
+            const dataType = stepDatatypeSelect.value || 'steps';
+            const stepUserId = stepUseridSelect.value || 'me';
+            const ticketId = (stepTicketInput.value || '').trim();
+            const statuses = parseStatusList(assertStatusInput.value);
+            const validateRange = validateRangeCheckbox.checked;
+
+            const qParams = {};
+            if (actionLower === 'list' || actionLower === 'reconcile') {
+                const ps = (pageSizeInput.value || '').trim();
+                const flt = (filterInput.value || '').trim();
+                const tok = (pageTokenInput.value || '').trim();
+                if (ps) qParams.pageSize = ps;
+                if (flt) qParams.filter = flt;
+                if (tok) qParams.pageToken = tok;
+            }
+
+            let dataPointId = null;
+            if (actionLower === 'get' || actionLower === 'patch' || actionLower === 'exportexercisetcx') {
+                dataPointId = (dpidInput.value || '').trim() || 'sample-dp-1';
+            }
+
+            let reqBody = null;
+            if (actionLower === 'create' || actionLower === 'rollup' || actionLower === 'dailyrollup' || actionLower === 'patch' || actionLower === 'batchdelete') {
+                reqBody = (bodyTextarea.value || '').trim() || null;
+            }
+
+            const stepObj = {
+                name: stepName,
+                action: action,
+                dataType: dataType,
+                userId: stepUserId, // SPECIFIC TO THIS TEST STEP
+                ticketId: ticketId || null,
+                dataPointId: dataPointId,
+                queryParams: Object.keys(qParams).length > 0 ? qParams : null,
+                body: reqBody,
+                assertStatus: statuses,
+                validateRange: validateRange
+            };
+
+            pendingSaveConfig = {
+                fileName: targetFileName,
+                suiteName: (suiteNameInput.value || '').trim(),
+                description: (suiteDescInput.value || '').trim(),
+                autoAddToManifest: autoManifestCheckbox.checked,
+                userId: stepUserId,
+                step: stepObj
+            };
+
+            // Check if chosen file name already exists (either from existing select or typed in new file input)
+            const cleanTarget = targetFileName.toLowerCase();
+            const matchedFile = cachedCustomFiles.find(cf => (cf.filename || '').toLowerCase() === cleanTarget);
+
+            if (matchedFile) {
+                // Ask user: Overwrite or Append to existing file
+                if (confirmFileNameEl) confirmFileNameEl.textContent = `scripts/${matchedFile.filename}`;
+                if (confirmStepsInfoEl) {
+                    const stepCount = matchedFile.totalSteps || 0;
+                    confirmStepsInfoEl.textContent = `(currently contains ${stepCount} step${stepCount === 1 ? '' : 's'})`;
+                }
+                if (confirmModal) confirmModal.style.display = 'flex';
+            } else {
+                // New file name does not exist yet -> save directly as create
+                executeSaveCustomTest('create');
+            }
+        }
+
+        async function executeSaveCustomTest(mode) {
+            if (!pendingSaveConfig) return;
+            if (confirmModal) confirmModal.style.display = 'none';
+
+            const payload = {
+                mode: mode, // 'create', 'overwrite', or 'append'
+                fileName: pendingSaveConfig.fileName,
+                suiteName: pendingSaveConfig.suiteName,
+                description: pendingSaveConfig.description,
+                autoAddToManifest: pendingSaveConfig.autoAddToManifest,
+                userId: pendingSaveConfig.userId,
+                step: pendingSaveConfig.step
+            };
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+            showModalFeedback(`Saving custom test step (${mode === 'append' ? 'appending' : 'saving'})...`, 'warn');
+
+            try {
+                const res = await fetch('/api/custom-tests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    let manifestNote = '';
+                    if (data.manifestUpdated) {
+                        manifestNote = ' & added to manifest';
+                    } else if (payload.autoAddToManifest) {
+                        manifestNote = ' (already in manifest)';
+                    }
+                    showModalFeedback(`✓ Saved to ${data.filePath} (${data.totalSteps} step${data.totalSteps === 1 ? '' : 's'})${manifestNote}!`, 'success');
+                    // Reload manifest and script lists
+                    if (typeof loadManifest === 'function') {
+                        loadManifest();
+                    }
+                    if (typeof loadScriptsList === 'function') {
+                        loadScriptsList();
+                    }
+                    setTimeout(() => {
+                        closeModal();
+                    }, 1400);
+                } else {
+                    showModalFeedback(data.error || data.message || 'Failed to save custom test.', 'danger');
+                }
+            } catch (e) {
+                showModalFeedback('Error: ' + e.message, 'danger');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" class="btn-icon"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                    Save Custom Test Step
+                `;
+            }
+        }
+
+        // Event listeners
+        openBtn.addEventListener('click', openModal);
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        if (sourceNewRadio) sourceNewRadio.addEventListener('change', () => toggleFileSource('new'));
+        if (sourceExistingRadio) sourceExistingRadio.addEventListener('change', () => toggleFileSource('existing'));
+
+        if (confirmCloseBtn) confirmCloseBtn.addEventListener('click', () => { if (confirmModal) confirmModal.style.display = 'none'; });
+        if (confirmCancelBtn) confirmCancelBtn.addEventListener('click', () => { if (confirmModal) confirmModal.style.display = 'none'; });
+        if (confirmAppendBtn) confirmAppendBtn.addEventListener('click', () => executeSaveCustomTest('append'));
+        if (confirmOverwriteBtn) confirmOverwriteBtn.addEventListener('click', () => executeSaveCustomTest('overwrite'));
+        if (confirmModal) {
+            confirmModal.addEventListener('click', (e) => {
+                if (e.target === confirmModal) confirmModal.style.display = 'none';
+            });
+        }
+
+        existingSelect.addEventListener('change', () => {
+            updateSelectedExistingStepBadge();
+            updateYamlPreview();
+        });
+
+        // Input change listeners for real-time preview
+        const inputsToListen = [
+            filenameInput, suiteNameInput, suiteDescInput, stepNameInput, stepTicketInput,
+            pageSizeInput, filterInput, pageTokenInput, dpidInput, bodyTextarea,
+            assertStatusInput
+        ];
+        inputsToListen.forEach(input => {
+            if (input) input.addEventListener('input', updateYamlPreview);
+        });
+
+        filenameInput.addEventListener('input', () => {
+            filenameInput.dataset.autoGenerated = 'false';
+        });
+
+        stepDatatypeSelect.addEventListener('change', () => {
+            updateFieldVisibility();
+            const expDt = stepDatatypeSelect.value;
+            const expEp = stepActionSelect.value;
+            if (filenameInput.dataset.autoGenerated === 'true') {
+                filenameInput.value = `${expDt.replace(/[^a-zA-Z0-9_-]/g, '_')}_${expEp}`;
+            }
+            stepNameInput.value = `Custom: ${formatDisplayName(expDt)} ${expEp}`;
+            suiteNameInput.value = `Custom ${formatDisplayName(expDt)} Tests`;
+            updateYamlPreview();
+        });
+
+        stepActionSelect.addEventListener('change', () => {
+            updateFieldVisibility();
+            const expDt = stepDatatypeSelect.value;
+            const expEp = stepActionSelect.value;
+            if (filenameInput.dataset.autoGenerated === 'true') {
+                filenameInput.value = `${expDt.replace(/[^a-zA-Z0-9_-]/g, '_')}_${expEp}`;
+            }
+            stepNameInput.value = `Custom: ${formatDisplayName(expDt)} ${expEp}`;
+            updateYamlPreview();
+        });
+
+        stepUseridSelect.addEventListener('change', updateYamlPreview);
+        validateRangeCheckbox.addEventListener('change', updateYamlPreview);
+
+        submitBtn.addEventListener('click', saveCustomTest);
+
+        copyYamlBtn.addEventListener('click', async () => {
+            const yamlText = yamlPreviewEl.textContent;
+            if (!yamlText) return;
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(yamlText);
+                } else {
+                    const ta = document.createElement('textarea');
+                    ta.value = yamlText;
+                    ta.style.position = 'fixed';
+                    ta.style.left = '-999999px';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                }
+                copyYamlBtn.textContent = 'Copied!';
+                setTimeout(() => { copyYamlBtn.textContent = 'Copy YAML'; }, 1500);
+            } catch (err) {
+                console.warn('Failed to copy YAML:', err);
+            }
+        });
     }
 });

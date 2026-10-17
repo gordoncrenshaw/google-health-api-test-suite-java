@@ -8,6 +8,8 @@ import com.google.health.testsuite.common.AppVersion;
 import com.google.health.testsuite.config.ConfigManager;
 import com.google.health.testsuite.config.DataTypeRegistry;
 import com.google.health.testsuite.config.Preferences;
+import com.google.health.testsuite.model.TestResult;
+import com.google.health.testsuite.runner.ScriptRunner;
 import com.google.health.testsuite.runner.SuiteExecutionEngine;
 import com.google.health.testsuite.server.RestApiHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -34,6 +36,7 @@ public class RestApiHandlerTest {
     private File tempTokensDir;
     private ConfigManager configManager;
     private OAuthService oAuthService;
+    private SuiteExecutionEngine engine;
     private HttpServer server;
     private int port;
     private final HttpClient httpClient = HttpClient.newHttpClient();
@@ -59,7 +62,7 @@ public class RestApiHandlerTest {
         oAuthService = new OAuthService(configManager, tempTokensDir);
         HealthApiClient apiClient = new HealthApiClient(configManager, oAuthService);
         DataTypeRegistry registry = new DataTypeRegistry(new File("config/datatypes.yaml"));
-        SuiteExecutionEngine engine = new SuiteExecutionEngine(configManager, registry, apiClient);
+        engine = new SuiteExecutionEngine(configManager, registry, apiClient);
 
         server = HttpServer.create(new InetSocketAddress(0), 0);
         server.createContext("/api", new RestApiHandler(engine, oAuthService));
@@ -405,4 +408,204 @@ public class RestApiHandlerTest {
         assertEquals("Custom Suite", root.get("name").asText());
         assertEquals(2, root.get("scripts").size());
     }
+
+    @Test
+    void testSaveCustomTest_CreateAndAppend_UserIdOnStepNotRoot() throws Exception {
+        File customFile = new File("scripts/custom_tests_junit_unit_test.yaml");
+        if (customFile.exists()) {
+            customFile.delete();
+        }
+
+        try {
+            // 1. Create mode
+            String createBody = """
+                {
+                  "fileName": "junit_unit_test",
+                  "mode": "create",
+                  "suiteName": "JUnit Custom Steps",
+                  "description": "Custom tests created by JUnit",
+                  "autoAddToManifest": false,
+                  "step": {
+                    "name": "Custom Steps List Step",
+                    "action": "list",
+                    "dataType": "steps",
+                    "userId": "me",
+                    "ticketId": "b/12345678",
+                    "queryParams": {
+                      "pageSize": "10"
+                    },
+                    "assertStatus": [200],
+                    "validateRange": true
+                  }
+                }
+                """;
+            HttpRequest req1 = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:" + port + "/api/custom-tests"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(createBody))
+                    .build();
+
+            HttpResponse<String> resp1 = httpClient.send(req1, HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, resp1.statusCode());
+            JsonNode root1 = jsonMapper.readTree(resp1.body());
+            assertTrue(root1.get("success").asBoolean());
+            assertEquals(1, root1.get("totalSteps").asInt());
+            assertEquals("custom_tests_junit_unit_test.yaml", root1.get("fileName").asText());
+
+            assertTrue(customFile.exists());
+            String yamlContent = Files.readString(customFile.toPath());
+
+            int stepsIdx = yamlContent.indexOf("steps:");
+            assertTrue(stepsIdx > 0);
+            String beforeSteps = yamlContent.substring(0, stepsIdx);
+            assertFalse(beforeSteps.contains("userId:"), "Root YAML should NOT contain userId! Found:\n" + yamlContent);
+
+            // userId MUST appear on the step:
+            String afterSteps = yamlContent.substring(stepsIdx);
+            assertTrue(afterSteps.contains("userId: \"me\"") || afterSteps.contains("userId: me"), "Step must contain userId!");
+            assertTrue(afterSteps.contains("ticketId: \"b/12345678\"") || afterSteps.contains("ticketId: b/12345678"));
+
+            // 2. Append mode
+            String appendBody = """
+                {
+                  "fileName": "custom_tests_junit_unit_test.yaml",
+                  "mode": "append",
+                  "autoAddToManifest": false,
+                  "step": {
+                    "name": "Custom Steps Reconcile Step",
+                    "action": "reconcile",
+                    "dataType": "steps",
+                    "userId": "both",
+                    "queryParams": {
+                      "pageSize": "5"
+                    },
+                    "assertStatus": [200],
+                    "validateRange": true
+                  }
+                }
+                """;
+            HttpRequest req2 = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:" + port + "/api/custom-tests"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(appendBody))
+                    .build();
+
+            HttpResponse<String> resp2 = httpClient.send(req2, HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, resp2.statusCode());
+            JsonNode root2 = jsonMapper.readTree(resp2.body());
+            assertTrue(root2.get("success").asBoolean());
+            assertEquals(2, root2.get("totalSteps").asInt());
+
+            // 3. Test list endpoint
+            HttpRequest listReq = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:" + port + "/api/custom-tests"))
+                    .GET()
+                    .build();
+            HttpResponse<String> listResp = httpClient.send(listReq, HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, listResp.statusCode());
+            JsonNode listRoot = jsonMapper.readTree(listResp.body());
+            assertTrue(listRoot.isArray());
+            boolean found = false;
+            for (JsonNode item : listRoot) {
+                if ("custom_tests_junit_unit_test.yaml".equals(item.path("filename").asText())) {
+                    found = true;
+                    assertEquals(2, item.path("totalSteps").asInt());
+                    break;
+                }
+            }
+            assertTrue(found, "Newly created custom test file should appear in GET /api/custom-tests");
+
+            // 4. Test overwrite endpoint
+            String overwriteBody = """
+                {
+                  "mode": "overwrite",
+                  "fileName": "junit_unit_test",
+                  "suiteName": "JUnit Custom Overwritten Suite",
+                  "description": "Overwritten suite with 1 step",
+                  "autoAddToManifest": false,
+                  "step": {
+                    "name": "Custom Steps Overwritten Single Step",
+                    "action": "list",
+                    "dataType": "steps",
+                    "userId": "me",
+                    "assertStatus": [200]
+                  }
+                }
+                """;
+            HttpRequest req3 = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:" + port + "/api/custom-tests"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(overwriteBody))
+                    .build();
+            HttpResponse<String> resp3 = httpClient.send(req3, HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, resp3.statusCode());
+            JsonNode root3 = jsonMapper.readTree(resp3.body());
+            assertTrue(root3.get("success").asBoolean());
+            assertEquals(1, root3.get("totalSteps").asInt(), "Overwritten file should only have 1 step");
+
+        } finally {
+            if (customFile.exists()) {
+                customFile.delete();
+            }
+        }
+    }
+
+    @Test
+    void testSaveCustomTest_BodyPrettyFormattedInYaml() throws Exception {
+        File customFile = new File("scripts/custom_tests_junit_body_pretty.yaml");
+        if (customFile.exists()) {
+            customFile.delete();
+        }
+
+        try {
+            String payload = """
+                {
+                  "fileName": "junit_body_pretty",
+                  "mode": "create",
+                  "suiteName": "JUnit Pretty Body Test",
+                  "autoAddToManifest": false,
+                  "step": {
+                    "name": "Custom: Steps dailyRollUp Pretty",
+                    "action": "dailyRollUp",
+                    "dataType": "steps",
+                    "userId": "me",
+                    "body": "{\\"range\\":{\\"start\\":{\\"date\\":{\\"year\\":2026,\\"month\\":10,\\"day\\":10},\\"time\\":{\\"hours\\":0,\\"minutes\\":0,\\"seconds\\":0}},\\"end\\":{\\"date\\":{\\"year\\":2026,\\"month\\":10,\\"day\\":17},\\"time\\":{\\"hours\\":23,\\"minutes\\":59,\\"seconds\\":59}}},\\"windowSizeDays\\":1}",
+                    "assertStatus": [200],
+                    "validateRange": true
+                  }
+                }
+                """;
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:" + port + "/api/custom-tests"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(payload))
+                    .build();
+
+            HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, resp.statusCode());
+
+            assertTrue(customFile.exists());
+            String yamlContent = Files.readString(customFile.toPath());
+
+            // Verify body is formatted using literal block scalar (body: | or body: |-)
+            assertTrue(yamlContent.contains("body: |-") || yamlContent.contains("body: |"),
+                    "YAML must use literal block scalar for body! Found:\n" + yamlContent);
+            assertFalse(yamlContent.contains("\\n"),
+                    "YAML should not contain escaped newlines in body! Found:\n" + yamlContent);
+            assertTrue(yamlContent.contains("\"year\" : 2026") || yamlContent.contains("\"year\": 2026"),
+                    "YAML must contain formatted JSON with year field! Found:\n" + yamlContent);
+
+            // Verify it can be read back and executed cleanly
+            ScriptRunner runner = new ScriptRunner(engine);
+            List<TestResult> results = runner.executeScript(customFile);
+            assertEquals(1, results.size());
+            assertTrue(results.get(0).isPassed(), "Pretty JSON body step must execute successfully: " + results.get(0).getMessage());
+
+        } finally {
+            if (customFile.exists()) {
+                customFile.delete();
+            }
+        }
+    }
 }
+
