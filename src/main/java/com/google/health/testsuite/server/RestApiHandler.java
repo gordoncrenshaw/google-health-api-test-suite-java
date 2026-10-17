@@ -715,6 +715,7 @@ public class RestApiHandler implements HttpHandler {
         if (scriptsDir.exists() && scriptsDir.isDirectory()) {
             File[] files = scriptsDir.listFiles((dir, name) -> name.endsWith(".yaml") || name.endsWith(".json"));
             if (files != null) {
+                Arrays.sort(files, Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER));
                 for (File f : files) {
                     ObjectNode sNode = arr.addObject();
                     sNode.put("filename", f.getName());

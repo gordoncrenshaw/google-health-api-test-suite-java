@@ -287,5 +287,22 @@ public class DataTypeRegistryTest {
         assertEquals("Sedentary Period", sed.getDisplayName());
         assertTrue(sed.isWebhooksSupported());
     }
+
+    @Test
+    void testGetAllDataTypesReturnsAlphabeticallySorted() {
+        List<DataTypeDefinition> list = registry.getAllDataTypes();
+        assertNotNull(list);
+        assertTrue(list.size() > 1);
+
+        String prev = null;
+        for (DataTypeDefinition dt : list) {
+            String name = dt.getName();
+            if (prev != null) {
+                assertTrue(name.compareToIgnoreCase(prev) >= 0,
+                        "Data types must be sorted by name! Expected '" + name + "' to be >= '" + prev + "'");
+            }
+            prev = name;
+        }
+    }
 }
 

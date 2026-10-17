@@ -602,12 +602,33 @@ public final class AppVersion {
 ```
 
 - **Runtime Availability**: The version is exposed via `/api/status` and `/api/version` endpoints.
-- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.7` pill badge and in the system information banner).
+- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.8` pill badge and in the system information banner).
 - **How to Update**: When adding new functionality or fixes, increment `AppVersion.VERSION` following Semantic Versioning (`MAJOR.MINOR.PATCH`) and document changes in the changelog below.
 
 ---
 
 ## 📋 Version History & Changelog
+
+### Version 1.0.8 (October 17, 2026)
+
+#### 🌟 UI Enhancements & Bug Fixes
+- **Alphabetical Sorting for API Explorer Data Types (Issue #37)**:
+  - Sorted the data type dropdown list on the API Explorer page in alphabetical order based on visible display name (`displayName` / `name`), improving discovery and navigation across 27+ supported health data types.
+- **Alphabetical Ordering of Test Scripts on Script Runner (Issue #38)**:
+  - Both server-side API endpoint (`GET /api/scripts`) and client-side dropdown population now sort all test scripts alphabetically by filename (`String.CASE_INSENSITIVE_ORDER`), maintaining consistent file ordering across standard and custom test scripts.
+- **Alphabetical Sorting of Data Types in Registry (Issue #39)**:
+  - Updated [`DataTypeRegistry.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/config/DataTypeRegistry.java) (`getAllDataTypes()`) and Web UX table rendering in [`app.js`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/resources/web/app.js) to guarantee alphabetical ordering of all data types by identifier `name`.
+- **Aligned Controls on Preferences & OAuth Page (Issue #40)**:
+  - Resolved vertical misalignment between the **"Authorization Scope Parameter String Preview"** field and the **"Authorize with Selected Scopes"** button, ensuring baseline and height alignment (`38px`) across varying screen resolutions.
+- **Dynamic Scope Selection Dropdowns in Data Type Setting**:
+  - Replaced plain text input boxes for Read Scope and Write Scope with `<select>` dropdowns grouped by read (`.readonly`) and write (`.writeonly`) permissions, pre-populated directly from configured OAuth scopes.
+  - Automatically recommends and pairs matching write scopes when a read scope is selected.
+- **Simplified Data Type Registry Table**:
+  - Removed the redundant "Required Scope" column from the registry table view for a cleaner, higher-density layout focusing on endpoints, units, valid ranges, and webhook support.
+- **Automated Testing**:
+  - Added unit test coverage in [`RestApiHandlerTest.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/test/java/com/google/health/testsuite/RestApiHandlerTest.java) and [`DataTypeRegistryTest.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/test/java/com/google/health/testsuite/DataTypeRegistryTest.java) ensuring alphabetical order is strictly preserved.
+
+---
 
 ### Version 1.0.7 (October 17, 2026)
 

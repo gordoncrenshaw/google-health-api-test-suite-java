@@ -267,6 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // By default: all scopes deselected
             selectedScopes.clear();
             renderScopesList();
+            populateDataTypeScopeDropdowns();
         } catch (e) {
             console.error('Failed to load scopes from /api/scopes:', e);
             if (container) {
@@ -398,15 +399,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function populateExplorerDataTypes(types) {
         const select = document.getElementById('explorer-datatype-select');
+        const prevVal = select.value;
         select.innerHTML = '';
-        types.forEach(dt => {
+        const sortedTypes = (types || []).slice().sort((a, b) => {
+            const nameA = (a.displayName || a.name || '').toLowerCase();
+            const nameB = (b.displayName || b.name || '').toLowerCase();
+            return nameA.localeCompare(nameB);
+        });
+        sortedTypes.forEach(dt => {
             const opt = document.createElement('option');
             opt.value = dt.name;
             opt.textContent = `${dt.displayName} (${dt.name})`;
             select.appendChild(opt);
         });
 
-        if (types.length > 0) {
+        if (prevVal && Array.from(select.options).some(o => o.value === prevVal)) {
+            select.value = prevVal;
+        }
+
+        if (sortedTypes.length > 0) {
             onExplorerDataTypeChanged();
         }
     }
@@ -869,7 +880,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function populateDataTypesTable(types) {
         const tbody = document.getElementById('datatypes-tbody');
         tbody.innerHTML = '';
-        types.forEach(dt => {
+        const sortedTypes = (types || []).slice().sort((a, b) => {
+            const nameA = (a.name || '').toLowerCase();
+            const nameB = (b.name || '').toLowerCase();
+            return nameA.localeCompare(nameB);
+        });
+        sortedTypes.forEach(dt => {
             const tr = document.createElement('tr');
             const rangeStr = `[${dt.minValue !== null ? dt.minValue : '0'}, ${dt.maxValue !== null ? dt.maxValue : '∞'}]`;
             
@@ -897,7 +913,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><span class="text-secondary">${endpointsHtml}</span></td>
                 <td><span class="pill-badge ${dt.webhooksSupported ? 'pill-success' : 'pill-neutral'}">${dt.webhooksSupported ? 'YES' : 'NO'}</span></td>
                 <td><span class="font-mono text-cyan">${rangeStr}</span></td>
-                <td><span class="font-mono text-muted" style="font-size: 11px;">${dt.scopeRequired}</span></td>
             `;
             tbody.appendChild(tr);
         });
@@ -1396,13 +1411,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/scripts');
             const scripts = await res.json();
             const select = document.getElementById('script-file-select');
+            const prevVal = select.value;
             select.innerHTML = '';
-            scripts.forEach(s => {
+            const sortedScripts = (scripts || []).slice().sort((a, b) => {
+                const nameA = (a.filename || a.path || '').toLowerCase();
+                const nameB = (b.filename || b.path || '').toLowerCase();
+                return nameA.localeCompare(nameB);
+            });
+            sortedScripts.forEach(s => {
                 const opt = document.createElement('option');
                 opt.value = s.path;
                 opt.textContent = `${s.filename} (${s.path})`;
                 select.appendChild(opt);
             });
+            if (prevVal && Array.from(select.options).some(o => o.value === prevVal)) {
+                select.value = prevVal;
+            }
         } catch (e) {
             console.error('Failed to load scripts list:', e);
         }
@@ -1920,10 +1944,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 toggleBtnText.textContent = willShow ? '✕ Close Setting' : '+ Add Data Type Setting';
             }
             if (willShow) {
+                populateDataTypeScopeDropdowns();
                 const nameInput = document.getElementById('new-dt-name');
                 if (nameInput) nameInput.focus();
             }
         }
+
+        const readSelect = document.getElementById('new-dt-scope');
+        const writeSelect = document.getElementById('new-dt-write-scope');
+        if (readSelect && writeSelect) {
+            readSelect.addEventListener('change', () => {
+                const readVal = readSelect.value;
+                if (readVal && readVal.includes('.readonly')) {
+                    const candidateWrite = readVal.replace('.readonly', '.writeonly');
+                    if (!writeSelect.value || writeSelect.value === '') {
+                        if (Array.from(writeSelect.options).some(o => o.value === candidateWrite)) {
+                            writeSelect.value = candidateWrite;
+                        }
+                    }
+                }
+            });
+        }
+        populateDataTypeScopeDropdowns();
 
         toggleBtn.addEventListener('click', () => togglePanel());
         if (cancelBtn) cancelBtn.addEventListener('click', () => togglePanel(false));
@@ -2021,6 +2063,74 @@ document.addEventListener('DOMContentLoaded', () => {
             feedbackEl.className = `pill-badge pill-${type}`;
             feedbackEl.style.display = 'inline-block';
         }
+    }
+
+    function populateDataTypeScopeDropdowns() {
+        const readSelect = document.getElementById('new-dt-scope');
+        const writeSelect = document.getElementById('new-dt-write-scope');
+        if (!readSelect || !writeSelect) return;
+
+        const currentRead = readSelect.value;
+        const currentWrite = writeSelect.value;
+
+        function fillSelect(select, currentVal, primarySuffix) {
+            select.innerHTML = '';
+
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = '-- None / No Scope Required --';
+            select.appendChild(defaultOpt);
+
+            if (!availableScopes || availableScopes.length === 0) return;
+
+            const primaryList = [];
+            const otherList = [];
+
+            availableScopes.forEach(scope => {
+                if (scope.toLowerCase().endsWith(primarySuffix)) {
+                    primaryList.push(scope);
+                } else {
+                    otherList.push(scope);
+                }
+            });
+
+            primaryList.sort((a, b) => a.localeCompare(b));
+            otherList.sort((a, b) => a.localeCompare(b));
+
+            function createOption(scope) {
+                const opt = document.createElement('option');
+                opt.value = scope;
+                let shortName = scope;
+                if (scope.includes('.auth/googlehealth.')) {
+                    shortName = scope.split('.auth/googlehealth.')[1];
+                } else if (scope.includes('.auth/')) {
+                    shortName = scope.split('.auth/')[1];
+                }
+                opt.textContent = shortName !== scope ? `${shortName} (${scope})` : scope;
+                return opt;
+            }
+
+            if (primaryList.length > 0) {
+                const grp = document.createElement('optgroup');
+                grp.label = primarySuffix === '.readonly' ? 'Read Scopes (.readonly)' : 'Write Scopes (.writeonly)';
+                primaryList.forEach(s => grp.appendChild(createOption(s)));
+                select.appendChild(grp);
+            }
+
+            if (otherList.length > 0) {
+                const grp = document.createElement('optgroup');
+                grp.label = primarySuffix === '.readonly' ? 'Write & Other Scopes' : 'Read & Other Scopes';
+                otherList.forEach(s => grp.appendChild(createOption(s)));
+                select.appendChild(grp);
+            }
+
+            if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
+                select.value = currentVal;
+            }
+        }
+
+        fillSelect(readSelect, currentRead, '.readonly');
+        fillSelect(writeSelect, currentWrite, '.writeonly');
     }
 
     // ==========================================================================

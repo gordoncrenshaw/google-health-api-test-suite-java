@@ -408,11 +408,19 @@
                                     <div class="grid-2-col mb-3">
                                         <div class="form-group">
                                             <label for="new-dt-scope">Read Scope Required:</label>
-                                            <input type="text" id="new-dt-scope" class="form-control font-mono" placeholder="https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly">
+                                            <select id="new-dt-scope" class="form-control font-mono">
+                                                <option value="">-- None / No Scope Required --</option>
+                                                <!-- Populated from available scopes in config/preferences.yaml -->
+                                            </select>
+                                            <small class="text-muted">Select read permission scope</small>
                                         </div>
                                         <div class="form-group">
                                             <label for="new-dt-write-scope">Write Scope Required:</label>
-                                            <input type="text" id="new-dt-write-scope" class="form-control font-mono" placeholder="https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly">
+                                            <select id="new-dt-write-scope" class="form-control font-mono">
+                                                <option value="">-- None / No Scope Required --</option>
+                                                <!-- Populated from available scopes in config/preferences.yaml -->
+                                            </select>
+                                            <small class="text-muted">Select write permission scope</small>
                                         </div>
                                     </div>
 
@@ -475,7 +483,6 @@
                                         <th>Supported Endpoints</th>
                                         <th>Webhooks</th>
                                         <th>Valid Min/Max Range</th>
-                                        <th>Required Scope</th>
                                     </tr>
                                 </thead>
                                 <tbody id="datatypes-tbody">
@@ -640,15 +647,15 @@
                         </div>
 
                         <!-- Live Scopes URL Preview & Action bar -->
-                        <div class="scopes-footer-bar mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div class="scopes-footer-bar mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px;">
                             <div style="flex: 1; min-width: 280px;">
-                                <div style="font-size: 0.8rem; font-weight: 600; color: #94a3b8; margin-bottom: 4px;">Authorization Scope Parameter String Preview:</div>
-                                <div id="scopes-parameter-preview" class="font-mono text-xs" style="background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 6px 10px; color: #38bdf8; word-break: break-all; min-height: 28px;">
+                                <label for="scopes-parameter-preview" style="display: block; font-size: 0.8rem; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">Authorization Scope Parameter String Preview:</label>
+                                <div id="scopes-parameter-preview" class="font-mono text-xs" style="background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 12px; color: #38bdf8; word-break: break-all; min-height: 38px; display: flex; align-items: center; box-sizing: border-box;">
                                     (No scopes selected - click checkboxes or 'Select All')
                                 </div>
                             </div>
-                            <div>
-                                <button type="button" id="btn-start-auth-scopes" class="btn btn-primary">
+                            <div style="display: flex; align-items: flex-end;">
+                                <button type="button" id="btn-start-auth-scopes" class="btn btn-primary" style="height: 38px; white-space: nowrap; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;">
                                     <svg viewBox="0 0 24 24" class="btn-icon"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
                                     Authorize with Selected Scopes
                                 </button>

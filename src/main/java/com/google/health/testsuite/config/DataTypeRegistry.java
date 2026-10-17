@@ -85,13 +85,15 @@ public class DataTypeRegistry {
     }
 
     public List<DataTypeDefinition> getAllDataTypes(boolean enableAllEndpoints) {
-        if (!enableAllEndpoints) {
-            return new ArrayList<>(dataTypesMap.values());
-        }
         List<DataTypeDefinition> list = new ArrayList<>();
-        for (DataTypeDefinition def : dataTypesMap.values()) {
-            list.add(def.withAllEndpointsEnabled());
+        if (!enableAllEndpoints) {
+            list.addAll(dataTypesMap.values());
+        } else {
+            for (DataTypeDefinition def : dataTypesMap.values()) {
+                list.add(def.withAllEndpointsEnabled());
+            }
         }
+        list.sort(Comparator.comparing(d -> d.getName() != null ? d.getName() : "", String.CASE_INSENSITIVE_ORDER));
         return list;
     }
 

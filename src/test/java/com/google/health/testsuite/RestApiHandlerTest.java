@@ -607,5 +607,56 @@ public class RestApiHandlerTest {
             }
         }
     }
+
+    @Test
+    void testListScriptsReturnsAlphabeticallySortedFiles() throws Exception {
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/scripts"))
+                .GET()
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, resp.statusCode());
+
+        JsonNode scriptsNode = jsonMapper.readTree(resp.body());
+        assertTrue(scriptsNode.isArray());
+        assertTrue(scriptsNode.size() > 1, "There should be multiple scripts returned");
+
+        String prevName = null;
+        for (JsonNode script : scriptsNode) {
+            String currentName = script.get("filename").asText();
+            if (prevName != null) {
+                assertTrue(currentName.compareToIgnoreCase(prevName) >= 0,
+                        "Scripts must be in alphabetical order! Expected '" + currentName + "' to be >= '" + prevName + "'");
+            }
+            prevName = currentName;
+        }
+    }
+
+    @Test
+    void testGetDataTypesReturnsAlphabeticallySortedDataTypes() throws Exception {
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/datatypes"))
+                .GET()
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, resp.statusCode());
+
+        JsonNode typesNode = jsonMapper.readTree(resp.body());
+        assertTrue(typesNode.isArray());
+        assertTrue(typesNode.size() > 1, "There should be multiple data types returned");
+
+        String prevName = null;
+        for (JsonNode dt : typesNode) {
+            String currentName = dt.get("name").asText();
+            if (prevName != null) {
+                assertTrue(currentName.compareToIgnoreCase(prevName) >= 0,
+                        "Data types must be in alphabetical order! Expected '" + currentName + "' to be >= '" + prevName + "'");
+            }
+            prevName = currentName;
+        }
+    }
 }
+
 

@@ -9,7 +9,7 @@ public final class AppVersion {
     /**
      * Current application semantic version (MAJOR.MINOR.PATCH).
      */
-    public static final String VERSION = "1.0.7";
+    public static final String VERSION = "1.0.8";
 
     /**
      * Target Google Health API version.
