@@ -1,14 +1,10 @@
-# Quick smoke test for verifying Google Health API basic connectivity
-name: "Google Health API Smoke Test"
-description: "Quick sanity checks on all endpoints"
+# Google Health API VO2 Max Standard Tests
+name: "Google Health API VO2 Max Tests"
+description: "Standard tests for VO2 Max datatype"
+userId: me # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:
-  - name: "Standard: Check Auth Status"
-    action: "check_auth"
-    assertStatus: [200]
-
-  # Datatype Tests
   - name: "Standard: VO2 Max List (Default)"
     action: "list"
     dataType: "vo2-max"

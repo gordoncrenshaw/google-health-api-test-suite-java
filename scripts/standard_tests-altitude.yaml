@@ -1,88 +1,84 @@
-# Quick smoke test for verifying Google Health API basic connectivity
-name: "Google Health API Smoke Test"
-description: "Quick sanity checks on all endpoints"
+# Google Health API Altitude Standard Tests
+name: "Google Health API Altitude Tests"
+description: "Standard tests for Altitude datatype"
+userId: me # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:
-  - name: "Standard: Check Auth Status"
-    action: "check_auth"
-    assertStatus: [200]
-
-  # Datatype Tests
-  - name: "Standard: Time In Heart Rate Zone List (Default)"
+  - name: "Standard: Altitude List (Default)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone List (pageSize)"
+  - name: "Standard: Altitude List (pageSize)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone List (pageToken)"
+  - name: "Standard: Altitude List (pageToken)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone List (filter: civil_start_time)"
+  - name: "Standard: Altitude List (filter: civil_start_time)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     queryParams:
-      filter: 'time_in_heart_rate_zone.interval.civil_start_time >= "2026-10-01"'
+      filter: 'altitude.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone List (filter: start_time)"
+  - name: "Standard: Altitude List (filter: start_time)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     queryParams:
-      filter: 'time_in_heart_rate_zone.interval.start_time >= "2026-10-01T00:00:00Z" AND time_in_heart_rate_zone.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'altitude.interval.start_time >= "2026-10-01T00:00:00Z" AND altitude.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone List (dataSourceFamily: all-sources)"
+  - name: "Standard: Altitude List (dataSourceFamily: all-sources)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone List (dataSourceFamily: google-wearables)"
+  - name: "Standard: Altitude List (dataSourceFamily: google-wearables)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone List (dataSourceFamily: google-sources)"
+  - name: "Standard: Altitude List (dataSourceFamily: google-sources)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone List (combined)"
+  - name: "Standard: Altitude List (combined)"
     action: "list"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     queryParams:
-      filter: 'time_in_heart_rate_zone.interval.start_time >= "2026-10-01T00:00:00Z" AND time_in_heart_rate_zone.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'altitude.interval.start_time >= "2026-10-01T00:00:00Z" AND altitude.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (Default)"
+  - name: "Standard: Altitude DailyRollUp (Default)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -114,9 +110,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (windowSizeDays)"
+  - name: "Standard: Altitude DailyRollUp (windowSizeDays)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -149,9 +145,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (pageSize)"
+  - name: "Standard: Altitude DailyRollUp (pageSize)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -184,9 +180,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (pageToken)"
+  - name: "Standard: Altitude DailyRollUp (pageToken)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -219,9 +215,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Altitude DailyRollUp (dataSourceFamily: all-sources)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -254,9 +250,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Altitude DailyRollUp (dataSourceFamily: google-wearables)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -289,9 +285,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Altitude DailyRollUp (dataSourceFamily: google-sources)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -324,9 +320,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Altitude DailyRollUp (dataSourceFamily: self-sources)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -359,9 +355,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Time In Heart Rate Zone DailyRollUp (combined)"
+  - name: "Standard: Altitude DailyRollUp (combined)"
     action: "dailyrollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -396,9 +392,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Time In Heart Rate Zone RollUp (Default)"
+  - name: "Standard: Altitude RollUp (Default)"
     action: "rollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -409,9 +405,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Time In Heart Rate Zone RollUp (pageSize)"
+  - name: "Standard: Altitude RollUp (pageSize)"
     action: "rollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -423,9 +419,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone RollUp (pageToken)"
+  - name: "Standard: Altitude RollUp (pageToken)"
     action: "rollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -436,9 +432,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone RollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Altitude RollUp (dataSourceFamily: all-sources)"
     action: "rollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -450,9 +446,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone RollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Altitude RollUp (dataSourceFamily: google-wearables)"
     action: "rollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -464,9 +460,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone RollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Altitude RollUp (dataSourceFamily: google-sources)"
     action: "rollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -478,9 +474,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Time In Heart Rate Zone RollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Altitude RollUp (dataSourceFamily: self-sources)"
     action: "rollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -492,9 +488,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Time In Heart Rate Zone RollUp (combined)"
+  - name: "Standard: Altitude RollUp (combined)"
     action: "rollup"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     body: |
       {
         "range": {
@@ -507,73 +503,73 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (Default)"
+  - name: "Standard: Altitude Reconcile (Default)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (pageSize)"
+  - name: "Standard: Altitude Reconcile (pageSize)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (pageToken)"
+  - name: "Standard: Altitude Reconcile (pageToken)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (filter: civil_start_time)"
+  - name: "Standard: Altitude Reconcile (filter: civil_start_time)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     queryParams:
-      filter: 'time_in_heart_rate_zone.interval.civil_start_time >= "2026-10-01"'
+      filter: 'altitude.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (filter: start_time)"
+  - name: "Standard: Altitude Reconcile (filter: start_time)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     queryParams:
-      filter: 'time_in_heart_rate_zone.interval.start_time >= "2026-10-01T00:00:00Z" AND time_in_heart_rate_zone.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'altitude.interval.start_time >= "2026-10-01T00:00:00Z" AND altitude.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (dataSourceFamily: all-sources)"
+  - name: "Standard: Altitude Reconcile (dataSourceFamily: all-sources)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (dataSourceFamily: google-wearables)"
+  - name: "Standard: Altitude Reconcile (dataSourceFamily: google-wearables)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (dataSourceFamily: google-sources)"
+  - name: "Standard: Altitude Reconcile (dataSourceFamily: google-sources)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Time In Heart Rate Zone Reconcile (combined)"
+  - name: "Standard: Altitude Reconcile (combined)"
     action: "reconcile"
-    dataType: "time-in-heart-rate-zone"
+    dataType: "altitude"
     queryParams:
-      filter: 'time_in_heart_rate_zone.interval.start_time >= "2026-10-01T00:00:00Z" AND time_in_heart_rate_zone.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'altitude.interval.start_time >= "2026-10-01T00:00:00Z" AND altitude.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true

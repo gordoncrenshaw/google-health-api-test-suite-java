@@ -17,6 +17,9 @@ public class TestSuiteScript {
     @JsonProperty("description")
     private String description = "";
 
+    @JsonProperty("userId")
+    private String userId = "me";
+
     @JsonProperty("stopOnError")
     private boolean stopOnError = false;
 
@@ -42,6 +45,14 @@ public class TestSuiteScript {
         this.description = description;
     }
 
+    public String getUserId() {
+        return userId != null && !userId.trim().isEmpty() ? userId.trim() : "me";
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
     public boolean isStopOnError() {
         return stopOnError;
     }
@@ -56,5 +67,52 @@ public class TestSuiteScript {
 
     public void setSteps(List<TestStep> steps) {
         this.steps = steps != null ? steps : new ArrayList<>();
+    }
+
+    /**
+     * Returns the list of executable test steps, expanding any steps configured with
+     * userId "both" (either explicitly on the step or inherited from the script) into
+     * separate steps for "me" and "healthUserId".
+     */
+    public List<TestStep> getExpandedSteps() {
+        List<TestStep> expanded = new ArrayList<>();
+        String scriptUser = getUserId();
+
+        for (TestStep step : steps) {
+            String stepUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty())
+                    ? step.getUserId().trim()
+                    : scriptUser;
+
+            if ("both".equalsIgnoreCase(stepUser)) {
+                TestStep stepMe = step.copy();
+                stepMe.setUserId("me");
+                stepMe.setName(appendUserSuffix(step.getName(), "me"));
+                expanded.add(stepMe);
+
+                TestStep stepHealthUser = step.copy();
+                stepHealthUser.setUserId("healthUserId");
+                stepHealthUser.setName(appendUserSuffix(step.getName(), "healthUserId"));
+                expanded.add(stepHealthUser);
+            } else {
+                TestStep s = step.copy();
+                s.setUserId(stepUser);
+                expanded.add(s);
+            }
+        }
+        return expanded;
+    }
+
+    private static String appendUserSuffix(String originalName, String suffix) {
+        if (originalName == null || originalName.isEmpty()) {
+            return "(" + suffix + ")";
+        }
+        String cleaned = originalName;
+        if (cleaned.endsWith(" (Default)")) {
+            cleaned = cleaned.substring(0, cleaned.length() - " (Default)".length());
+        }
+        if (cleaned.toLowerCase().endsWith(" (" + suffix.toLowerCase() + ")")) {
+            return cleaned;
+        }
+        return cleaned + " (" + suffix + ")";
     }
 }

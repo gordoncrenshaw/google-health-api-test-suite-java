@@ -1,0 +1,10 @@
+# Quick smoke test for verifying Google Health API basic connectivity
+name: "Google Health API Smoke Test"
+description: "Quick sanity checks on all endpoints"
+userId: me # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Check Auth Status"
+    action: "check_auth"
+    assertStatus: [200]

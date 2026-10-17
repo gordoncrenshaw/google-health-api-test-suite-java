@@ -1,14 +1,10 @@
-# Quick smoke test for verifying Google Health API basic connectivity
-name: "Google Health API Smoke Test"
-description: "Quick sanity checks on all endpoints"
+# Google Health API Daily VO2 Max Standard Tests
+name: "Google Health API Daily VO2 Max Tests"
+description: "Standard tests for Daily VO2 Max datatype"
+userId: me # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:
-  - name: "Standard: Check Auth Status"
-    action: "check_auth"
-    assertStatus: [200]
-
-  # Datatype Tests
   - name: "Standard: Daily VO2 Max List (Default)"
     action: "list"
     dataType: "daily-vo2-max"
@@ -31,19 +27,19 @@ steps:
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Daily VO2 Max List (filter: civil_start_time)"
+  - name: "Standard: Daily VO2 Max List (filter: date)"
     action: "list"
     dataType: "daily-vo2-max"
     queryParams:
-      filter: 'daily_vo2_max.interval.civil_start_time >= "2026-10-01"'
+      filter: 'daily_vo2_max.date >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Daily VO2 Max List (filter: start_time)"
+  - name: "Standard: Daily VO2 Max List (filter: date range)"
     action: "list"
     dataType: "daily-vo2-max"
     queryParams:
-      filter: 'daily_vo2_max.interval.start_time >= "2026-10-01T00:00:00Z" AND daily_vo2_max.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'daily_vo2_max.date >= "2026-10-01" AND daily_vo2_max.date < "2026-10-08"'
     assertStatus: [200]
     validateRange: true
 
@@ -75,7 +71,7 @@ steps:
     action: "list"
     dataType: "daily-vo2-max"
     queryParams:
-      filter: 'daily_vo2_max.interval.start_time >= "2026-10-01T00:00:00Z" AND daily_vo2_max.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'daily_vo2_max.date >= "2026-10-01" AND daily_vo2_max.date < "2026-10-08"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true
@@ -102,19 +98,19 @@ steps:
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Daily VO2 Max Reconcile (filter: civil_start_time)"
+  - name: "Standard: Daily VO2 Max Reconcile (filter: date)"
     action: "reconcile"
     dataType: "daily-vo2-max"
     queryParams:
-      filter: 'daily_vo2_max.interval.civil_start_time >= "2026-10-01"'
+      filter: 'daily_vo2_max.date >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Daily VO2 Max Reconcile (filter: start_time)"
+  - name: "Standard: Daily VO2 Max Reconcile (filter: date range)"
     action: "reconcile"
     dataType: "daily-vo2-max"
     queryParams:
-      filter: 'daily_vo2_max.interval.start_time >= "2026-10-01T00:00:00Z" AND daily_vo2_max.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'daily_vo2_max.date >= "2026-10-01" AND daily_vo2_max.date < "2026-10-08"'
     assertStatus: [200]
     validateRange: true
 
@@ -146,7 +142,7 @@ steps:
     action: "reconcile"
     dataType: "daily-vo2-max"
     queryParams:
-      filter: 'daily_vo2_max.interval.start_time >= "2026-10-01T00:00:00Z" AND daily_vo2_max.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'daily_vo2_max.date >= "2026-10-01" AND daily_vo2_max.date < "2026-10-08"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true

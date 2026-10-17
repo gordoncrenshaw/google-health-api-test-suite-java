@@ -608,6 +608,14 @@ public class CliMenuRunner {
 
     private void runFullTestSuite() {
         System.out.println(CYAN + BOLD + "\n--- Running Comprehensive Test Suite Across All Data Types ---" + RESET);
+        File manifestFile = configManager.getManifestFile();
+        if (manifestFile != null && manifestFile.exists()) {
+            System.out.println("Executing full test suite from manifest: " + manifestFile.getPath());
+            ScriptRunner runner = new ScriptRunner(engine);
+            runner.runManifestWithDetails(manifestFile);
+            return;
+        }
+
         long start = System.currentTimeMillis();
         File stdScript = new File("scripts/standard_tests.yaml");
         if (!stdScript.exists()) {

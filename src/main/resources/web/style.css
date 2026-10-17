@@ -888,3 +888,42 @@ textarea.form-control {
     flex-shrink: 0;
 }
 
+/* ==========================================================================
+   Real-Time Test Suite Failed Filter Controls
+   ========================================================================== */
+.filter-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+    transition: all 0.2s ease;
+}
+
+.filter-checkbox-label:hover {
+    background: rgba(239, 68, 68, 0.22);
+    border-color: rgba(239, 68, 68, 0.6);
+    color: #ffffff;
+}
+
+.filter-checkbox-label input[type="checkbox"] {
+    cursor: pointer;
+    width: 15px;
+    height: 15px;
+    accent-color: var(--danger-color);
+    margin: 0;
+}
+
+/* Instant real-time filtering: when .filter-failed-only is set on tbody, hide all rows with data-passed="true" */
+#suite-results-tbody.filter-failed-only tr.suite-result-row[data-passed="true"] {
+    display: none !important;
+}
+
+

@@ -1,17 +1,84 @@
-# Quick smoke test for verifying Google Health API basic connectivity
-name: "Google Health API Smoke Test"
-description: "Quick sanity checks on all endpoints"
+# Google Health API Time In Heart Rate Zone Standard Tests
+name: "Google Health API Time In Heart Rate Zone Tests"
+description: "Standard tests for Time In Heart Rate Zone datatype"
+userId: me # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:
-  - name: "Standard: Check Auth Status"
-    action: "check_auth"
+  - name: "Standard: Time In Heart Rate Zone List (Default)"
+    action: "list"
+    dataType: "time-in-heart-rate-zone"
     assertStatus: [200]
+    validateRange: true
 
-  # Datatype Tests
-  - name: "Standard: Total Calories DailyRollUp (Default)"
+  - name: "Standard: Time In Heart Rate Zone List (pageSize)"
+    action: "list"
+    dataType: "time-in-heart-rate-zone"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Time In Heart Rate Zone List (pageToken)"
+    action: "list"
+    dataType: "time-in-heart-rate-zone"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Time In Heart Rate Zone List (filter: civil_start_time)"
+    action: "list"
+    dataType: "time-in-heart-rate-zone"
+    queryParams:
+      filter: 'time_in_heart_rate_zone.interval.civil_start_time >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Time In Heart Rate Zone List (filter: start_time)"
+    action: "list"
+    dataType: "time-in-heart-rate-zone"
+    queryParams:
+      filter: 'time_in_heart_rate_zone.interval.start_time >= "2026-10-01T00:00:00Z" AND time_in_heart_rate_zone.interval.start_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Time In Heart Rate Zone List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "time-in-heart-rate-zone"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Time In Heart Rate Zone List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "time-in-heart-rate-zone"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Time In Heart Rate Zone List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "time-in-heart-rate-zone"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Time In Heart Rate Zone List (combined)"
+    action: "list"
+    dataType: "time-in-heart-rate-zone"
+    queryParams:
+      filter: 'time_in_heart_rate_zone.interval.start_time >= "2026-10-01T00:00:00Z" AND time_in_heart_rate_zone.interval.start_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (Default)"
     action: "dailyrollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -43,9 +110,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Total Calories DailyRollUp (windowSizeDays)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (windowSizeDays)"
     action: "dailyrollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -78,9 +145,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Total Calories DailyRollUp (pageSize)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (pageSize)"
     action: "dailyrollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -113,9 +180,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Total Calories DailyRollUp (pageToken)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (pageToken)"
     action: "dailyrollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -148,9 +215,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Total Calories DailyRollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (dataSourceFamily: all-sources)"
     action: "dailyrollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -183,9 +250,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Total Calories DailyRollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (dataSourceFamily: google-wearables)"
     action: "dailyrollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -218,9 +285,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Total Calories DailyRollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (dataSourceFamily: google-sources)"
     action: "dailyrollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -253,9 +320,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Total Calories DailyRollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (dataSourceFamily: self-sources)"
     action: "dailyrollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -288,9 +355,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Total Calories DailyRollUp (combined)"
+  - name: "Standard: Time In Heart Rate Zone DailyRollUp (combined)"
     action: "dailyrollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -325,9 +392,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Total Calories RollUp (Default)"
+  - name: "Standard: Time In Heart Rate Zone RollUp (Default)"
     action: "rollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -338,9 +405,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Total Calories RollUp (pageSize)"
+  - name: "Standard: Time In Heart Rate Zone RollUp (pageSize)"
     action: "rollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -352,9 +419,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Total Calories RollUp (pageToken)"
+  - name: "Standard: Time In Heart Rate Zone RollUp (pageToken)"
     action: "rollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -365,9 +432,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Total Calories RollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Time In Heart Rate Zone RollUp (dataSourceFamily: all-sources)"
     action: "rollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -379,9 +446,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Total Calories RollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Time In Heart Rate Zone RollUp (dataSourceFamily: google-wearables)"
     action: "rollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -393,9 +460,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Total Calories RollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Time In Heart Rate Zone RollUp (dataSourceFamily: google-sources)"
     action: "rollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -407,9 +474,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Total Calories RollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Time In Heart Rate Zone RollUp (dataSourceFamily: self-sources)"
     action: "rollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -421,9 +488,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Total Calories RollUp (combined)"
+  - name: "Standard: Time In Heart Rate Zone RollUp (combined)"
     action: "rollup"
-    dataType: "total-calories"
+    dataType: "time-in-heart-rate-zone"
     body: |
       {
         "range": {
@@ -435,3 +502,74 @@ steps:
         "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
       }
     assertStatus: [200]
+
+  - name: "Standard: Time In Heart Rate Zone Reconcile (Default)"
+    action: "reconcile"
+    dataType: "time-in-heart-rate-zone"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Time In Heart Rate Zone Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "time-in-heart-rate-zone"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Time In Heart Rate Zone Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "time-in-heart-rate-zone"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Time In Heart Rate Zone Reconcile (filter: civil_start_time)"
+    action: "reconcile"
+    dataType: "time-in-heart-rate-zone"
+    queryParams:
+      filter: 'time_in_heart_rate_zone.interval.civil_start_time >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Time In Heart Rate Zone Reconcile (filter: start_time)"
+    action: "reconcile"
+    dataType: "time-in-heart-rate-zone"
+    queryParams:
+      filter: 'time_in_heart_rate_zone.interval.start_time >= "2026-10-01T00:00:00Z" AND time_in_heart_rate_zone.interval.start_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Time In Heart Rate Zone Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "time-in-heart-rate-zone"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Time In Heart Rate Zone Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "time-in-heart-rate-zone"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Time In Heart Rate Zone Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "time-in-heart-rate-zone"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Time In Heart Rate Zone Reconcile (combined)"
+    action: "reconcile"
+    dataType: "time-in-heart-rate-zone"
+    queryParams:
+      filter: 'time_in_heart_rate_zone.interval.start_time >= "2026-10-01T00:00:00Z" AND time_in_heart_rate_zone.interval.start_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

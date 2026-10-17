@@ -595,19 +595,69 @@ src/main/java/com/google/health/testsuite/common/AppVersion.java
 
 ```java
 public final class AppVersion {
-    public static final String VERSION = "1.0.4";
+    public static final String VERSION = "1.0.6";
     public static final String API_TARGET = "v4";
-    public static final String RELEASE_DATE = "2026-10-11";
+    public static final String RELEASE_DATE = "2026-10-17";
 }
 ```
 
 - **Runtime Availability**: The version is exposed via `/api/status` and `/api/version` endpoints.
-- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.4` pill badge and in the system information banner).
+- **Web UI**: Automatically displayed in the **"Preferences & OAuth"** tab (as an `App v1.0.6` pill badge and in the system information banner).
 - **How to Update**: When adding new functionality or fixes, increment `AppVersion.VERSION` following Semantic Versioning (`MAJOR.MINOR.PATCH`) and document changes in the changelog below.
 
 ---
 
 ## 📋 Version History & Changelog
+
+### Version 1.0.6 (October 17, 2026)
+
+#### 🌟 New Features & API Enhancements
+- **Standard Tests for User Endpoints & Paired Devices (Issue #34)**:
+  - Added [`scripts/standard_tests_user.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_user.yaml) covering standard tests for user profile and configuration endpoints:
+    - `Standard: User Profile (getProfile)`
+    - `Standard: User Identity (getIdentity)`
+    - `Standard: Irregular Rhythm Notifications (getIrnProfile)`
+    - `Standard: User Settings (getSettings)`
+  - Added [`scripts/standard_tests_pairedDevices.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_pairedDevices.yaml) covering standard tests for device management:
+    - `Standard: Paired Devices (listDevices)`
+  - Registered both `scripts/standard_tests_user.yaml` and `scripts/standard_tests_pairedDevices.yaml` in [`config/test_suite_manifest.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/config/test_suite_manifest.yaml) for full test suite execution.
+- **Configurable `userId` Option in Test Scripts (`me`, `healthUserId`, `both`) (Issue #34)**:
+  - Added top-level and per-step `userId` configuration to test YAML scripts with options `me`, `healthUserId`, or `both`.
+  - Configured all 19 standard test scripts (`scripts/standard_tests-*.yaml`, `standard_tests_user.yaml`, `standard_tests_pairedDevices.yaml`, and `standard_tests_auth.yaml`) with `userId: me` by default.
+  - Added automated step expansion in [`TestSuiteScript.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/model/TestSuiteScript.java) (`getExpandedSteps()`): when `userId: both` is specified, each test step is automatically cloned and executed twice—once against `(me)` and once against `(healthUserId)`.
+  - Added `copy()` method to [`TestStep.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/model/TestStep.java) to support step duplication with specific user context.
+  - Updated [`ScriptRunner.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/runner/ScriptRunner.java) and [`RestApiHandler.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/server/RestApiHandler.java) to process expanded steps seamlessly.
+- **Dynamic User ID Resolution & Action Support**:
+  - Enhanced [`HealthApiClient.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/client/HealthApiClient.java) with `getEffectiveUserId(overrideUserId)` to dynamically resolve `"me"`, `"healthUserId"`, or arbitrary user IDs against preferences and mock fallbacks.
+  - Added user ID override routing to all user endpoints (`getProfile`, `getIdentity`, `getIrnProfile`, `getSettings`, `listDevices`) and data point operations (`list`, `get`, `create`, `patch`, `rollup`, `dailyrollup`, `reconcile`, `batchdelete`).
+  - Added automatic rewriting of `users/me/` references in query parameters (e.g. `dataSourceFamily: "users/me/dataSources/..."`) to `users/{effectiveUserId}/...`.
+  - Enhanced [`SuiteExecutionEngine.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/runner/SuiteExecutionEngine.java) to accept standard camelCase action names (`getProfile`, `getIdentity`, `getIrnProfile`, `getSettings`, `listDevices`) and propagate step-level user IDs.
+- **Unit Testing**:
+  - Added test coverage in [`ScriptRunnerTest.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/test/java/com/google/health/testsuite/ScriptRunnerTest.java) verifying step expansion behavior across all `userId` settings.
+
+---
+
+### Version 1.0.5 (October 11, 2026)
+
+#### 🌟 New Features & API Enhancements
+- **Test Suite Manifest File (Issue #28)**:
+  - Added [`config/test_suite_manifest.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/config/test_suite_manifest.yaml) defining the ordered list of test script files executed when pressing "Run Full Test Suite".
+  - Created [`TestSuiteManifest.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/model/TestSuiteManifest.java) to model the manifest schema, with loading/saving support in [`ConfigManager.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/config/ConfigManager.java).
+  - Added `/api/manifest` GET and POST/PUT endpoints in [`RestApiHandler.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/server/RestApiHandler.java) for retrieving available scripts and saving active manifest configurations.
+  - Added manifest badge and interactive "Configure Manifest" panel in the Web UI ([`index.html`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/resources/web/index.html), [`app.js`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/resources/web/app.js)) with script checkboxes, Select All, Deselect All, and Save Manifest buttons.
+  - Reorganized test suites: split monolithic test scripts into modular individual datatype scripts (`scripts/standard_tests-*.yaml`) and a standalone auth verification script ([`scripts/standard_tests_auth.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_auth.yaml)).
+  - Added "Script" column to the Test Execution Results table and recorded `scriptFile` on each [`TestResult`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/model/TestResult.java).
+  - Added dynamic `DataTypeDefinition` synthesis in [`SuiteExecutionEngine.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/runner/SuiteExecutionEngine.java) to support custom and unregistered data types.
+- **Real-Time Failed Tests Filtering (Issue #29)**:
+  - Added **"Show Failed Only"** filter checkbox with real-time count badge to the Test Execution Results table header on the Full Test Suite tab.
+  - Enabled click-to-filter directly from the red "Failed" metric summary card.
+  - Real-time CSS-driven filtering hides passed rows instantly without UI lag as events stream in.
+  - Added empty-state notification row when all executed tests pass while the filter is active.
+  - Added persistent `suiteFilterFailedOnly` preference in [`Preferences.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/config/Preferences.java) and the Preferences tab.
+- **Fix Filters on Daily VO2 Max (Issue #30)**:
+  - Updated filter parameters in [`scripts/standard_tests-dailyVo2Max.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-dailyVo2Max.yaml) to use `daily_vo2_max.date` instead of interval times for `list` and `reconcile` operations.
+
+---
 
 ### Version 1.0.4 (October 11, 2026)
 

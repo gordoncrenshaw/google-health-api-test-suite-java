@@ -1,88 +1,84 @@
-# Quick smoke test for verifying Google Health API basic connectivity
-name: "Google Health API Smoke Test"
-description: "Quick sanity checks on all endpoints"
+# Google Health API Steps Standard Tests
+name: "Google Health API Steps Tests"
+description: "Standard tests for Steps datatype"
+userId: me # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:
-  - name: "Standard: Check Auth Status"
-    action: "check_auth"
-    assertStatus: [200]
-
-  # Datatype Tests
-  - name: "Standard: Active Zone Minutes List (Default)"
+  - name: "Standard: Steps List (Default)"
     action: "list"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes List (pageSize)"
+  - name: "Standard: Steps List (pageSize)"
     action: "list"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes List (pageToken)"
+  - name: "Standard: Steps List (pageToken)"
     action: "list"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes List (filter: civil_start_time)"
+  - name: "Standard: Steps List (filter: civil_start_time)"
     action: "list"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     queryParams:
-      filter: 'active_zone_minutes.interval.civil_start_time >= "2026-10-01"'
+      filter: 'steps.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes List (filter: start_time)"
+  - name: "Standard: Steps List (filter: start_time)"
     action: "list"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     queryParams:
-      filter: 'active_zone_minutes.interval.start_time >= "2026-10-01T00:00:00Z" AND active_zone_minutes.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'steps.interval.start_time >= "2026-10-01T00:00:00Z" AND steps.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes List (dataSourceFamily: all-sources)"
+  - name: "Standard: Steps List (dataSourceFamily: all-sources)"
     action: "list"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes List (dataSourceFamily: google-wearables)"
+  - name: "Standard: Steps List (dataSourceFamily: google-wearables)"
     action: "list"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes List (dataSourceFamily: google-sources)"
+  - name: "Standard: Steps List (dataSourceFamily: google-sources)"
     action: "list"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes List (combined)"
+  - name: "Standard: Steps List (combined)"
     action: "list"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     queryParams:
-      filter: 'active_zone_minutes.interval.start_time >= "2026-10-01T00:00:00Z" AND active_zone_minutes.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'steps.interval.start_time >= "2026-10-01T00:00:00Z" AND steps.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes DailyRollUp (Default)"
+  - name: "Standard: Steps DailyRollUp (Default)"
     action: "dailyrollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -114,9 +110,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Zone Minutes DailyRollUp (windowSizeDays)"
+  - name: "Standard: Steps DailyRollUp (windowSizeDays)"
     action: "dailyrollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -149,9 +145,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Zone Minutes DailyRollUp (pageSize)"
+  - name: "Standard: Steps DailyRollUp (pageSize)"
     action: "dailyrollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -184,9 +180,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Zone Minutes DailyRollUp (pageToken)"
+  - name: "Standard: Steps DailyRollUp (pageToken)"
     action: "dailyrollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -219,9 +215,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Zone Minutes DailyRollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Steps DailyRollUp (dataSourceFamily: all-sources)"
     action: "dailyrollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -254,9 +250,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Zone Minutes DailyRollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Steps DailyRollUp (dataSourceFamily: google-wearables)"
     action: "dailyrollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -289,9 +285,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Zone Minutes DailyRollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Steps DailyRollUp (dataSourceFamily: google-sources)"
     action: "dailyrollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -324,9 +320,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Zone Minutes DailyRollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Steps DailyRollUp (dataSourceFamily: self-sources)"
     action: "dailyrollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -359,9 +355,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Zone Minutes DailyRollUp (combined)"
+  - name: "Standard: Steps DailyRollUp (combined)"
     action: "dailyrollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -396,9 +392,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Zone Minutes RollUp (Default)"
+  - name: "Standard: Steps RollUp (Default)"
     action: "rollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -409,9 +405,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Zone Minutes RollUp (pageSize)"
+  - name: "Standard: Steps RollUp (pageSize)"
     action: "rollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -423,9 +419,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Zone Minutes RollUp (pageToken)"
+  - name: "Standard: Steps RollUp (pageToken)"
     action: "rollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -436,9 +432,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Zone Minutes RollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Steps RollUp (dataSourceFamily: all-sources)"
     action: "rollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -450,9 +446,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Zone Minutes RollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Steps RollUp (dataSourceFamily: google-wearables)"
     action: "rollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -464,9 +460,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Zone Minutes RollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Steps RollUp (dataSourceFamily: google-sources)"
     action: "rollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -478,9 +474,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Zone Minutes RollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Steps RollUp (dataSourceFamily: self-sources)"
     action: "rollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -492,9 +488,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Zone Minutes RollUp (combined)"
+  - name: "Standard: Steps RollUp (combined)"
     action: "rollup"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     body: |
       {
         "range": {
@@ -507,73 +503,73 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Zone Minutes Reconcile (Default)"
+  - name: "Standard: Steps Reconcile (Default)"
     action: "reconcile"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes Reconcile (pageSize)"
+  - name: "Standard: Steps Reconcile (pageSize)"
     action: "reconcile"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes Reconcile (pageToken)"
+  - name: "Standard: Steps Reconcile (pageToken)"
     action: "reconcile"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes Reconcile (filter: civil_start_time)"
+  - name: "Standard: Steps Reconcile (filter: civil_start_time)"
     action: "reconcile"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     queryParams:
-      filter: 'active_zone_minutes.interval.civil_start_time >= "2026-10-01"'
+      filter: 'steps.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes Reconcile (filter: start_time)"
+  - name: "Standard: Steps Reconcile (filter: start_time)"
     action: "reconcile"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     queryParams:
-      filter: 'active_zone_minutes.interval.start_time >= "2026-10-01T00:00:00Z" AND active_zone_minutes.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'steps.interval.start_time >= "2026-10-01T00:00:00Z" AND steps.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes Reconcile (dataSourceFamily: all-sources)"
+  - name: "Standard: Steps Reconcile (dataSourceFamily: all-sources)"
     action: "reconcile"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes Reconcile (dataSourceFamily: google-wearables)"
+  - name: "Standard: Steps Reconcile (dataSourceFamily: google-wearables)"
     action: "reconcile"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes Reconcile (dataSourceFamily: google-sources)"
+  - name: "Standard: Steps Reconcile (dataSourceFamily: google-sources)"
     action: "reconcile"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Zone Minutes Reconcile (combined)"
+  - name: "Standard: Steps Reconcile (combined)"
     action: "reconcile"
-    dataType: "active-zone-minutes"
+    dataType: "steps"
     queryParams:
-      filter: 'active_zone_minutes.interval.start_time >= "2026-10-01T00:00:00Z" AND active_zone_minutes.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'steps.interval.start_time >= "2026-10-01T00:00:00Z" AND steps.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true

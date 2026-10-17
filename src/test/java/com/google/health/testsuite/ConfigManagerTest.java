@@ -54,6 +54,7 @@ public class ConfigManagerTest {
         prefs.setDefaultUserId("user-789");
         prefs.setMockMode(true);
         prefs.setEnableAllEndpoints(true);
+        prefs.setSuiteFilterFailedOnly(true);
 
         configManager.savePreferences(prefs);
 
@@ -71,6 +72,7 @@ public class ConfigManagerTest {
         assertEquals("user-789", loaded.getDefaultUserId());
         assertTrue(loaded.isMockMode());
         assertTrue(loaded.isEnableAllEndpoints());
+        assertTrue(loaded.isSuiteFilterFailedOnly());
     }
 
     @Test
@@ -146,5 +148,31 @@ public class ConfigManagerTest {
         List<String> dynamicallyLoaded = configManager.getAvailableScopes();
         assertEquals(3, dynamicallyLoaded.size());
         assertTrue(dynamicallyLoaded.contains("https://www.googleapis.com/auth/googlehealth.new_scope.read"));
+    }
+
+    @Test
+    void testManifestLoadAndSave() throws Exception {
+        File tempManifest = File.createTempFile("temp_manifest", ".yaml");
+        tempManifest.deleteOnExit();
+
+        Preferences prefs = configManager.getPreferences();
+        prefs.setSuiteManifestPath(tempManifest.getAbsolutePath());
+        configManager.savePreferences(prefs);
+
+        com.google.health.testsuite.model.TestSuiteManifest manifest =
+                new com.google.health.testsuite.model.TestSuiteManifest(
+                        "Test Suite",
+                        "Description",
+                        List.of("scripts/steps_tests.yaml", "scripts/distance_tests.yaml")
+                );
+
+        configManager.saveTestSuiteManifest(manifest);
+
+        com.google.health.testsuite.model.TestSuiteManifest loaded = configManager.loadTestSuiteManifest();
+        assertNotNull(loaded);
+        assertEquals("Test Suite", loaded.getName());
+        assertEquals("Description", loaded.getDescription());
+        assertEquals(2, loaded.getScripts().size());
+        assertEquals("scripts/steps_tests.yaml", loaded.getScripts().get(0));
     }
 }

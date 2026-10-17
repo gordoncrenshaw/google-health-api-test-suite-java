@@ -1,88 +1,84 @@
-# Quick smoke test for verifying Google Health API basic connectivity
-name: "Google Health API Smoke Test"
-description: "Quick sanity checks on all endpoints"
+# Google Health API Active Energy Burned Standard Tests
+name: "Google Health API Active Energy Burned Tests"
+description: "Standard tests for Active Energy Burned datatype"
+userId: me # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:
-  - name: "Standard: Check Auth Status"
-    action: "check_auth"
-    assertStatus: [200]
-
-  # Datatype Tests
-  - name: "Standard: Active Minutes List (Default)"
+  - name: "Standard: Active Energy Burned List (Default)"
     action: "list"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes List (pageSize)"
+  - name: "Standard: Active Energy Burned List (pageSize)"
     action: "list"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes List (pageToken)"
+  - name: "Standard: Active Energy Burned List (pageToken)"
     action: "list"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes List (filter: civil_start_time)"
+  - name: "Standard: Active Energy Burned List (filter: civil_start_time)"
     action: "list"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     queryParams:
-      filter: 'active_minutes.interval.civil_start_time >= "2026-10-01"'
+      filter: 'active_energy_burned.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes List (filter: start_time)"
+  - name: "Standard: Active Energy Burned List (filter: start_time)"
     action: "list"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     queryParams:
-      filter: 'active_minutes.interval.start_time >= "2026-10-01T00:00:00Z" AND active_minutes.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'active_energy_burned.interval.start_time >= "2026-10-01T00:00:00Z" AND active_energy_burned.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes List (dataSourceFamily: all-sources)"
+  - name: "Standard: Active Energy Burned List (dataSourceFamily: all-sources)"
     action: "list"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes List (dataSourceFamily: google-wearables)"
+  - name: "Standard: Active Energy Burned List (dataSourceFamily: google-wearables)"
     action: "list"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes List (dataSourceFamily: google-sources)"
+  - name: "Standard: Active Energy Burned List (dataSourceFamily: google-sources)"
     action: "list"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes List (combined)"
+  - name: "Standard: Active Energy Burned List (combined)"
     action: "list"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     queryParams:
-      filter: 'active_minutes.interval.start_time >= "2026-10-01T00:00:00Z" AND active_minutes.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'active_energy_burned.interval.start_time >= "2026-10-01T00:00:00Z" AND active_energy_burned.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes DailyRollUp (Default)"
+  - name: "Standard: Active Energy Burned DailyRollUp (Default)"
     action: "dailyrollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -114,9 +110,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Minutes DailyRollUp (windowSizeDays)"
+  - name: "Standard: Active Energy Burned DailyRollUp (windowSizeDays)"
     action: "dailyrollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -149,9 +145,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Minutes DailyRollUp (pageSize)"
+  - name: "Standard: Active Energy Burned DailyRollUp (pageSize)"
     action: "dailyrollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -184,9 +180,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Minutes DailyRollUp (pageToken)"
+  - name: "Standard: Active Energy Burned DailyRollUp (pageToken)"
     action: "dailyrollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -219,9 +215,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Minutes DailyRollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Active Energy Burned DailyRollUp (dataSourceFamily: all-sources)"
     action: "dailyrollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -254,9 +250,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Minutes DailyRollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Active Energy Burned DailyRollUp (dataSourceFamily: google-wearables)"
     action: "dailyrollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -289,9 +285,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Minutes DailyRollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Active Energy Burned DailyRollUp (dataSourceFamily: google-sources)"
     action: "dailyrollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -324,9 +320,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Minutes DailyRollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Active Energy Burned DailyRollUp (dataSourceFamily: self-sources)"
     action: "dailyrollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -359,9 +355,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Minutes DailyRollUp (combined)"
+  - name: "Standard: Active Energy Burned DailyRollUp (combined)"
     action: "dailyrollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -396,9 +392,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Minutes RollUp (Default)"
+  - name: "Standard: Active Energy Burned RollUp (Default)"
     action: "rollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -409,9 +405,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Minutes RollUp (pageSize)"
+  - name: "Standard: Active Energy Burned RollUp (pageSize)"
     action: "rollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -423,9 +419,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Minutes RollUp (pageToken)"
+  - name: "Standard: Active Energy Burned RollUp (pageToken)"
     action: "rollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -436,9 +432,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Minutes RollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Active Energy Burned RollUp (dataSourceFamily: all-sources)"
     action: "rollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -450,9 +446,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Minutes RollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Active Energy Burned RollUp (dataSourceFamily: google-wearables)"
     action: "rollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -464,9 +460,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Minutes RollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Active Energy Burned RollUp (dataSourceFamily: google-sources)"
     action: "rollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -478,9 +474,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Active Minutes RollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Active Energy Burned RollUp (dataSourceFamily: self-sources)"
     action: "rollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -492,9 +488,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Minutes RollUp (combined)"
+  - name: "Standard: Active Energy Burned RollUp (combined)"
     action: "rollup"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     body: |
       {
         "range": {
@@ -507,73 +503,73 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Active Minutes Reconcile (Default)"
+  - name: "Standard: Active Energy Burned Reconcile (Default)"
     action: "reconcile"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes Reconcile (pageSize)"
+  - name: "Standard: Active Energy Burned Reconcile (pageSize)"
     action: "reconcile"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes Reconcile (pageToken)"
+  - name: "Standard: Active Energy Burned Reconcile (pageToken)"
     action: "reconcile"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes Reconcile (filter: civil_start_time)"
+  - name: "Standard: Active Energy Burned Reconcile (filter: civil_start_time)"
     action: "reconcile"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     queryParams:
-      filter: 'active_minutes.interval.civil_start_time >= "2026-10-01"'
+      filter: 'active_energy_burned.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes Reconcile (filter: start_time)"
+  - name: "Standard: Active Energy Burned Reconcile (filter: start_time)"
     action: "reconcile"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     queryParams:
-      filter: 'active_minutes.interval.start_time >= "2026-10-01T00:00:00Z" AND active_minutes.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'active_energy_burned.interval.start_time >= "2026-10-01T00:00:00Z" AND active_energy_burned.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes Reconcile (dataSourceFamily: all-sources)"
+  - name: "Standard: Active Energy Burned Reconcile (dataSourceFamily: all-sources)"
     action: "reconcile"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes Reconcile (dataSourceFamily: google-wearables)"
+  - name: "Standard: Active Energy Burned Reconcile (dataSourceFamily: google-wearables)"
     action: "reconcile"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes Reconcile (dataSourceFamily: google-sources)"
+  - name: "Standard: Active Energy Burned Reconcile (dataSourceFamily: google-sources)"
     action: "reconcile"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Active Minutes Reconcile (combined)"
+  - name: "Standard: Active Energy Burned Reconcile (combined)"
     action: "reconcile"
-    dataType: "active-minutes"
+    dataType: "active-energy-burned"
     queryParams:
-      filter: 'active_minutes.interval.start_time >= "2026-10-01T00:00:00Z" AND active_minutes.interval.start_time < "2026-10-08T23:59:59Z"'
+      filter: 'active_energy_burned.interval.start_time >= "2026-10-01T00:00:00Z" AND active_energy_burned.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true

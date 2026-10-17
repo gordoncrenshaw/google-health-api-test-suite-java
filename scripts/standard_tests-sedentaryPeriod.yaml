@@ -1,88 +1,84 @@
-# Quick smoke test for verifying Google Health API basic connectivity
-name: "Google Health API Smoke Test"
-description: "Quick sanity checks on all endpoints"
+# Google Health API Sedentary Period Standard Tests
+name: "Google Health API Sedentary Period Tests"
+description: "Standard tests for Sedentary Period datatype"
+userId: me # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:
-  - name: "Standard: Check Auth Status"
-    action: "check_auth"
-    assertStatus: [200]
-
-  # Datatype Tests
-  - name: "Standard: Run VO2 Max List (Default)"
+  - name: "Standard: Sedentary Period List (Default)"
     action: "list"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max List (pageSize)"
+  - name: "Standard: Sedentary Period List (pageSize)"
     action: "list"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max List (pageToken)"
+  - name: "Standard: Sedentary Period List (pageToken)"
     action: "list"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max List (filter: civil_time)"
+  - name: "Standard: Sedentary Period List (filter: civil_start_time)"
     action: "list"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     queryParams:
-      filter: 'run_vo2_max.sample_time.civil_time >= "2026-10-01"'
+      filter: 'sedentary_period.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max List (filter: physical_time)"
+  - name: "Standard: Sedentary Period List (filter: start_time)"
     action: "list"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     queryParams:
-      filter: 'run_vo2_max.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND run_vo2_max.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      filter: 'sedentary_period.interval.start_time >= "2026-10-01T00:00:00Z" AND sedentary_period.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max List (dataSourceFamily: all-sources)"
+  - name: "Standard: Sedentary Period List (dataSourceFamily: all-sources)"
     action: "list"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max List (dataSourceFamily: google-wearables)"
+  - name: "Standard: Sedentary Period List (dataSourceFamily: google-wearables)"
     action: "list"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max List (dataSourceFamily: google-sources)"
+  - name: "Standard: Sedentary Period List (dataSourceFamily: google-sources)"
     action: "list"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max List (combined)"
+  - name: "Standard: Sedentary Period List (combined)"
     action: "list"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     queryParams:
-      filter: 'run_vo2_max.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND run_vo2_max.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      filter: 'sedentary_period.interval.start_time >= "2026-10-01T00:00:00Z" AND sedentary_period.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max DailyRollUp (Default)"
+  - name: "Standard: Sedentary Period DailyRollUp (Default)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -114,9 +110,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Run VO2 Max DailyRollUp (windowSizeDays)"
+  - name: "Standard: Sedentary Period DailyRollUp (windowSizeDays)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -149,9 +145,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Run VO2 Max DailyRollUp (pageSize)"
+  - name: "Standard: Sedentary Period DailyRollUp (pageSize)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -184,9 +180,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max DailyRollUp (pageToken)"
+  - name: "Standard: Sedentary Period DailyRollUp (pageToken)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -219,9 +215,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max DailyRollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Sedentary Period DailyRollUp (dataSourceFamily: all-sources)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -254,9 +250,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max DailyRollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Sedentary Period DailyRollUp (dataSourceFamily: google-wearables)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -289,9 +285,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max DailyRollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Sedentary Period DailyRollUp (dataSourceFamily: google-sources)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -324,9 +320,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max DailyRollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Sedentary Period DailyRollUp (dataSourceFamily: self-sources)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -359,9 +355,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Run VO2 Max DailyRollUp (combined)"
+  - name: "Standard: Sedentary Period DailyRollUp (combined)"
     action: "dailyrollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -396,9 +392,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Run VO2 Max RollUp (Default)"
+  - name: "Standard: Sedentary Period RollUp (Default)"
     action: "rollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -409,9 +405,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Run VO2 Max RollUp (pageSize)"
+  - name: "Standard: Sedentary Period RollUp (pageSize)"
     action: "rollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -423,9 +419,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max RollUp (pageToken)"
+  - name: "Standard: Sedentary Period RollUp (pageToken)"
     action: "rollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -436,9 +432,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max RollUp (dataSourceFamily: all-sources)"
+  - name: "Standard: Sedentary Period RollUp (dataSourceFamily: all-sources)"
     action: "rollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -450,9 +446,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max RollUp (dataSourceFamily: google-wearables)"
+  - name: "Standard: Sedentary Period RollUp (dataSourceFamily: google-wearables)"
     action: "rollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -464,9 +460,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max RollUp (dataSourceFamily: google-sources)"
+  - name: "Standard: Sedentary Period RollUp (dataSourceFamily: google-sources)"
     action: "rollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -478,9 +474,9 @@ steps:
       }
     assertStatus: [200]
     
-  - name: "Standard: Run VO2 Max RollUp (dataSourceFamily: self-sources)"
+  - name: "Standard: Sedentary Period RollUp (dataSourceFamily: self-sources)"
     action: "rollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -492,9 +488,9 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Run VO2 Max RollUp (combined)"
+  - name: "Standard: Sedentary Period RollUp (combined)"
     action: "rollup"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     body: |
       {
         "range": {
@@ -507,73 +503,73 @@ steps:
       }
     assertStatus: [200]
 
-  - name: "Standard: Run VO2 Max Reconcile (Default)"
+  - name: "Standard: Sedentary Period Reconcile (Default)"
     action: "reconcile"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max Reconcile (pageSize)"
+  - name: "Standard: Sedentary Period Reconcile (pageSize)"
     action: "reconcile"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     queryParams:
       pageSize: "5"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max Reconcile (pageToken)"
+  - name: "Standard: Sedentary Period Reconcile (pageToken)"
     action: "reconcile"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     queryParams:
       pageToken: ""
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max Reconcile (filter: civil_time)"
+  - name: "Standard: Sedentary Period Reconcile (filter: civil_start_time)"
     action: "reconcile"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     queryParams:
-      filter: 'run_vo2_max.sample_time.civil_time >= "2026-10-01"'
+      filter: 'sedentary_period.interval.civil_start_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max Reconcile (filter: physical_time)"
+  - name: "Standard: Sedentary Period Reconcile (filter: start_time)"
     action: "reconcile"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     queryParams:
-      filter: 'run_vo2_max.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND run_vo2_max.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      filter: 'sedentary_period.interval.start_time >= "2026-10-01T00:00:00Z" AND sedentary_period.interval.start_time < "2026-10-08T23:59:59Z"'
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max Reconcile (dataSourceFamily: all-sources)"
+  - name: "Standard: Sedentary Period Reconcile (dataSourceFamily: all-sources)"
     action: "reconcile"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max Reconcile (dataSourceFamily: google-wearables)"
+  - name: "Standard: Sedentary Period Reconcile (dataSourceFamily: google-wearables)"
     action: "reconcile"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max Reconcile (dataSourceFamily: google-sources)"
+  - name: "Standard: Sedentary Period Reconcile (dataSourceFamily: google-sources)"
     action: "reconcile"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     queryParams:
       dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
     assertStatus: [200]
     validateRange: true
 
-  - name: "Standard: Run VO2 Max Reconcile (combined)"
+  - name: "Standard: Sedentary Period Reconcile (combined)"
     action: "reconcile"
-    dataType: "run-vo2-max"
+    dataType: "sedentary-period"
     queryParams:
-      filter: 'run_vo2_max.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND run_vo2_max.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      filter: 'sedentary_period.interval.start_time >= "2026-10-01T00:00:00Z" AND sedentary_period.interval.start_time < "2026-10-08T23:59:59Z"'
       dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
     assertStatus: [200]
     validateRange: true

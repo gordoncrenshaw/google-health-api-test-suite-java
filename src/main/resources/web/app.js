@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPreferences();
     loadAvailableScopes();
     loadScriptsList();
+    loadManifest();
     bindEvents();
 
     // Start 1-second interval for countdown timer
@@ -982,10 +983,18 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
+        const scriptName = r.scriptFile ? r.scriptFile.replace(/^scripts\//, '') : '';
+        const scriptBadge = scriptName
+            ? `<span class="pill-badge pill-neutral font-mono" style="font-size: 11px;">${escapeHtml(scriptName)}</span>`
+            : `<span class="text-muted font-mono" style="font-size: 11px;">-</span>`;
+
         const tr = document.createElement('tr');
         tr.className = 'suite-result-row';
+        tr.dataset.passed = r.passed ? 'true' : 'false';
+        tr.dataset.script = r.scriptFile || '';
         tr.innerHTML = `
             <td><span class="pill-badge ${r.passed ? 'pill-success' : 'pill-danger'}">${r.passed ? 'PASS' : 'FAIL'}</span></td>
+            <td title="${escapeHtml(r.scriptFile || '')}">${scriptBadge}</td>
             <td><strong>${escapeHtml(r.dataType || 'api')}</strong></td>
             <td title="${escapeHtml(r.testName || r.name || r.endpoint || 'Test')}"><span>${escapeHtml(r.testName || r.name || r.endpoint || 'Test')}</span></td>
             <td><span class="pill-badge ${(r.statusCode === 200 || (r.passed && !r.statusCode)) ? 'pill-success' : 'pill-danger'} font-mono font-semibold">${escapeHtml(String(r.statusCode !== undefined && r.statusCode !== null ? r.statusCode : 200))}</span></td>
@@ -994,6 +1003,192 @@ document.addEventListener('DOMContentLoaded', () => {
             <td><span class="text-muted font-mono" style="font-size: 11px;">${new Date().toLocaleTimeString()}</span></td>
         `;
         return tr;
+    }
+
+    function applySuiteFilter() {
+        const checkbox = document.getElementById('suite-filter-failed-only');
+        const tbody = document.getElementById('suite-results-tbody');
+        const badge = document.getElementById('suite-filter-failed-badge');
+        const noFailuresRow = document.getElementById('suite-no-failures-row');
+        const emptyRow = document.getElementById('suite-empty-row');
+        if (!checkbox || !tbody) return;
+
+        const failedOnly = checkbox.checked;
+        tbody.classList.toggle('filter-failed-only', failedOnly);
+
+        const resultRows = tbody.querySelectorAll('tr.suite-result-row');
+        const failedRows = tbody.querySelectorAll('tr.suite-result-row[data-passed="false"]');
+        const failedCount = failedRows.length;
+
+        if (badge) {
+            if (failedOnly) {
+                badge.textContent = `${failedCount} failed`;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        if (noFailuresRow) {
+            // If filter is active and tests have run, but zero failures were recorded
+            if (failedOnly && resultRows.length > 0 && failedCount === 0) {
+                noFailuresRow.style.display = '';
+            } else {
+                noFailuresRow.style.display = 'none';
+            }
+        }
+
+        if (emptyRow) {
+            emptyRow.style.display = resultRows.length === 0 ? '' : 'none';
+        }
+    }
+
+    // ==========================================================================
+    // 3b. Test Suite Manifest Management
+    // ==========================================================================
+    let currentManifest = null;
+
+    async function loadManifest() {
+        try {
+            const [manifestRes, scriptsRes] = await Promise.all([
+                fetch('/api/manifest'),
+                fetch('/api/scripts')
+            ]);
+
+            if (manifestRes.ok) {
+                currentManifest = await manifestRes.json();
+                const badge = document.getElementById('suite-manifest-badge');
+                if (badge && currentManifest.manifestPath) {
+                    badge.textContent = currentManifest.manifestPath;
+                }
+                const label = document.getElementById('suite-manifest-path-label');
+                if (label && currentManifest.manifestPath) {
+                    label.textContent = currentManifest.manifestPath;
+                }
+                const savePathLabel = document.getElementById('manifest-file-save-path');
+                if (savePathLabel && currentManifest.manifestPath) {
+                    savePathLabel.textContent = currentManifest.manifestPath;
+                }
+                const countBadge = document.getElementById('manifest-scripts-count');
+                if (countBadge) {
+                    const count = currentManifest.scripts ? currentManifest.scripts.length : 0;
+                    countBadge.textContent = `${count} script${count === 1 ? '' : 's'}`;
+                }
+            }
+
+            if (scriptsRes.ok) {
+                const availableScripts = await scriptsRes.json();
+                renderManifestChecklist(availableScripts, currentManifest ? currentManifest.scripts : []);
+            }
+        } catch (e) {
+            console.warn('Failed to load test suite manifest:', e);
+        }
+    }
+
+    function renderManifestChecklist(availableScripts, selectedScripts) {
+        const container = document.getElementById('manifest-scripts-checklist');
+        if (!container) return;
+        container.innerHTML = '';
+
+        const selectedSet = new Set((selectedScripts || []).map(s => s.trim().replace(/^scripts\//, '')));
+
+        // Sort scripts alphabetically
+        const sorted = (availableScripts || []).slice().sort((a, b) => a.filename.localeCompare(b.filename));
+
+        sorted.forEach(s => {
+            const fname = s.filename;
+            const isChecked = selectedSet.has(fname) || selectedSet.has(`scripts/${fname}`);
+
+            const label = document.createElement('label');
+            label.style.display = 'flex';
+            label.style.alignItems = 'center';
+            label.style.gap = '8px';
+            label.style.fontSize = '12px';
+            label.style.cursor = 'pointer';
+            label.style.padding = '4px 6px';
+            label.style.borderRadius = '4px';
+            label.style.backgroundColor = 'rgba(255, 255, 255, 0.04)';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'manifest-script-checkbox';
+            checkbox.value = `scripts/${fname}`;
+            checkbox.checked = isChecked;
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'font-mono';
+            nameSpan.textContent = fname;
+
+            label.appendChild(checkbox);
+            label.appendChild(nameSpan);
+            container.appendChild(label);
+        });
+    }
+
+    async function saveManifestConfig() {
+        const container = document.getElementById('manifest-scripts-checklist');
+        if (!container) return;
+
+        const checkboxes = container.querySelectorAll('.manifest-script-checkbox');
+        const selected = [];
+        checkboxes.forEach(cb => {
+            if (cb.checked) selected.push(cb.value);
+        });
+
+        if (selected.length === 0) {
+            if (!confirm('No test scripts selected. Are you sure you want an empty manifest?')) {
+                return;
+            }
+        }
+
+        const saveBtn = document.getElementById('btn-save-manifest');
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+        }
+
+        try {
+            const manifestData = {
+                name: (currentManifest && currentManifest.name) ? currentManifest.name : 'Google Health API Full Test Suite',
+                description: (currentManifest && currentManifest.description) ? currentManifest.description : 'Master test suite executing data type and endpoint test scripts',
+                scripts: selected
+            };
+
+            const res = await fetch('/api/manifest', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(manifestData)
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || err.message || `HTTP ${res.status}`);
+            }
+
+            const data = await res.json();
+            currentManifest = data;
+            const countBadge = document.getElementById('manifest-scripts-count');
+            if (countBadge) {
+                countBadge.textContent = `${selected.length} script${selected.length === 1 ? '' : 's'}`;
+            }
+
+            const statusText = document.getElementById('suite-status-text');
+            if (statusText) {
+                statusText.textContent = `Manifest saved with ${selected.length} scripts. Ready to execute.`;
+            }
+
+            const card = document.getElementById('manifest-config-card');
+            if (card) card.style.display = 'none';
+
+            alert(`Test Suite Manifest saved successfully with ${selected.length} test scripts.`);
+        } catch (e) {
+            alert('Failed to save manifest: ' + e.message);
+        } finally {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Manifest';
+            }
+        }
     }
 
     async function runFullTestSuite() {
@@ -1007,9 +1202,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const avgLatency = document.getElementById('suite-avg-latency');
 
         btn.disabled = true;
-        statusText.textContent = 'Initializing real-time execution from scripts/standard_tests.yaml...';
+        const manifestFile = currentManifest?.manifestPath || 'config/test_suite_manifest.yaml';
+        statusText.textContent = `Initializing execution from ${manifestFile}...`;
         progressBar.style.width = '3%';
         tbody.innerHTML = '';
+
+        // Add no-failures placeholder row
+        const initNoFailuresRow = document.createElement('tr');
+        initNoFailuresRow.id = 'suite-no-failures-row';
+        initNoFailuresRow.style.display = 'none';
+        initNoFailuresRow.innerHTML = `
+            <td colspan="8" class="text-center text-success py-4">
+                <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 500;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    No failed tests! All executed tests passed successfully.
+                </span>
+            </td>
+        `;
+        tbody.appendChild(initNoFailuresRow);
+        applySuiteFilter();
+
         countTotal.textContent = '0';
         countPassed.textContent = '0';
         countFailed.textContent = '0';
@@ -1025,7 +1237,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/test/run-all', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ scriptPath: 'scripts/standard_tests.yaml', endpoint: 'list', stream: true })
+                body: JSON.stringify({ stream: true })
             });
 
             if (!res.ok) {
@@ -1066,9 +1278,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (msg.type === 'start') {
                             totalTests = msg.total || 0;
                             countTotal.textContent = totalTests;
-                            statusText.textContent = `Executing test 1 of ${totalTests}...`;
+                            const srcLabel = msg.manifestName ? `${msg.manifestName} (${msg.totalScripts || ''} scripts)` : (msg.scriptName || 'manifest');
+                            statusText.textContent = `Executing test 1 of ${totalTests} from ${srcLabel}...`;
                         } else if (msg.type === 'step') {
                             const r = msg.result;
+                            if (msg.scriptFile && !r.scriptFile) {
+                                r.scriptFile = msg.scriptFile;
+                            }
                             stepCount++;
                             if (msg.total && !totalTests) {
                                 totalTests = msg.total;
@@ -1085,31 +1301,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             const pct = totalTests > 0 ? Math.round((stepCount / totalTests) * 100) : 50;
                             progressBar.style.width = `${pct}%`;
-                            statusText.textContent = `[${stepCount}/${totalTests || '?'}] Executing: ${r.testName || r.dataType}...`;
+                            const sFile = r.scriptFile ? ` [${r.scriptFile}]` : '';
+                            statusText.textContent = `[${stepCount}/${totalTests || '?'}] Executing: ${r.testName || r.dataType}${sFile}...`;
 
                             const tr = buildSuiteResultRow(r);
                             tbody.appendChild(tr);
+                            applySuiteFilter();
                             if (stepCount === 1) {
                                 applySuiteVisibleRows(document.getElementById('pref-suite-visible-rows')?.value || 12);
                             }
                         } else if (msg.type === 'complete') {
+                            applySuiteFilter();
                             progressBar.style.width = '100%';
                             const durStr = msg.durationMs ? ` in ${(msg.durationMs / 1000).toFixed(1)}s` : '';
-                            statusText.textContent = `Completed ${msg.total} tests from standard_tests.yaml (${msg.passed} passed, ${msg.failed} failed${durStr}).`;
+                            const srcName = msg.manifestName || (currentManifest ? currentManifest.name : 'manifest');
+                            statusText.textContent = `Completed ${msg.total} tests from ${srcName} (${msg.passed} passed, ${msg.failed} failed${durStr}).`;
                         }
                     }
                 }
 
                 progressBar.style.width = '100%';
                 if (stepCount > 0 && !statusText.textContent.startsWith('Completed')) {
-                    statusText.textContent = `Completed ${stepCount} tests from standard_tests.yaml (${passed} passed, ${failed} failed).`;
+                    statusText.textContent = `Completed ${stepCount} tests (${passed} passed, ${failed} failed).`;
                 }
             } else {
                 // Fallback for non-streaming environments
                 progressBar.style.width = '85%';
                 const results = await res.json();
                 renderSuiteResults(results);
-                statusText.textContent = `Completed ${results.length} tests from standard_tests.yaml.`;
+                statusText.textContent = `Completed ${results.length} tests from manifest.`;
             }
         } catch (e) {
             progressBar.style.width = '0%';
@@ -1139,12 +1359,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.getElementById('suite-results-tbody');
         tbody.innerHTML = '';
 
+        const noFailuresRow = document.createElement('tr');
+        noFailuresRow.id = 'suite-no-failures-row';
+        noFailuresRow.style.display = 'none';
+        noFailuresRow.innerHTML = `
+            <td colspan="8" class="text-center text-success py-4">
+                <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 500;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    No failed tests! All executed tests passed successfully.
+                </span>
+            </td>
+        `;
+        tbody.appendChild(noFailuresRow);
+
         results.forEach(r => {
             if (r.passed) passed++;
             else failed++;
             totalLatency += r.latencyMs;
             tbody.appendChild(buildSuiteResultRow(r));
         });
+        applySuiteFilter();
         applySuiteVisibleRows(document.getElementById('pref-suite-visible-rows')?.value || 12);
 
         document.getElementById('suite-count-total').textContent = total;
@@ -1247,6 +1481,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 visibleRowsEl.value = visibleRowsVal;
             }
             applySuiteVisibleRows(visibleRowsVal);
+
+            const filterFailedOnlyEl = document.getElementById('pref-suite-filter-failed-only');
+            const suiteFilterCheckbox = document.getElementById('suite-filter-failed-only');
+            const filterFailedVal = prefs.suiteFilterFailedOnly !== undefined ? !!prefs.suiteFilterFailedOnly : false;
+            if (filterFailedOnlyEl) filterFailedOnlyEl.checked = filterFailedVal;
+            if (suiteFilterCheckbox) suiteFilterCheckbox.checked = filterFailedVal;
+            applySuiteFilter();
             updateExplorerCurlPreview();
             if (dataTypes && dataTypes.length > 0) {
                 onExplorerDataTypeChanged();
@@ -1268,6 +1509,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const enableAllVal = enableAllEl ? enableAllEl.checked : false;
         const visibleRowsEl = document.getElementById('pref-suite-visible-rows');
         const visibleRowsVal = visibleRowsEl ? parseInt(visibleRowsEl.value, 10) || 12 : 12;
+        const filterFailedOnlyEl = document.getElementById('pref-suite-filter-failed-only');
+        const filterFailedOnlyVal = filterFailedOnlyEl ? filterFailedOnlyEl.checked : (document.getElementById('suite-filter-failed-only')?.checked || false);
 
         const prefs = {
             clientId: document.getElementById('pref-client-id').value,
@@ -1276,6 +1519,7 @@ document.addEventListener('DOMContentLoaded', () => {
             endpointUserId: syntax,
             defaultUserId: syntax,
             suiteVisibleRows: visibleRowsVal,
+            suiteFilterFailedOnly: filterFailedOnlyVal,
             redirect_uri: document.getElementById('pref-redirect-uri').value,
             redirectUri: document.getElementById('pref-redirect-uri').value,
             apiBaseUrl: document.getElementById('pref-api-base-url').value,
@@ -1297,8 +1541,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (currentPreferences) {
                     currentPreferences.enableAllEndpoints = enableAllVal;
                     currentPreferences.suiteVisibleRows = visibleRowsVal;
+                    currentPreferences.suiteFilterFailedOnly = filterFailedOnlyVal;
                 }
                 applySuiteVisibleRows(visibleRowsVal);
+                const suiteFilterCheckbox = document.getElementById('suite-filter-failed-only');
+                if (suiteFilterCheckbox) {
+                    suiteFilterCheckbox.checked = filterFailedOnlyVal;
+                    applySuiteFilter();
+                }
                 syncEndpointUserSyntax(syntax, false);
                 await loadAuthStatus();
                 await loadDataTypes();
@@ -1539,6 +1789,43 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('btn-run-script').addEventListener('click', executeSelectedScript);
         document.getElementById('preferences-form').addEventListener('submit', savePreferences);
 
+        const btnToggleManifest = document.getElementById('btn-toggle-manifest-config');
+        if (btnToggleManifest) {
+            btnToggleManifest.addEventListener('click', () => {
+                const card = document.getElementById('manifest-config-card');
+                if (card) {
+                    card.style.display = card.style.display === 'none' ? 'block' : 'none';
+                }
+            });
+        }
+
+        const btnCloseManifest = document.getElementById('btn-close-manifest');
+        if (btnCloseManifest) {
+            btnCloseManifest.addEventListener('click', () => {
+                const card = document.getElementById('manifest-config-card');
+                if (card) card.style.display = 'none';
+            });
+        }
+
+        const btnManifestSelectAll = document.getElementById('btn-manifest-select-all');
+        if (btnManifestSelectAll) {
+            btnManifestSelectAll.addEventListener('click', () => {
+                document.querySelectorAll('.manifest-script-checkbox').forEach(cb => cb.checked = true);
+            });
+        }
+
+        const btnManifestDeselectAll = document.getElementById('btn-manifest-deselect-all');
+        if (btnManifestDeselectAll) {
+            btnManifestDeselectAll.addEventListener('click', () => {
+                document.querySelectorAll('.manifest-script-checkbox').forEach(cb => cb.checked = false);
+            });
+        }
+
+        const btnSaveManifest = document.getElementById('btn-save-manifest');
+        if (btnSaveManifest) {
+            btnSaveManifest.addEventListener('click', saveManifestConfig);
+        }
+
         const epUserSelect = document.getElementById('pref-endpoint-user-id');
         if (epUserSelect) {
             epUserSelect.addEventListener('change', (e) => {
@@ -1550,6 +1837,37 @@ document.addEventListener('DOMContentLoaded', () => {
         if (visibleRowsInput) {
             visibleRowsInput.addEventListener('input', (e) => {
                 applySuiteVisibleRows(e.target.value);
+            });
+        }
+
+        const suiteFilterCheckbox = document.getElementById('suite-filter-failed-only');
+        if (suiteFilterCheckbox) {
+            suiteFilterCheckbox.addEventListener('change', () => {
+                applySuiteFilter();
+                const prefCheckbox = document.getElementById('pref-suite-filter-failed-only');
+                if (prefCheckbox) prefCheckbox.checked = suiteFilterCheckbox.checked;
+            });
+        }
+
+        const failedMetricCard = document.getElementById('suite-metric-card-failed');
+        if (failedMetricCard) {
+            failedMetricCard.addEventListener('click', () => {
+                if (suiteFilterCheckbox) {
+                    suiteFilterCheckbox.checked = !suiteFilterCheckbox.checked;
+                    applySuiteFilter();
+                    const prefCheckbox = document.getElementById('pref-suite-filter-failed-only');
+                    if (prefCheckbox) prefCheckbox.checked = suiteFilterCheckbox.checked;
+                }
+            });
+        }
+
+        const prefFilterCheckbox = document.getElementById('pref-suite-filter-failed-only');
+        if (prefFilterCheckbox) {
+            prefFilterCheckbox.addEventListener('change', () => {
+                if (suiteFilterCheckbox) {
+                    suiteFilterCheckbox.checked = prefFilterCheckbox.checked;
+                    applySuiteFilter();
+                }
             });
         }
 

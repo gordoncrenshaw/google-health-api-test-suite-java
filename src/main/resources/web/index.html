@@ -184,17 +184,47 @@
             <!-- TAB 3: FULL TEST SUITE RUNNER -->
             <section id="tab-suite" class="tab-pane">
                 <div class="card glass-card mb-4">
-                    <div class="card-header">
-                        <h2 class="card-title">Automated Google Health API Test Suite</h2>
-                        <span class="file-badge">scripts/standard_tests.yaml</span>
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <h2 class="card-title">Automated Google Health API Test Suite</h2>
+                            <span id="suite-manifest-badge" class="file-badge">config/test_suite_manifest.yaml</span>
+                        </div>
+                        <button id="btn-toggle-manifest-config" class="btn btn-secondary btn-sm" type="button">
+                            <svg class="btn-icon" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                            <span id="btn-toggle-manifest-text">Configure Manifest</span>
+                        </button>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted mb-4">Executes automated HTTP list queries and range validations across all supported data types defined in <code>scripts/standard_tests.yaml</code>.</p>
+                        <p class="text-muted mb-4">Executes automated test scripts defined in <code id="suite-manifest-path-label">config/test_suite_manifest.yaml</code> across all configured data types and endpoints.</p>
+
+                        <!-- Manifest Configuration Panel -->
+                        <div id="manifest-config-card" class="card glass-card mb-4" style="display: none; border-color: rgba(99, 102, 241, 0.4); background: rgba(15, 23, 42, 0.9);">
+                            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                <h3 class="card-title" style="font-size: 16px;">Test Suite Manifest Configuration</h3>
+                                <span class="pill-badge pill-cyan" id="manifest-scripts-count">0 scripts</span>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-3" style="font-size: 13px;">Select which test script files are executed when clicking <strong>Run Full Test Suite</strong>. Changes are saved directly to <code id="manifest-file-save-path">config/test_suite_manifest.yaml</code>.</p>
+                                <div id="manifest-scripts-checklist" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; max-height: 220px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.25); border-radius: 8px; border: 1px solid var(--border-color);" class="mb-3">
+                                    <!-- Populated dynamically via JS -->
+                                </div>
+                                <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                                    <div style="display: flex; gap: 8px;">
+                                        <button id="btn-manifest-select-all" class="btn btn-secondary btn-sm" type="button">Select All</button>
+                                        <button id="btn-manifest-deselect-all" class="btn btn-secondary btn-sm" type="button">Deselect All</button>
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button id="btn-save-manifest" class="btn btn-primary btn-sm" type="button">Save Manifest</button>
+                                        <button id="btn-close-manifest" class="btn btn-secondary btn-sm" type="button">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="suite-controls">
                             <button id="btn-run-full-suite" class="btn btn-primary btn-lg">
                                 <svg viewBox="0 0 24 24" class="btn-icon"><path d="M8 5v14l11-7z"/></svg>
-                                Run Full Test Suite (standard_tests.yaml)
+                                Run Full Test Suite
                             </button>
                             <span id="suite-status-text" class="text-muted ml-3">Ready to execute.</span>
                         </div>
@@ -214,7 +244,7 @@
                                 <div class="metric-card-label text-success">Passed</div>
                                 <div id="suite-count-passed" class="metric-card-value font-mono text-success">0</div>
                             </div>
-                            <div class="metric-card border-danger">
+                            <div class="metric-card border-danger" id="suite-metric-card-failed" style="cursor: pointer;" title="Click to toggle Show Failed Only filter">
                                 <div class="metric-card-label text-danger">Failed</div>
                                 <div id="suite-count-failed" class="metric-card-value font-mono text-danger">0</div>
                             </div>
@@ -228,9 +258,18 @@
 
                 <!-- Results Table -->
                 <div class="card glass-card">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                        <h3 class="card-title">Test Execution Results</h3>
-                        <span id="suite-visible-rows-badge" class="file-badge">Scrollable (12 rows)</span>
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <h3 class="card-title">Test Execution Results</h3>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            <label class="filter-checkbox-label" for="suite-filter-failed-only" title="Filter and display only failed tests in real-time">
+                                <input type="checkbox" id="suite-filter-failed-only">
+                                <span>Show Failed Only</span>
+                                <span id="suite-filter-failed-badge" class="pill-badge pill-danger" style="display: none; padding: 1px 7px; font-size: 11px;">0</span>
+                            </label>
+                            <span id="suite-visible-rows-badge" class="file-badge">Scrollable (12 rows)</span>
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive suite-scroll-box" id="suite-table-container">
@@ -238,6 +277,7 @@
                                 <thead>
                                     <tr>
                                         <th>Result</th>
+                                        <th>Script</th>
                                         <th>Data Type</th>
                                         <th>Test</th>
                                         <th>HTTP Status</th>
@@ -247,8 +287,16 @@
                                     </tr>
                                 </thead>
                                 <tbody id="suite-results-tbody">
-                                    <tr>
-                                        <td colspan="7" class="text-center text-muted py-4">No test run executed yet. Click "Run Full Test Suite (standard_tests.yaml)" to start.</td>
+                                    <tr id="suite-empty-row">
+                                        <td colspan="8" class="text-center text-muted py-4">No test run executed yet. Click "Run Full Test Suite" to start.</td>
+                                    </tr>
+                                    <tr id="suite-no-failures-row" style="display: none;">
+                                        <td colspan="8" class="text-center text-success py-4">
+                                            <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 500;">
+                                                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                                No failed tests! All executed tests passed successfully.
+                                            </span>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -690,6 +738,13 @@
                                 <label class="checkbox-container">
                                     <input type="checkbox" id="pref-enable-all-endpoints">
                                     <span class="checkbox-label"><strong>Enable All Endpoints for Each Datatype</strong> (The test suite will enable all endpoints no matter if they are supported by the datatype or not)</span>
+                                </label>
+                            </div>
+
+                            <div class="form-group mt-2">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="pref-suite-filter-failed-only">
+                                    <span class="checkbox-label"><strong>Filter and Show Only Failed Tests by Default</strong> (Automatically filters the Test Execution Results table to display only failed tests)</span>
                                 </label>
                             </div>
 
