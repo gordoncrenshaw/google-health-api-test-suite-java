@@ -1,10 +1,10 @@
-# Quick smoke test for verifying Google Health API basic connectivity
-name: "Google Health API Smoke Test"
-description: "Quick sanity checks on all endpoints"
+# Google Health API Swim Lengths Data Standard Tests
+name: "Google Health API Swim Lengths Data Tests"
+description: "Standard tests for Swim Lengths Data datatype"
+userId: me # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:
-  # Datatype Tests
   - name: "Standard: Swim Lengths Data List (Default)"
     action: "list"
     dataType: "swim-lengths-data"

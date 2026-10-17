@@ -160,66 +160,59 @@ public class SuiteExecutionEngine {
             switch (action) {
                 case "list", "list_datapoints" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
-                    response = apiClient.listDataPoints(def, step.getQueryParams());
+                    response = apiClient.listDataPoints(def, step.getQueryParams(), step.getUserId());
                 }
                 case "get", "get_datapoint" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
                     String dpId = step.getDataPointId() != null ? step.getDataPointId() : "default-dp";
-                    response = apiClient.getDataPoint(def, dpId);
+                    response = apiClient.getDataPoint(def, dpId, step.getUserId());
                 }
                 case "create", "create_datapoint" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
-                    response = apiClient.createDataPoint(def, step.getBody());
+                    response = apiClient.createDataPoint(def, step.getBody(), step.getUserId());
                 }
                 case "rollup", "roll_up" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
-                    response = apiClient.rollUpDataPoints(def, step.getBody());
+                    response = apiClient.rollUpDataPoints(def, step.getBody(), step.getUserId());
                 }
                 case "dailyrollup", "daily_rollup" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
-                    response = apiClient.dailyRollUpDataPoints(def, step.getBody());
+                    response = apiClient.dailyRollUpDataPoints(def, step.getBody(), step.getUserId());
                 }
                 case "reconcile" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
-                    response = apiClient.reconcileDataPoints(def, step.getQueryParams());
+                    response = apiClient.reconcileDataPoints(def, step.getQueryParams(), step.getUserId());
                 }
                 case "exportexercisetcx", "export_exercise_tcx" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
                     String dpId = step.getDataPointId() != null ? step.getDataPointId() : "sample-dp-1";
-                    response = apiClient.exportExerciseTcx(def, dpId);
+                    response = apiClient.exportExerciseTcx(def, dpId, step.getUserId());
                 }
                 case "patch", "patch_datapoint" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
                     String dpId = step.getDataPointId() != null ? step.getDataPointId() : "sample-dp-1";
-                    response = apiClient.patchDataPoint(def, dpId, step.getBody());
+                    response = apiClient.patchDataPoint(def, dpId, step.getBody(), step.getUserId());
                 }
-                case "profile", "get_profile" -> {
-                    String targetUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty() && !"auto".equalsIgnoreCase(step.getUserId())) ? step.getUserId() : null;
-                    response = apiClient.getProfile(targetUser);
+                case "profile", "get_profile", "getprofile" -> {
+                    response = apiClient.getProfile(step.getUserId());
                 }
-                case "update_profile", "patch_profile" -> {
-                    String targetUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty() && !"auto".equalsIgnoreCase(step.getUserId())) ? step.getUserId() : null;
-                    response = apiClient.updateProfile(targetUser, step.getBody());
+                case "update_profile", "patch_profile", "updateprofile", "patchprofile" -> {
+                    response = apiClient.updateProfile(step.getUserId(), step.getBody());
                 }
-                case "irn_profile", "get_irn_profile", "irnprofile" -> {
-                    String targetUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty() && !"auto".equalsIgnoreCase(step.getUserId())) ? step.getUserId() : null;
-                    response = apiClient.getIrnProfile(targetUser);
+                case "irn_profile", "get_irn_profile", "irnprofile", "getirnprofile" -> {
+                    response = apiClient.getIrnProfile(step.getUserId());
                 }
-                case "settings", "get_settings" -> {
-                    String targetUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty() && !"auto".equalsIgnoreCase(step.getUserId())) ? step.getUserId() : null;
-                    response = apiClient.getSettings(targetUser);
+                case "settings", "get_settings", "getsettings" -> {
+                    response = apiClient.getSettings(step.getUserId());
                 }
-                case "update_settings", "patch_settings" -> {
-                    String targetUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty() && !"auto".equalsIgnoreCase(step.getUserId())) ? step.getUserId() : null;
-                    response = apiClient.updateSettings(targetUser, step.getBody());
+                case "update_settings", "patch_settings", "updatesettings", "patchsettings" -> {
+                    response = apiClient.updateSettings(step.getUserId(), step.getBody());
                 }
-                case "devices", "list_devices" -> {
-                    String targetUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty() && !"auto".equalsIgnoreCase(step.getUserId())) ? step.getUserId() : null;
-                    response = apiClient.listPairedDevices(targetUser);
+                case "devices", "list_devices", "listdevices", "get_devices", "getdevices" -> {
+                    response = apiClient.listPairedDevices(step.getUserId());
                 }
-                case "identity", "get_identity" -> {
-                    String targetUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty() && !"auto".equalsIgnoreCase(step.getUserId())) ? step.getUserId() : null;
-                    response = apiClient.getIdentity(targetUser);
+                case "identity", "get_identity", "getidentity" -> {
+                    response = apiClient.getIdentity(step.getUserId());
                 }
                 case "check_auth" -> {
                     boolean hasTokens = configManager.getUserAuthorization().hasAccessToken() ||

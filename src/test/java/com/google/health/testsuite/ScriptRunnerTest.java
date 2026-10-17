@@ -1,5 +1,14 @@
 package com.google.health.testsuite;
 
+import java.io.File;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import com.google.health.testsuite.auth.OAuthService;
 import com.google.health.testsuite.client.HealthApiClient;
 import com.google.health.testsuite.config.ConfigManager;
@@ -7,12 +16,6 @@ import com.google.health.testsuite.config.DataTypeRegistry;
 import com.google.health.testsuite.config.Preferences;
 import com.google.health.testsuite.runner.ScriptRunner;
 import com.google.health.testsuite.runner.SuiteExecutionEngine;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.io.File;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class ScriptRunnerTest {
 
@@ -65,6 +68,84 @@ public class ScriptRunnerTest {
         assertFalse(results.isEmpty(), "Should have test steps");
         assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
                 "All standard tests should pass");
+    }
+
+    @Test
+    void testRunStandardUserTestsScript() throws Exception {
+        File scriptFile = new File("scripts/standard_tests_user.yaml");
+        assertTrue(scriptFile.exists(), "standard_tests_user.yaml script must exist");
+
+        int exitCode = runner.runScript(scriptFile);
+        assertEquals(0, exitCode, "standard_tests_user.yaml should pass with exit code 0 in mock mode");
+
+        var results = runner.executeScript(scriptFile);
+        assertFalse(results.isEmpty(), "Should have test steps");
+        assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
+                "All user standard tests should pass");
+        assertEquals(4, results.size(), "Should have executed 4 test steps for userId: me");
+    }
+
+    @Test
+    void testRunStandardPairedDevicesScript() throws Exception {
+        File scriptFile = new File("scripts/standard_tests_pairedDevices.yaml");
+        assertTrue(scriptFile.exists(), "standard_tests_pairedDevices.yaml script must exist");
+
+        int exitCode = runner.runScript(scriptFile);
+        assertEquals(0, exitCode, "standard_tests_pairedDevices.yaml should pass with exit code 0 in mock mode");
+
+        var results = runner.executeScript(scriptFile);
+        assertEquals(1, results.size());
+        assertTrue(results.get(0).isPassed());
+    }
+
+    @Test
+    void testScriptWithUserIdBothExpandsSteps() throws Exception {
+        File tempScript = File.createTempFile("both_users_test", ".yaml");
+        tempScript.deleteOnExit();
+
+        String yaml = """
+            name: "Both Users Test"
+            userId: both
+            stopOnError: false
+            steps:
+              - name: "User Profile Test"
+                action: "getProfile"
+                assertStatus: [200]
+              - name: "User Settings Test"
+                action: "getSettings"
+                assertStatus: [200]
+            """;
+        java.nio.file.Files.writeString(tempScript.toPath(), yaml);
+
+        var results = runner.executeScript(tempScript);
+        assertEquals(4, results.size(), "2 steps with userId: both must expand to 4 executed steps");
+        assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed));
+
+        assertEquals("User Profile Test (me)", results.get(0).getTestName());
+        assertEquals("User Profile Test (healthUserId)", results.get(1).getTestName());
+        assertEquals("User Settings Test (me)", results.get(2).getTestName());
+        assertEquals("User Settings Test (healthUserId)", results.get(3).getTestName());
+    }
+
+    @Test
+    void testScriptWithUserIdHealthUserId() throws Exception {
+        File tempScript = File.createTempFile("health_user_test", ".yaml");
+        tempScript.deleteOnExit();
+
+        String yaml = """
+            name: "Health User ID Test"
+            userId: healthUserId
+            stopOnError: false
+            steps:
+              - name: "User Identity Test"
+                action: "getIdentity"
+                assertStatus: [200]
+            """;
+        java.nio.file.Files.writeString(tempScript.toPath(), yaml);
+
+        var results = runner.executeScript(tempScript);
+        assertEquals(1, results.size());
+        assertTrue(results.get(0).isPassed());
     }
 
     @Test

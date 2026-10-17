@@ -162,4 +162,25 @@ public class TestStep {
     public void setAssertContains(List<String> assertContains) {
         this.assertContains = assertContains != null ? assertContains : new ArrayList<>();
     }
+
+    public TestStep copy() {
+        TestStep copy = new TestStep();
+        copy.setName(this.name);
+        copy.setAction(this.action);
+        copy.setDataType(this.dataType);
+        copy.setDataPointId(this.dataPointId);
+        copy.setUserId(this.userId);
+        if (this.queryParams != null) {
+            copy.setQueryParams(new HashMap<>(this.queryParams));
+        }
+        copy.setBody(this.body);
+        if (this.assertStatus != null) {
+            copy.setAssertStatus(new ArrayList<>(this.assertStatus));
+        }
+        copy.setValidateRange(this.validateRange);
+        if (this.assertContains != null) {
+            copy.setAssertContains(new ArrayList<>(this.assertContains));
+        }
+        return copy;
+    }
 }

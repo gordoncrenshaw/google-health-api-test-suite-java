@@ -2,6 +2,8 @@ name: Google Health API Full Test Suite
 description: Master test suite executing data type and endpoint test scripts
 scripts:
   - scripts/standard_tests_auth.yaml
+  - scripts/standard_tests_pairedDevices.yaml
+  - scripts/standard_tests_user.yaml
   - scripts/standard_tests-activeEnergyBurned.yaml
   - scripts/standard_tests-activeMinutes.yaml
   - scripts/standard_tests-activeZoneMinutes.yaml

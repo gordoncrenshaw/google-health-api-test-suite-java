@@ -1,0 +1,19 @@
+# ==============================================================================
+# Google Health API Test Suite - Paired Devices Standard Tests
+# ==============================================================================
+# Tests user paired devices endpoints:
+#   - listDevices (GET /v4/users/{userId}/pairedDevices)
+# ==============================================================================
+
+name: "Google Health API Paired Devices Tests"
+description: "Standard tests for paired devices endpoints"
+userId: me # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ----------------------------------------------------------------------------
+  # 1. Paired Devices (GET /v4/users/{userId}/pairedDevices)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: User Paired Devices"
+    action: "devices"
+    assertStatus: [200]

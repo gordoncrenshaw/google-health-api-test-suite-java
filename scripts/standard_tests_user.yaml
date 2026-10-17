@@ -1,0 +1,43 @@
+# ==============================================================================
+# Google Health API Test Suite - User Endpoints Standard Tests
+# ==============================================================================
+# Tests user-level endpoints:
+#   - getProfile (GET /v4/users/{userId}/profile)
+#   - getIdentity (GET /v4/users/{userId}/identity)
+#   - getIrnProfile (GET /v4/users/{userId}/irnProfile)
+#   - getSettings (GET /v4/users/{userId}/settings)
+# ==============================================================================
+
+name: "Google Health API User Endpoints Standard Tests"
+description: "Standard tests for user endpoints"
+userId: me # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ----------------------------------------------------------------------------
+  # 1. User Profile (GET /v4/users/{userId}/profile)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: User Profile"
+    action: "getProfile"
+    assertStatus: [200]
+
+  # ----------------------------------------------------------------------------
+  # 2. User Identity (GET /v4/users/{userId}/identity)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: User Identity"
+    action: "getIdentity"
+    assertStatus: [200]
+
+  # ----------------------------------------------------------------------------
+  # 3. Irregular Rhythm Notifications (IRN) Profile (GET /v4/users/{userId}/irnProfile)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: User IRN Profile"
+    action: "getIrnProfile"
+    assertStatus: [200]
+
+  # ----------------------------------------------------------------------------
+  # 4. User Settings (GET /v4/users/{userId}/settings)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: User Settings"
+    action: "getSettings"
+    assertStatus: [200]

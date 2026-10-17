@@ -1,11 +1,10 @@
-# Quick smoke test for verifying Google Health API basic connectivity
-name: "Google Health API Smoke Test"
-description: "Quick sanity checks on all endpoints"
+# Google Health API Active Zone Minutes Standard Tests
+name: "Google Health API Active Zone Minutes Tests"
+description: "Standard tests for Active Zone Minutes datatype"
+userId: me # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:
-
-  # Datatype Tests
   - name: "Standard: Active Zone Minutes List (Default)"
     action: "list"
     dataType: "active-zone-minutes"

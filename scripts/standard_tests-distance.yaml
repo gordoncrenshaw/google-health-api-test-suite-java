@@ -1,10 +1,10 @@
-# Quick smoke test for verifying Google Health API basic connectivity
-name: "Google Health API Smoke Test"
-description: "Quick sanity checks on all endpoints"
+# Google Health API Distance Standard Tests
+name: "Google Health API Distance Tests"
+description: "Standard tests for Distance datatype"
+userId: me # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:
-  # Datatype Tests
   - name: "Standard: Distance List (Default)"
     action: "list"
     dataType: "distance"

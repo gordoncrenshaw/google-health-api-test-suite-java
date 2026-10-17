@@ -624,7 +624,7 @@ public class RestApiHandler implements HttpHandler {
                 return;
             }
 
-            int totalSteps = script.getSteps().size();
+            int totalSteps = script.getExpandedSteps().size();
             ObjectNode startNode = jsonMapper.createObjectNode();
             startNode.put("type", "start");
             startNode.put("scriptName", script.getName());

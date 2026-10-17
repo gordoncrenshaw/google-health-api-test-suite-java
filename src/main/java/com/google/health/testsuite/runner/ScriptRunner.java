@@ -58,12 +58,13 @@ public class ScriptRunner {
             script = yamlMapper.readValue(scriptFile, TestSuiteScript.class);
         }
 
-        int total = script.getSteps().size();
+        List<TestStep> steps = script.getExpandedSteps();
+        int total = steps.size();
         logger.info("Executing test script: {} ({} steps)", script.getName(), total);
         List<TestResult> results = new ArrayList<>();
 
         for (int i = 0; i < total; i++) {
-            TestStep step = script.getSteps().get(i);
+            TestStep step = steps.get(i);
             TestResult result = engine.executeStep(step);
             result.setScriptFile(scriptFile.getName());
             results.add(result);
@@ -146,7 +147,7 @@ public class ScriptRunner {
                         : yamlMapper.readValue(f, TestSuiteScript.class);
                 loadedScripts.add(s);
                 validScriptFiles.add(f);
-                totalStepsAcrossAll += s.getSteps().size();
+                totalStepsAcrossAll += s.getExpandedSteps().size();
             } catch (Exception e) {
                 logger.error("Failed to parse script file {}: {}", f.getName(), e.getMessage());
             }
@@ -161,9 +162,10 @@ public class ScriptRunner {
         for (int sIdx = 0; sIdx < loadedScripts.size(); sIdx++) {
             TestSuiteScript script = loadedScripts.get(sIdx);
             File sFile = validScriptFiles.get(sIdx);
+            List<TestStep> steps = script.getExpandedSteps();
 
-            for (int i = 0; i < script.getSteps().size(); i++) {
-                TestStep step = script.getSteps().get(i);
+            for (int i = 0; i < steps.size(); i++) {
+                TestStep step = steps.get(i);
                 globalIndex++;
                 TestResult result = engine.executeStep(step);
                 result.setScriptFile(sFile.getName());
@@ -297,8 +299,9 @@ public class ScriptRunner {
         if (script.getDescription() != null && !script.getDescription().isEmpty()) {
             System.out.println(" Description: " + script.getDescription());
         }
+        List<TestStep> steps = script.getExpandedSteps();
         System.out.println(" Script File: " + scriptFile.getAbsolutePath());
-        System.out.println(" Steps:       " + script.getSteps().size());
+        System.out.println(" Steps:       " + steps.size());
         System.out.println("================================================================================");
 
         List<TestResult> results = new ArrayList<>();
@@ -309,9 +312,9 @@ public class ScriptRunner {
         int passedCount = 0;
         int failedCount = 0;
 
-        for (int i = 0; i < script.getSteps().size(); i++) {
-            TestStep step = script.getSteps().get(i);
-            System.out.printf("[%2d/%2d] Running: %-35s ... ", (i + 1), script.getSteps().size(), step.getName());
+        for (int i = 0; i < steps.size(); i++) {
+            TestStep step = steps.get(i);
+            System.out.printf("[%2d/%2d] Running: %-35s ... ", (i + 1), steps.size(), step.getName());
 
             TestResult result = engine.executeStep(step);
             result.setScriptFile(scriptFile.getName());
@@ -351,7 +354,7 @@ public class ScriptRunner {
         System.out.println("================================================================================");
 
         int exitCode = failedCount == 0 ? 0 : 1;
-        return new ScriptRunResult(exitCode, script.getSteps().size(), passedCount, failedCount,
+        return new ScriptRunResult(exitCode, steps.size(), passedCount, failedCount,
                 totalDuration, results, failedTests, failedTestNames, null);
     }
 
@@ -413,7 +416,7 @@ public class ScriptRunner {
                         : yamlMapper.readValue(f, TestSuiteScript.class);
                 loadedScripts.add(s);
                 validScriptFiles.add(f);
-                totalSteps += s.getSteps().size();
+                totalSteps += s.getExpandedSteps().size();
             } catch (Exception e) {
                 System.err.println("Error parsing script " + f.getName() + ": " + e.getMessage());
             }
@@ -431,11 +434,12 @@ public class ScriptRunner {
         for (int sIdx = 0; sIdx < loadedScripts.size(); sIdx++) {
             TestSuiteScript script = loadedScripts.get(sIdx);
             File sFile = validScriptFiles.get(sIdx);
+            List<TestStep> steps = script.getExpandedSteps();
 
-            System.out.println("\n--- [" + (sIdx + 1) + "/" + loadedScripts.size() + "] Script: " + sFile.getName() + " (" + script.getSteps().size() + " steps) ---");
+            System.out.println("\n--- [" + (sIdx + 1) + "/" + loadedScripts.size() + "] Script: " + sFile.getName() + " (" + steps.size() + " steps) ---");
 
-            for (int i = 0; i < script.getSteps().size(); i++) {
-                TestStep step = script.getSteps().get(i);
+            for (int i = 0; i < steps.size(); i++) {
+                TestStep step = steps.get(i);
                 globalIndex++;
                 System.out.printf("[%2d/%2d] Running: %-35s ... ", globalIndex, totalSteps, step.getName());
 

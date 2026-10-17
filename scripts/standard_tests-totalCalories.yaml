@@ -1,10 +1,10 @@
-# Quick smoke test for verifying Google Health API basic connectivity
-name: "Google Health API Smoke Test"
-description: "Quick sanity checks on all endpoints"
+# Google Health API Total Calories Standard Tests
+name: "Google Health API Total Calories Tests"
+description: "Standard tests for Total Calories datatype"
+userId: me # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:
-  # Datatype Tests
   - name: "Standard: Total Calories DailyRollUp (Default)"
     action: "dailyrollup"
     dataType: "total-calories"

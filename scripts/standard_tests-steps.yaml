@@ -1,10 +1,10 @@
-# Quick smoke test for verifying Google Health API basic connectivity
-name: "Google Health API Smoke Test"
-description: "Quick sanity checks on all endpoints"
+# Google Health API Steps Standard Tests
+name: "Google Health API Steps Tests"
+description: "Standard tests for Steps datatype"
+userId: me # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:
-  # Datatype Tests
   - name: "Standard: Steps List (Default)"
     action: "list"
     dataType: "steps"
