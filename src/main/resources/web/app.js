@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentPreferences = null;
     let availableScopes = [];
     let selectedScopes = new Set(); // Default: all scopes deselected
+    let editingDataTypeName = null;
 
     // Initialize UI
     initTabs();
@@ -877,7 +878,215 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function toggleDataTypePanel(show) {
+        const card = document.getElementById('add-datatype-card');
+        const toggleBtnText = document.getElementById('btn-toggle-add-datatype-text');
+        if (!card) return;
+        const isVisible = card.style.display !== 'none';
+        const willShow = (typeof show === 'boolean') ? show : !isVisible;
+        card.style.display = willShow ? 'block' : 'none';
+        if (toggleBtnText) {
+            toggleBtnText.textContent = willShow ? '✕ Close Setting' : '+ Add Data Type Setting';
+        }
+        if (willShow) {
+            populateDataTypeScopeDropdowns();
+            const nameInput = document.getElementById('new-dt-name');
+            if (nameInput && !nameInput.disabled) nameInput.focus();
+        }
+    }
+
+    function showDataTypeFeedback(msg, type) {
+        const feedbackEl = document.getElementById('add-datatype-feedback');
+        if (!feedbackEl) return;
+        feedbackEl.textContent = msg;
+        feedbackEl.className = 'pill-badge ' + (type === 'success' ? 'pill-success' : (type === 'warn' ? 'pill-amber' : 'pill-danger'));
+        feedbackEl.style.display = 'inline-block';
+    }
+
+    function resetDataTypeForm() {
+        editingDataTypeName = null;
+        const titleEl = document.getElementById('datatype-form-title');
+        const badgeEl = document.getElementById('datatype-form-badge');
+        const nameInput = document.getElementById('new-dt-name');
+        const nameHelp = document.getElementById('new-dt-name-help');
+        const saveBtnText = document.getElementById('btn-save-datatype-text');
+        const feedbackEl = document.getElementById('add-datatype-feedback');
+
+        if (titleEl) titleEl.textContent = 'Add Additional Data Type Setting';
+        if (badgeEl) {
+            badgeEl.textContent = 'New Entry';
+            badgeEl.className = 'pill-badge pill-cyan';
+        }
+        if (nameInput) {
+            nameInput.disabled = false;
+            nameInput.value = '';
+        }
+        if (nameHelp) {
+            nameHelp.textContent = 'Used in API URL path segment';
+            nameHelp.className = 'text-muted';
+        }
+        if (saveBtnText) saveBtnText.textContent = 'Save & Register Data Type';
+        if (feedbackEl) feedbackEl.style.display = 'none';
+
+        const dispName = document.getElementById('new-dt-display-name');
+        if (dispName) dispName.value = '';
+        const ver = document.getElementById('new-dt-version');
+        if (ver) ver.value = 'v4';
+        const unit = document.getElementById('new-dt-unit');
+        if (unit) unit.value = '';
+        const minVal = document.getElementById('new-dt-min-val');
+        if (minVal) minVal.value = '';
+        const maxVal = document.getElementById('new-dt-max-val');
+        if (maxVal) maxVal.value = '';
+        const scope = document.getElementById('new-dt-scope');
+        if (scope) scope.value = '';
+        const writeScope = document.getElementById('new-dt-write-scope');
+        if (writeScope) writeScope.value = '';
+        const filterParam = document.getElementById('new-dt-filter-param');
+        if (filterParam) filterParam.value = '';
+        const sampleField = document.getElementById('new-dt-sample-field');
+        if (sampleField) sampleField.value = '';
+        const webhooks = document.getElementById('new-dt-webhooks');
+        if (webhooks) webhooks.checked = false;
+
+        ['ep-list', 'ep-get', 'ep-create', 'ep-batchdelete'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.checked = true;
+        });
+        ['ep-rollup', 'ep-dailyrollup', 'ep-exportexercisetcx', 'ep-reconcile', 'ep-patch'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.checked = false;
+        });
+    }
+
+    function startEditDataType(name) {
+        if (!dataTypes) return;
+        const dt = dataTypes.find(d => d.name && d.name.toLowerCase() === name.toLowerCase());
+        if (!dt) {
+            alert(`Data type '${name}' not found.`);
+            return;
+        }
+
+        editingDataTypeName = dt.name;
+        const titleEl = document.getElementById('datatype-form-title');
+        const badgeEl = document.getElementById('datatype-form-badge');
+        const nameInput = document.getElementById('new-dt-name');
+        const nameHelp = document.getElementById('new-dt-name-help');
+        const saveBtnText = document.getElementById('btn-save-datatype-text');
+        const feedbackEl = document.getElementById('add-datatype-feedback');
+        const card = document.getElementById('add-datatype-card');
+        const toggleBtnText = document.getElementById('btn-toggle-add-datatype-text');
+
+        if (titleEl) titleEl.textContent = `Edit Data Type: ${dt.name}`;
+        if (badgeEl) {
+            badgeEl.textContent = 'Editing';
+            badgeEl.className = 'pill-badge pill-amber';
+        }
+        if (nameInput) {
+            nameInput.value = dt.name;
+            nameInput.disabled = true;
+        }
+        if (nameHelp) {
+            nameHelp.textContent = 'Identifier cannot be modified in edit mode';
+            nameHelp.className = 'text-warning';
+        }
+        if (saveBtnText) saveBtnText.textContent = 'Save Changes';
+        if (feedbackEl) feedbackEl.style.display = 'none';
+
+        const dispName = document.getElementById('new-dt-display-name');
+        if (dispName) dispName.value = dt.displayName || '';
+        const ver = document.getElementById('new-dt-version');
+        if (ver) ver.value = dt.endpointVersion || 'v4';
+        const unit = document.getElementById('new-dt-unit');
+        if (unit) unit.value = dt.unit || '';
+        const minVal = document.getElementById('new-dt-min-val');
+        if (minVal) minVal.value = (dt.minValue !== null && dt.minValue !== undefined) ? dt.minValue : '';
+        const maxVal = document.getElementById('new-dt-max-val');
+        if (maxVal) maxVal.value = (dt.maxValue !== null && dt.maxValue !== undefined) ? dt.maxValue : '';
+
+        populateDataTypeScopeDropdowns();
+        const readSelect = document.getElementById('new-dt-scope');
+        const writeSelect = document.getElementById('new-dt-write-scope');
+        if (readSelect) readSelect.value = dt.scopeRequired || '';
+        if (writeSelect) writeSelect.value = dt.writeScopeRequired || '';
+
+        const filterParam = document.getElementById('new-dt-filter-param');
+        if (filterParam) filterParam.value = dt.filterParameterName || '';
+        const sampleField = document.getElementById('new-dt-sample-field');
+        if (sampleField) sampleField.value = dt.sampleValueField || '';
+        const webhooks = document.getElementById('new-dt-webhooks');
+        if (webhooks) webhooks.checked = !!dt.webhooksSupported;
+
+        const epMap = dt.endpointsSupported || {};
+        const epCheckboxes = {
+            'ep-list': 'list',
+            'ep-get': 'get',
+            'ep-create': 'create',
+            'ep-batchdelete': 'batchDelete',
+            'ep-rollup': 'rollUp',
+            'ep-dailyrollup': 'dailyRollUp',
+            'ep-exportexercisetcx': 'exportExerciseTcx',
+            'ep-reconcile': 'reconcile',
+            'ep-patch': 'patch'
+        };
+        for (const [chkId, epKey] of Object.entries(epCheckboxes)) {
+            const chk = document.getElementById(chkId);
+            if (chk) {
+                if (Array.isArray(epMap)) {
+                    chk.checked = epMap.includes(epKey);
+                } else if (typeof epMap === 'object') {
+                    chk.checked = !!(epMap[epKey] === true || epMap[epKey] === 'true');
+                } else {
+                    chk.checked = false;
+                }
+            }
+        }
+
+        if (card) card.style.display = 'block';
+        if (toggleBtnText) toggleBtnText.textContent = '✕ Close Setting';
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (dispName) dispName.focus();
+    }
+
+    async function promptDeleteDataType(name) {
+        if (!name) return;
+        const confirmDelete = window.confirm(
+            `Are you sure you want to delete data type '${name}'?\n\nThis will permanently remove the data type and its definitions from config/datatypes.yaml.`
+        );
+        if (!confirmDelete) return;
+
+        try {
+            const res = await fetch(`/api/datatypes?name=${encodeURIComponent(name)}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                if (editingDataTypeName && editingDataTypeName.toLowerCase() === name.toLowerCase()) {
+                    resetDataTypeForm();
+                    const card = document.getElementById('add-datatype-card');
+                    const toggleBtnText = document.getElementById('btn-toggle-add-datatype-text');
+                    if (card) card.style.display = 'none';
+                    if (toggleBtnText) toggleBtnText.textContent = '+ Add Data Type Setting';
+                }
+                await loadDataTypes();
+                alert(`✓ Data type '${name}' was successfully deleted.`);
+            } else {
+                alert(`Failed to delete data type: ${data.error || data.message || 'Unknown error'}`);
+            }
+        } catch (e) {
+            alert(`Network error while deleting data type: ${e.message}`);
+        }
+    }
+
     function populateDataTypesTable(types) {
+        const count = (types || []).length;
+        const countBadge = document.getElementById('datatypes-count-badge');
+        if (countBadge) countBadge.textContent = `${count} Registered`;
+        const countText = document.getElementById('datatypes-count-text');
+        if (countText) countText.textContent = `${count} total registered`;
+        const tableCount = document.getElementById('datatypes-table-count');
+        if (tableCount) tableCount.textContent = count;
+
         const tbody = document.getElementById('datatypes-tbody');
         tbody.innerHTML = '';
         const sortedTypes = (types || []).slice().sort((a, b) => {
@@ -906,15 +1115,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 : '<span class="text-muted">None</span>';
 
             tr.innerHTML = `
-                <td><strong>${dt.name}</strong></td>
-                <td>${dt.displayName}</td>
-                <td><span class="pill-badge pill-cyan font-mono">${dt.endpointVersion || 'v4'}</span></td>
-                <td><span class="font-mono">${dt.unit || '-'}</span></td>
+                <td><strong>${escapeHtml(dt.name)}</strong></td>
+                <td>${escapeHtml(dt.displayName)}</td>
+                <td><span class="pill-badge pill-cyan font-mono">${escapeHtml(dt.endpointVersion || 'v4')}</span></td>
+                <td><span class="font-mono">${escapeHtml(dt.unit || '-')}</span></td>
                 <td><span class="text-secondary">${endpointsHtml}</span></td>
                 <td><span class="pill-badge ${dt.webhooksSupported ? 'pill-success' : 'pill-neutral'}">${dt.webhooksSupported ? 'YES' : 'NO'}</span></td>
                 <td><span class="font-mono text-cyan">${rangeStr}</span></td>
+                <td style="text-align: right; white-space: nowrap;">
+                    <button type="button" class="btn btn-sm btn-edit-datatype" data-dt-name="${escapeHtml(dt.name)}" title="Edit Data Type '${escapeHtml(dt.name)}'" style="padding: 4px 8px; margin-right: 6px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; border-radius: 4px; cursor: pointer;">
+                        <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor; vertical-align: middle;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-delete-datatype" data-dt-name="${escapeHtml(dt.name)}" title="Delete Data Type '${escapeHtml(dt.name)}'" style="padding: 4px 8px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; border-radius: 4px; cursor: pointer;">
+                        <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor; vertical-align: middle;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                    </button>
+                </td>
             `;
             tbody.appendChild(tr);
+        });
+
+        tbody.querySelectorAll('.btn-edit-datatype').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const name = btn.getAttribute('data-dt-name');
+                if (name) startEditDataType(name);
+            });
+        });
+
+        tbody.querySelectorAll('.btn-delete-datatype').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const name = btn.getAttribute('data-dt-name');
+                if (name) promptDeleteDataType(name);
+            });
         });
     }
 
@@ -1928,27 +2161,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================================
     function initAddDataTypeSetting() {
         const toggleBtn = document.getElementById('btn-toggle-add-datatype');
-        const toggleBtnText = document.getElementById('btn-toggle-add-datatype-text');
         const card = document.getElementById('add-datatype-card');
         const cancelBtn = document.getElementById('btn-cancel-add-datatype');
         const saveBtn = document.getElementById('btn-save-datatype');
-        const feedbackEl = document.getElementById('add-datatype-feedback');
 
         if (!toggleBtn || !card) return;
-
-        function togglePanel(show) {
-            const isVisible = card.style.display !== 'none';
-            const willShow = (typeof show === 'boolean') ? show : !isVisible;
-            card.style.display = willShow ? 'block' : 'none';
-            if (toggleBtnText) {
-                toggleBtnText.textContent = willShow ? '✕ Close Setting' : '+ Add Data Type Setting';
-            }
-            if (willShow) {
-                populateDataTypeScopeDropdowns();
-                const nameInput = document.getElementById('new-dt-name');
-                if (nameInput) nameInput.focus();
-            }
-        }
 
         const readSelect = document.getElementById('new-dt-scope');
         const writeSelect = document.getElementById('new-dt-write-scope');
@@ -1967,8 +2184,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         populateDataTypeScopeDropdowns();
 
-        toggleBtn.addEventListener('click', () => togglePanel());
-        if (cancelBtn) cancelBtn.addEventListener('click', () => togglePanel(false));
+        toggleBtn.addEventListener('click', () => {
+            const isVisible = card.style.display !== 'none';
+            if (isVisible) {
+                resetDataTypeForm();
+                toggleDataTypePanel(false);
+            } else {
+                resetDataTypeForm();
+                toggleDataTypePanel(true);
+            }
+        });
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                resetDataTypeForm();
+                toggleDataTypePanel(false);
+            });
+        }
 
         if (saveBtn) {
             saveBtn.addEventListener('click', async () => {
@@ -1984,12 +2216,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const sampleFieldInput = document.getElementById('new-dt-sample-field');
                 const webhooksCheckbox = document.getElementById('new-dt-webhooks');
 
-                const name = nameInput.value.trim().toLowerCase();
+                const isEditing = !!editingDataTypeName;
+                const name = (isEditing ? editingDataTypeName : (nameInput.value || '')).trim().toLowerCase();
                 const displayName = displayNameInput.value.trim() || name;
                 const endpointVersion = versionInput.value.trim() || 'v4';
 
                 if (!name) {
-                    showFeedback('Data type identifier (name) is required.', 'danger');
+                    showDataTypeFeedback('Data type identifier (name) is required.', 'danger');
                     nameInput.focus();
                     return;
                 }
@@ -2022,48 +2255,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
 
                 saveBtn.disabled = true;
-                saveBtn.textContent = 'Saving...';
-                showFeedback('Saving data type to datatypes.yaml...', 'warn');
+                saveBtn.textContent = isEditing ? 'Updating...' : 'Saving...';
+                showDataTypeFeedback(isEditing ? `Updating data type '${name}'...` : 'Saving data type to datatypes.yaml...', 'warn');
 
                 try {
                     const res = await fetch('/api/datatypes', {
-                        method: 'POST',
+                        method: isEditing ? 'PUT' : 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
 
                     const resData = await res.json();
                     if (res.ok && resData.success) {
-                        showFeedback(`✓ Data type '${name}' registered successfully! Refreshing page...`, 'success');
-                        localStorage.setItem('activeTab', 'tab-datatypes');
-                        window.location.hash = '#tab-datatypes';
-
-                        // Refresh page so the new data type appears in the list
+                        showDataTypeFeedback(`✓ Data type '${name}' ${isEditing ? 'updated' : 'registered'} successfully!`, 'success');
+                        await loadDataTypes();
                         setTimeout(() => {
-                            window.location.reload();
-                        }, 750);
+                            resetDataTypeForm();
+                            toggleDataTypePanel(false);
+                        }, 900);
                     } else {
-                        showFeedback(resData.error || resData.message || 'Failed to register data type.', 'danger');
+                        showDataTypeFeedback(resData.error || resData.message || `Failed to ${isEditing ? 'update' : 'register'} data type.`, 'danger');
                     }
                 } catch (e) {
-                    showFeedback('Network error: ' + e.message, 'danger');
+                    showDataTypeFeedback('Network error: ' + e.message, 'danger');
                 } finally {
                     saveBtn.disabled = false;
                     saveBtn.innerHTML = `
                         <svg class="btn-icon" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
-                        Save & Register Data Type
+                        <span id="btn-save-datatype-text">${isEditing ? 'Save Changes' : 'Save & Register Data Type'}</span>
                     `;
                 }
             });
         }
-
-        function showFeedback(msg, type) {
-            if (!feedbackEl) return;
-            feedbackEl.textContent = msg;
-            feedbackEl.className = `pill-badge pill-${type}`;
-            feedbackEl.style.display = 'inline-block';
-        }
     }
+
 
     function populateDataTypeScopeDropdowns() {
         const readSelect = document.getElementById('new-dt-scope');

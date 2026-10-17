@@ -609,6 +609,39 @@ public final class AppVersion {
 
 ## 📋 Version History & Changelog
 
+### Version 1.1.0 (October 17, 2026)
+
+#### 🌟 New Features & API Enhancements (Closes #44)
+- **Edit & Update Data Types in Registry**:
+  - Added an **Edit** (pencil) action button to each data type row in the Google Health API Data Types Registry table.
+  - Clicking Edit seamlessly expands and loads the data type definition into the top configuration panel with the form title updating to `Edit Data Type: <name>` and badge `Editing`.
+  - **Locked Identifier Protection**: The Data Type Identifier (`name`) is rendered in a read-only / disabled state during edit mode with inline guidance (`Identifier cannot be modified in edit mode`) to prevent accidental breaking changes to existing test scripts.
+  - Form fields automatically pre-populate with current settings: display name, endpoint version, unit, minimum/maximum valid range, required read/write scopes, AIP-160 filter parameter, sample value field path, webhook support flag, and all supported REST operation checkboxes (`list`, `get`, `create`, `batchDelete`, `rollUp`, `dailyRollUp`, `exportExerciseTcx`, `reconcile`, `patch`).
+  - Action button toggles to **Save Changes** and sends `PUT /api/datatypes`, updating the in-memory registry and persisting modifications directly to `config/datatypes.yaml`.
+  - Added a **Cancel** button to instantly discard edits and reset the panel back to clean registration mode.
+- **Delete Data Types from Registry**:
+  - Added a **Delete** (trashcan) action button with red styling to each row in the Data Types Registry table.
+  - Clicking Delete presents a browser confirmation dialog (`window.confirm`) stating the data type name and warning that definitions will be permanently removed.
+  - Sends `DELETE /api/datatypes?name=<name>`, removing the data type from memory and updating `config/datatypes.yaml`.
+  - Automatically resets the form panel if the currently edited data type was deleted, and refreshes the table in real time.
+- **REST API Endpoints for Data Type Modification**:
+  - `PUT /api/datatypes` & `PUT /api/datatypes/{name}`: Updates an existing data type definition in the registry and writes to `config/datatypes.yaml`.
+  - `DELETE /api/datatypes` & `DELETE /api/datatypes/{name}`: Deletes a data type definition from the registry and removes it from `config/datatypes.yaml`.
+- **Alphabetical Persistence & Comment Preservation**:
+  - Updated [`DataTypeRegistry.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/config/DataTypeRegistry.java) to save all data types sorted alphabetically by identifier name while preserving original top comment blocks and metadata headers in `config/datatypes.yaml`.
+- **Total Registered Data Types Count Display**:
+  - Prominently displays the total registered count across the Data Types Registry tab in three places:
+    1. **Card Header**: Monospace badge indicating the total count (e.g. `27 Registered`).
+    2. **Registry Description**: Inline highlighted text indicating the exact number of data types currently registered.
+    3. **Table Sub-Header**: Live count (`Registered Data Types: 27`) above the registry table.
+  - Automatically recalculates and updates the displayed count in real time whenever data types are added, edited, or deleted.
+- **Automated Unit & Integration Testing**:
+  - Added [`testUpdateAndDeleteDataTypeInTempFile()`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/test/java/com/google/health/testsuite/DataTypeRegistryTest.java) in [`DataTypeRegistryTest.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/test/java/com/google/health/testsuite/DataTypeRegistryTest.java).
+  - Added [`testUpdateAndDeleteDataTypeEndpoints()`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/test/java/com/google/health/testsuite/RestApiHandlerTest.java) in [`RestApiHandlerTest.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/test/java/com/google/health/testsuite/RestApiHandlerTest.java).
+  - All 74 unit and integration tests passing.
+
+---
+
 ### Version 1.0.8 (October 17, 2026)
 
 #### 🌟 UI Enhancements & Bug Fixes

@@ -304,5 +304,46 @@ public class DataTypeRegistryTest {
             prev = name;
         }
     }
+
+    @Test
+    void testUpdateAndDeleteDataTypeInTempFile() throws Exception {
+        java.nio.file.Path tempPath = java.nio.file.Files.createTempFile("test_datatypes", ".yaml");
+        java.nio.file.Files.copy(new File("config/datatypes.yaml").toPath(), tempPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+        DataTypeRegistry tempRegistry = new DataTypeRegistry(tempPath.toFile());
+        assertTrue(tempRegistry.hasDataType("steps"));
+
+        // 1. Update an existing data type
+        DataTypeDefinition steps = tempRegistry.getDataType("steps").orElseThrow();
+        assertEquals("Step Count", steps.getDisplayName());
+        steps.setDisplayName("Updated Step Count");
+        steps.setUnit("steps_unit");
+
+        boolean updateOk = tempRegistry.updateDataType(steps);
+        assertTrue(updateOk, "updateDataType should return true");
+
+        // Verify in-memory and reloaded
+        DataTypeDefinition updatedSteps = tempRegistry.getDataType("steps").orElseThrow();
+        assertEquals("Updated Step Count", updatedSteps.getDisplayName());
+        assertEquals("steps_unit", updatedSteps.getUnit());
+
+        // 2. Add a new temporary data type
+        DataTypeDefinition newDt = new DataTypeDefinition("test-custom-dt", "Test Custom", "https://scope/test.readonly",
+                List.of("list", "get"), "test.param", true, 0.0, 100.0, "points");
+        boolean addOk = tempRegistry.addDataType(newDt);
+        assertTrue(addOk, "addDataType should return true");
+        assertTrue(tempRegistry.hasDataType("test-custom-dt"));
+
+        // 3. Delete the temporary data type
+        boolean deleteOk = tempRegistry.deleteDataType("test-custom-dt");
+        assertTrue(deleteOk, "deleteDataType should return true");
+        assertFalse(tempRegistry.hasDataType("test-custom-dt"));
+
+        // Verify non-existent update/delete return false
+        assertFalse(tempRegistry.updateDataType(newDt));
+        assertFalse(tempRegistry.deleteDataType("non-existent-dt"));
+
+        java.nio.file.Files.deleteIfExists(tempPath);
+    }
 }
 

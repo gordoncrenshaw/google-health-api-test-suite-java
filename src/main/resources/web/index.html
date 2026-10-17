@@ -352,9 +352,10 @@
             <section id="tab-datatypes" class="tab-pane">
                 <div class="card glass-card mb-4">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                        <div>
-                            <h2 class="card-title">Google Health API Data Types Registry</h2>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <h2 class="card-title" style="margin: 0;">Google Health API Data Types Registry</h2>
                             <span class="file-badge">config/datatypes.yaml</span>
+                            <span id="datatypes-count-badge" class="pill-badge pill-cyan font-mono" style="font-size: 11px;">0 Data Types</span>
                         </div>
                         <button id="btn-toggle-add-datatype" class="btn btn-primary btn-sm">
                             <svg class="btn-icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
@@ -362,13 +363,13 @@
                         </button>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted mb-4">All data types supported by the test suite are defined and maintained in <code>config/datatypes.yaml</code>. You can query endpoints per data type or use the setting below to register additional data types.</p>
+                        <p class="text-muted mb-4">All data types supported by the test suite are defined and maintained in <code>config/datatypes.yaml</code> (<span id="datatypes-count-text" class="text-cyan font-semibold">0 registered</span>). You can query endpoints per data type or use the setting below to register additional data types.</p>
 
                         <!-- Add Data Type Setting Form Panel -->
                         <div id="add-datatype-card" class="card glass-card mb-4" style="display: none; border-color: rgba(56, 189, 248, 0.35); background: rgba(15, 23, 42, 0.85);">
                             <div class="card-header">
-                                <h3 class="card-title" style="font-size: 16px;">Add Additional Data Type Setting</h3>
-                                <span class="pill-badge pill-cyan">New Entry</span>
+                                <h3 class="card-title" id="datatype-form-title" style="font-size: 16px;">Add Additional Data Type Setting</h3>
+                                <span class="pill-badge pill-cyan" id="datatype-form-badge">New Entry</span>
                             </div>
                             <div class="card-body">
                                 <form id="form-add-datatype" onsubmit="return false;">
@@ -376,7 +377,7 @@
                                         <div class="form-group">
                                             <label for="new-dt-name">Data Type Identifier (name): *</label>
                                             <input type="text" id="new-dt-name" class="form-control font-mono" placeholder="e.g. blood-pressure" required>
-                                            <small class="text-muted">Used in API URL path segment</small>
+                                            <small id="new-dt-name-help" class="text-muted">Used in API URL path segment</small>
                                         </div>
                                         <div class="form-group">
                                             <label for="new-dt-display-name">Display Name: *</label>
@@ -460,7 +461,7 @@
                                     <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
                                         <button id="btn-save-datatype" type="button" class="btn btn-primary">
                                             <svg class="btn-icon" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
-                                            Save & Register Data Type
+                                            <span id="btn-save-datatype-text">Save & Register Data Type</span>
                                         </button>
                                         <button id="btn-cancel-add-datatype" type="button" class="btn btn-secondary">
                                             Cancel
@@ -472,6 +473,9 @@
                         </div>
 
                         <!-- Data Types Table -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span class="text-secondary" style="font-size: 13px;">Registered Data Types: <strong id="datatypes-table-count" class="text-cyan font-mono">0</strong></span>
+                        </div>
                         <div class="table-responsive">
                             <table class="data-table" id="datatypes-table">
                                 <thead>
@@ -483,6 +487,7 @@
                                         <th>Supported Endpoints</th>
                                         <th>Webhooks</th>
                                         <th>Valid Min/Max Range</th>
+                                        <th style="text-align: right; width: 100px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="datatypes-tbody">
@@ -1001,6 +1006,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=20261004_8"></script>
+    <script src="app.js?v=20261017_46"></script>
 </body>
 </html>
