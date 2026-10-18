@@ -1,0 +1,28 @@
+# Google Health API Food Standard Tests
+name: "Google Health API Food Tests"
+description: "Standard tests for Food datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Food List (Default)"
+    action: "list"
+    dataType: "food"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Food List (pageSize)"
+    action: "list"
+    dataType: "food"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Food List (pageToken)"
+    action: "list"
+    dataType: "food"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true

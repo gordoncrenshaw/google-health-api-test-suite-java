@@ -1,5 +1,50 @@
 name: Google Health API Full Test Suite
 description: Master test suite executing data type and endpoint test scripts
 scripts:
+  - scripts/custom_tests_user.yaml
+  - scripts/full_regression.yaml
+  - scripts/sample_suite.yaml
+  - scripts/smoke_test.yaml
+  - scripts/standard_tests_auth.yaml
   - scripts/standard_tests_pairedDevices.yaml
   - scripts/standard_tests_user.yaml
+  - scripts/standard_tests-activeEnergyBurned.yaml
+  - scripts/standard_tests-activeMinutes.yaml
+  - scripts/standard_tests-activeZoneMinutes.yaml
+  - scripts/standard_tests-activityLevel.yaml
+  - scripts/standard_tests-altitude.yaml
+  - scripts/standard_tests-bloodGlucose.yaml
+  - scripts/standard_tests-bodyFat.yaml
+  - scripts/standard_tests-caloriesInHeartRateZone.yaml
+  - scripts/standard_tests-coreBodyTemperature.yaml
+  - scripts/standard_tests-dailyHeartRateVariability.yaml
+  - scripts/standard_tests-dailyHeartRateZones.yaml
+  - scripts/standard_tests-dailyOxygenSaturation.yaml
+  - scripts/standard_tests-dailyRespiratoryRate.yaml
+  - scripts/standard_tests-dailyRestingHeartRate.yaml
+  - scripts/standard_tests-dailySleepTemperatureDerivations.yaml
+  - scripts/standard_tests-dailyVo2Max.yaml
+  - scripts/standard_tests-distance.yaml
+  - scripts/standard_tests-electrocardiogram.yaml
+  - scripts/standard_tests-exercise.yaml
+  - scripts/standard_tests-floors.yaml
+  - scripts/standard_tests-food.yaml
+  - scripts/standard_tests-foodMeasurementUnit.yaml
+  - scripts/standard_tests-heartRate.yaml
+  - scripts/standard_tests-heartRateVariability.yaml
+  - scripts/standard_tests-height.yaml
+  - scripts/standard_tests-hydrationLog.yaml
+  - scripts/standard_tests-irregularRhythmNotification.yaml
+  - scripts/standard_tests-nutritionLog.yaml
+  - scripts/standard_tests-oxygenSaturation.yaml
+  - scripts/standard_tests-respiratoryRateSleepSummary.yaml
+  - scripts/standard_tests-runVo2Max.yaml
+  - scripts/standard_tests-sedentaryPeriod.yaml
+  - scripts/standard_tests-skinTemperatureSensors.yaml
+  - scripts/standard_tests-sleep.yaml
+  - scripts/standard_tests-steps.yaml
+  - scripts/standard_tests-swimLengthsData.yaml
+  - scripts/standard_tests-timeInHeartRateZone.yaml
+  - scripts/standard_tests-totalCalories.yaml
+  - scripts/standard_tests-vo2Max.yaml
+  - scripts/standard_tests-weight.yaml

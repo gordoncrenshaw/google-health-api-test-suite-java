@@ -1,0 +1,148 @@
+# Google Health API Exercise Standard Tests
+name: "Google Health API Exercise Tests"
+description: "Standard tests for Exercise datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Exercise List (Default)"
+    action: "list"
+    dataType: "exercise"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise List (pageSize)"
+    action: "list"
+    dataType: "exercise"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise List (pageToken)"
+    action: "list"
+    dataType: "exercise"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise List (filter: civil_start_time)"
+    action: "list"
+    dataType: "exercise"
+    queryParams:
+      filter: 'exercise.interval.civil_start_time >= "2026-10-01T00:00:00"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise List (filter: civil_start_time range)"
+    action: "list"
+    dataType: "exercise"
+    queryParams:
+      filter: 'exercise.interval.civil_start_time >= "2026-10-01T00:00:00" AND exercise.interval.civil_start_time < "2026-10-08T23:59:59"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "exercise"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "exercise"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "exercise"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise List (combined)"
+    action: "list"
+    dataType: "exercise"
+    queryParams:
+      filter: 'exercise.interval.civil_start_time >= "2026-10-01T00:00:00" AND exercise.interval.civil_start_time < "2026-10-08T23:59:59"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise Reconcile (Default)"
+    action: "reconcile"
+    dataType: "exercise"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "exercise"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "exercise"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise Reconcile (filter: civil_start_time)"
+    action: "reconcile"
+    dataType: "exercise"
+    queryParams:
+      filter: 'exercise.interval.civil_start_time >= "2026-10-01T00:00:00"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise Reconcile (filter: civil_start_time range)"
+    action: "reconcile"
+    dataType: "exercise"
+    queryParams:
+      filter: 'exercise.interval.civil_start_time >= "2026-10-01T00:00:00" AND exercise.interval.civil_start_time < "2026-10-08T23:59:59"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "exercise"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "exercise"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "exercise"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise Reconcile (combined)"
+    action: "reconcile"
+    dataType: "exercise"
+    queryParams:
+      filter: 'exercise.interval.civil_start_time >= "2026-10-01T00:00:00" AND exercise.interval.civil_start_time < "2026-10-08T23:59:59"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

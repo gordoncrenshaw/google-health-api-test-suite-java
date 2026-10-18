@@ -1,0 +1,148 @@
+# Google Health API Height Standard Tests
+name: "Google Health API Height Tests"
+description: "Standard tests for Height datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Height List (Default)"
+    action: "list"
+    dataType: "height"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height List (pageSize)"
+    action: "list"
+    dataType: "height"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height List (pageToken)"
+    action: "list"
+    dataType: "height"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height List (filter: physical_time)"
+    action: "list"
+    dataType: "height"
+    queryParams:
+      filter: 'height.sample_time.physical_time >= "2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height List (filter: physical_time range)"
+    action: "list"
+    dataType: "height"
+    queryParams:
+      filter: 'height.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND height.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "height"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "height"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "height"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height List (combined)"
+    action: "list"
+    dataType: "height"
+    queryParams:
+      filter: 'height.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND height.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height Reconcile (Default)"
+    action: "reconcile"
+    dataType: "height"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "height"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "height"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height Reconcile (filter: physical_time)"
+    action: "reconcile"
+    dataType: "height"
+    queryParams:
+      filter: 'height.sample_time.physical_time >= "2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height Reconcile (filter: physical_time range)"
+    action: "reconcile"
+    dataType: "height"
+    queryParams:
+      filter: 'height.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND height.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "height"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "height"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "height"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height Reconcile (combined)"
+    action: "reconcile"
+    dataType: "height"
+    queryParams:
+      filter: 'height.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND height.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

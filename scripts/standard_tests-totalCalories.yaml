@@ -1,7 +1,7 @@
 # Google Health API Total Calories Standard Tests
 name: "Google Health API Total Calories Tests"
 description: "Standard tests for Total Calories datatype"
-userId: me # Supported values: me, healthUserId, both
+userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

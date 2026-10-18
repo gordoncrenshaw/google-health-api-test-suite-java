@@ -1,0 +1,77 @@
+# Google Health API Irregular Rhythm Notification Standard Tests
+name: "Google Health API Irregular Rhythm Notification Tests"
+description: "Standard tests for Irregular Rhythm Notification datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Irregular Rhythm Notification List (Default)"
+    action: "list"
+    dataType: "irregular-rhythm-notification"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Irregular Rhythm Notification List (pageSize)"
+    action: "list"
+    dataType: "irregular-rhythm-notification"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Irregular Rhythm Notification List (pageToken)"
+    action: "list"
+    dataType: "irregular-rhythm-notification"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Irregular Rhythm Notification List (filter: civil_start_time)"
+    action: "list"
+    dataType: "irregular-rhythm-notification"
+    queryParams:
+      filter: 'irregular_rhythm_notification.interval.civil_start_time >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Irregular Rhythm Notification List (filter: start_time)"
+    action: "list"
+    dataType: "irregular-rhythm-notification"
+    queryParams:
+      filter: 'irregular_rhythm_notification.interval.start_time >= "2026-10-01T00:00:00Z" AND irregular_rhythm_notification.interval.start_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Irregular Rhythm Notification List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "irregular-rhythm-notification"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Irregular Rhythm Notification List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "irregular-rhythm-notification"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Irregular Rhythm Notification List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "irregular-rhythm-notification"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Irregular Rhythm Notification List (combined)"
+    action: "list"
+    dataType: "irregular-rhythm-notification"
+    queryParams:
+      filter: 'irregular_rhythm_notification.interval.start_time >= "2026-10-01T00:00:00Z" AND irregular_rhythm_notification.interval.start_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

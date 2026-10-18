@@ -1,0 +1,585 @@
+# Google Health API Heart Rate Standard Tests
+name: "Google Health API Heart Rate Tests"
+description: "Standard tests for Heart Rate datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Heart Rate List (Default)"
+    action: "list"
+    dataType: "heart-rate"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate List (pageSize)"
+    action: "list"
+    dataType: "heart-rate"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate List (pageToken)"
+    action: "list"
+    dataType: "heart-rate"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate List (filter: physical_time)"
+    action: "list"
+    dataType: "heart-rate"
+    queryParams:
+      filter: 'heart_rate.sample_time.physical_time >= "2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate List (filter: physical_time range)"
+    action: "list"
+    dataType: "heart-rate"
+    queryParams:
+      filter: 'heart_rate.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND heart_rate.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "heart-rate"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "heart-rate"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "heart-rate"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate List (combined)"
+    action: "list"
+    dataType: "heart-rate"
+    queryParams:
+      filter: 'heart_rate.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND heart_rate.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+
+  - name: "Standard: Heart Rate List (combined)"
+    action: "list"
+    dataType: "heart-rate"
+    queryParams:
+      filter: 'heart_rate.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND heart_rate.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate DailyRollUp (Default)"
+    action: "dailyrollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        }
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Heart Rate DailyRollUp (windowSizeDays)"
+    action: "dailyrollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "windowSizeDays": 1
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Heart Rate DailyRollUp (pageSize)"
+    action: "dailyrollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "pageSize": 25
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Heart Rate DailyRollUp (pageToken)"
+    action: "dailyrollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "pageToken": ""
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Heart Rate DailyRollUp (dataSourceFamily: all-sources)"
+    action: "dailyrollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/all-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Heart Rate DailyRollUp (dataSourceFamily: google-wearables)"
+    action: "dailyrollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Heart Rate DailyRollUp (dataSourceFamily: google-sources)"
+    action: "dailyrollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Heart Rate DailyRollUp (dataSourceFamily: self-sources)"
+    action: "dailyrollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/self-sources"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Heart Rate DailyRollUp (combined)"
+    action: "dailyrollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "windowSizeDays": 1,
+        "pageSize": 25,
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Heart Rate RollUp (Default)"
+    action: "rollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+       "windowSize": "60s"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Heart Rate RollUp (pageSize)"
+    action: "rollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "pageSize": 25
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Heart Rate RollUp (pageToken)"
+    action: "rollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s","pageToken": ""
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Heart Rate RollUp (dataSourceFamily: all-sources)"
+    action: "rollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/all-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Heart Rate RollUp (dataSourceFamily: google-wearables)"
+    action: "rollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Heart Rate RollUp (dataSourceFamily: google-sources)"
+    action: "rollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Heart Rate RollUp (dataSourceFamily: self-sources)"
+    action: "rollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/self-sources"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Heart Rate RollUp (combined)"
+    action: "rollup"
+    dataType: "heart-rate"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "pageSize": 25,
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Heart Rate Reconcile (Default)"
+    action: "reconcile"
+    dataType: "heart-rate"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "heart-rate"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "heart-rate"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Reconcile (filter: physical_time)"
+    action: "reconcile"
+    dataType: "heart-rate"
+    queryParams:
+      filter: 'heart_rate.sample_time.physical_time >= "2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Reconcile (filter: physical_time range)"
+    action: "reconcile"
+    dataType: "heart-rate"
+    queryParams:
+      filter: 'heart_rate.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND heart_rate.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "heart-rate"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "heart-rate"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "heart-rate"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Reconcile (combined)"
+    action: "reconcile"
+    dataType: "heart-rate"
+    queryParams:
+      filter: 'heart_rate.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND heart_rate.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

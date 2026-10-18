@@ -1,0 +1,148 @@
+# Google Health API Weight Standard Tests
+name: "Google Health API Weight Tests"
+description: "Standard tests for Weight datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Weight List (Default)"
+    action: "list"
+    dataType: "weight"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight List (pageSize)"
+    action: "list"
+    dataType: "weight"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight List (pageToken)"
+    action: "list"
+    dataType: "weight"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight List (filter: physical_time)"
+    action: "list"
+    dataType: "weight"
+    queryParams:
+      filter: 'weight.sample_time.physical_time >= "2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight List (filter: physical_time range)"
+    action: "list"
+    dataType: "weight"
+    queryParams:
+      filter: 'weight.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND weight.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "weight"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "weight"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "weight"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight List (combined)"
+    action: "list"
+    dataType: "weight"
+    queryParams:
+      filter: 'weight.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND weight.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight Reconcile (Default)"
+    action: "reconcile"
+    dataType: "weight"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "weight"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "weight"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight Reconcile (filter: physical_time)"
+    action: "reconcile"
+    dataType: "weight"
+    queryParams:
+      filter: 'weight.sample_time.physical_time >= "2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight Reconcile (filter: physical_time range)"
+    action: "reconcile"
+    dataType: "weight"
+    queryParams:
+      filter: 'weight.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND weight.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "weight"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "weight"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "weight"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight Reconcile (combined)"
+    action: "reconcile"
+    dataType: "weight"
+    queryParams:
+      filter: 'weight.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND weight.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
