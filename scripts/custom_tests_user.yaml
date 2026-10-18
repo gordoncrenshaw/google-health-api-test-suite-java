@@ -1,0 +1,20 @@
+# ==============================================================================
+# Google Health API Test Suite - User Endpoints Custom Tests
+# ==============================================================================
+# Tests user-level endpoints:
+#   - getIdentity (GET /v4/users/{userId}/identity)
+# ==============================================================================
+
+name: "Google Health API User Endpoints Custom Tests"
+description: "Custom tests for user endpoints"
+stopOnError: false
+
+steps:
+  # ----------------------------------------------------------------------------
+  # 2. User Identity (GET /v4/users/{userId}/identity)
+  # ----------------------------------------------------------------------------
+  - name: "Custom: User Identity with invalid userId"
+    action: "getIdentity"
+    userId: "dummyValue"
+    ticketId: b/12345678
+    assertStatus: [400]

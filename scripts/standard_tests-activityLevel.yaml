@@ -1,7 +1,7 @@
 # Google Health API Activity Level Standard Tests
 name: "Google Health API Activity Level Tests"
 description: "Standard tests for Activity Level datatype"
-userId: me # Supported values: me, healthUserId, both
+userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

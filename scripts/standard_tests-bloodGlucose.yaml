@@ -1,0 +1,575 @@
+# Google Health API Blood Glucose Standard Tests
+name: "Google Health API Blood Glucose Tests"
+description: "Standard tests for Blood Glucose datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Blood Glucose List (Default)"
+    action: "list"
+    dataType: "blood-glucose"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose List (pageSize)"
+    action: "list"
+    dataType: "blood-glucose"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose List (pageToken)"
+    action: "list"
+    dataType: "blood-glucose"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose List (filter: sample_time >= datetime)"
+    action: "list"
+    dataType: "blood-glucose"
+    queryParams:
+      filter: 'blood_glucose.sample_time.physical_time>="2026-10-01T08:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose List (filter: sample_time date range)"
+    action: "list"
+    dataType: "blood-glucose"
+    queryParams:
+      filter: 'blood_glucose.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND blood_glucose.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "blood-glucose"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "blood-glucose"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "blood-glucose"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose List (combined)"
+    action: "list"
+    dataType: "blood-glucose"
+    queryParams:
+      filter: 'blood_glucose.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND blood_glucose.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose DailyRollUp (Default)"
+    action: "dailyrollup"
+    dataType: "blood-glucose"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        }
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Blood Glucose DailyRollUp (windowSizeDays)"
+    action: "dailyrollup"
+    dataType: "blood-glucose" 
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "windowSizeDays": 1
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Blood Glucose DailyRollUp (pageSize)"
+    action: "dailyrollup"
+    dataType: "blood-glucose"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "pageSize": 25
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Blood Glucose DailyRollUp (pageToken)"
+    action: "dailyrollup"
+    dataType: "blood-glucose"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "pageToken": ""
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Blood Glucose DailyRollUp (dataSourceFamily: all-sources)"
+    action: "dailyrollup"
+    dataType: "blood-glucose"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/all-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Blood Glucose DailyRollUp (dataSourceFamily: google-wearables)"
+    action: "dailyrollup"
+    dataType: "blood-glucose"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Blood Glucose DailyRollUp (dataSourceFamily: google-sources)"
+    action: "dailyrollup"
+    dataType: "blood-glucose"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Blood Glucose DailyRollUp (dataSourceFamily: self-sources)"
+    action: "dailyrollup"
+    dataType: "blood-glucose"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/self-sources"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Blood Glucose DailyRollUp (combined)"
+    action: "dailyrollup"
+    dataType: "blood-glucose"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "windowSizeDays": 1,
+        "pageSize": 25,
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Blood Glucose RollUp (Default)"
+    action: "rollup"
+    dataType: "blood-glucose"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+       "windowSize": "60s"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Blood Glucose RollUp (pageSize)"
+    action: "rollup"
+    dataType: "blood-glucose"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "pageSize": 25
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Blood Glucose RollUp (pageToken)"
+    action: "rollup"
+    dataType: "blood-glucose"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s","pageToken": ""
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Blood Glucose RollUp (dataSourceFamily: all-sources)"
+    action: "rollup"
+    dataType: "blood-glucose"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/all-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Blood Glucose RollUp (dataSourceFamily: google-wearables)"
+    action: "rollup"
+    dataType: "blood-glucose"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Blood Glucose RollUp (dataSourceFamily: google-sources)"
+    action: "rollup"
+    dataType: "blood-glucose"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Blood Glucose RollUp (dataSourceFamily: self-sources)"
+    action: "rollup"
+    dataType: "blood-glucose"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/self-sources"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Blood Glucose RollUp (combined)"
+    action: "rollup"
+    dataType: "blood-glucose"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "pageSize": 25,
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Blood Glucose Reconcile (Default)"
+    action: "reconcile"
+    dataType: "blood-glucose"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "blood-glucose"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "blood-glucose"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose Reconcile (filter: sample_time >= datetime)"
+    action: "reconcile"
+    dataType: "blood-glucose"
+    queryParams:
+      filter: 'blood_glucose.sample_time.physical_time>="2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose Reconcile (filter: sample_time date range)"
+    action: "reconcile"
+    dataType: "blood-glucose"
+    queryParams:
+      filter: 'blood_glucose.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND blood_glucose.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "blood-glucose"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "blood-glucose"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "blood-glucose"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Blood Glucose Reconcile (combined)"
+    action: "reconcile"
+    dataType: "blood-glucose"
+    queryParams:
+      filter: 'blood_glucose.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND blood_glucose.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

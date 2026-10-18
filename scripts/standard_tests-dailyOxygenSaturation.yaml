@@ -1,0 +1,148 @@
+# Google Health API Daily Oxygen Saturation Standard Tests
+name: "Google Health API Daily Oxygen Saturation Tests"
+description: "Standard tests for Daily Oxygen Saturation datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Daily Oxygen Saturation List (Default)"
+    action: "list"
+    dataType: "daily-oxygen-saturation"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation List (pageSize)"
+    action: "list"
+    dataType: "daily-oxygen-saturation"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation List (pageToken)"
+    action: "list"
+    dataType: "daily-oxygen-saturation"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation List (filter: date)"
+    action: "list"
+    dataType: "daily-oxygen-saturation"
+    queryParams:
+      filter: 'daily_oxygen_saturation.date >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation List (filter: date range)"
+    action: "list"
+    dataType: "daily-oxygen-saturation"
+    queryParams:
+      filter: 'daily_oxygen_saturation.date >= "2026-10-01" AND daily_oxygen_saturation.date < "2026-10-08"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "daily-oxygen-saturation"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "daily-oxygen-saturation"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "daily-oxygen-saturation"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation List (combined)"
+    action: "list"
+    dataType: "daily-oxygen-saturation"
+    queryParams:
+      filter: 'daily_oxygen_saturation.date >= "2026-10-01" AND daily_oxygen_saturation.date < "2026-10-08"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation Reconcile (Default)"
+    action: "reconcile"
+    dataType: "daily-oxygen-saturation"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "daily-oxygen-saturation"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "daily-oxygen-saturation"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation Reconcile (filter: date)"
+    action: "reconcile"
+    dataType: "daily-oxygen-saturation"
+    queryParams:
+      filter: 'daily_oxygen_saturation.date >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation Reconcile (filter: date range)"
+    action: "reconcile"
+    dataType: "daily-oxygen-saturation"
+    queryParams:
+      filter: 'daily_oxygen_saturation.date >= "2026-10-01" AND daily_oxygen_saturation.date < "2026-10-08"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "daily-oxygen-saturation"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "daily-oxygen-saturation"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "daily-oxygen-saturation"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Oxygen Saturation Reconcile (combined)"
+    action: "reconcile"
+    dataType: "daily-oxygen-saturation"
+    queryParams:
+      filter: 'daily_oxygen_saturation.date >= "2026-10-01" AND daily_oxygen_saturation.date < "2026-10-08"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

@@ -1321,7 +1321,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const countBadge = document.getElementById('manifest-scripts-count');
                 if (countBadge) {
                     const count = currentManifest.scripts ? currentManifest.scripts.length : 0;
-                    countBadge.textContent = `${count} script${count === 1 ? '' : 's'}`;
+                    const testCount = currentManifest.totalTests !== undefined ? currentManifest.totalTests : 0;
+                    countBadge.textContent = `${count} script${count === 1 ? '' : 's'} (${testCount} test${testCount === 1 ? '' : 's'})`;
+                }
+
+                // If no tests have run yet in this session, initialize the Total Tests card
+                const countTotal = document.getElementById('suite-count-total');
+                const tbody = document.getElementById('suite-results-tbody');
+                const hasResults = tbody && tbody.querySelectorAll('tr.suite-result-row').length > 0;
+                if (countTotal && !hasResults && currentManifest.totalTests !== undefined) {
+                    countTotal.textContent = currentManifest.totalTests;
                 }
             }
 
@@ -1331,6 +1340,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.warn('Failed to load test suite manifest:', e);
+        }
+    }
+
+    function updateManifestChecklistCounts() {
+        const container = document.getElementById('manifest-scripts-checklist');
+        if (!container) return;
+        const checkboxes = container.querySelectorAll('.manifest-script-checkbox');
+        let selectedScriptsCount = 0;
+        let selectedTestsCount = 0;
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                selectedScriptsCount++;
+                const stepCount = parseInt(cb.dataset.steps || '0', 10);
+                selectedTestsCount += stepCount;
+            }
+        });
+        const countBadge = document.getElementById('manifest-scripts-count');
+        if (countBadge) {
+            countBadge.textContent = `${selectedScriptsCount} script${selectedScriptsCount === 1 ? '' : 's'} (${selectedTestsCount} test${selectedTestsCount === 1 ? '' : 's'})`;
         }
     }
 
@@ -1347,6 +1375,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sorted.forEach(s => {
             const fname = s.filename;
             const isChecked = selectedSet.has(fname) || selectedSet.has(`scripts/${fname}`);
+            const testCount = (s.totalSteps !== undefined) ? s.totalSteps : 0;
 
             const label = document.createElement('label');
             label.style.display = 'flex';
@@ -1363,15 +1392,26 @@ document.addEventListener('DOMContentLoaded', () => {
             checkbox.className = 'manifest-script-checkbox';
             checkbox.value = `scripts/${fname}`;
             checkbox.checked = isChecked;
+            checkbox.dataset.steps = testCount;
+            checkbox.addEventListener('change', updateManifestChecklistCounts);
 
             const nameSpan = document.createElement('span');
             nameSpan.className = 'font-mono';
             nameSpan.textContent = fname;
 
+            const countSpan = document.createElement('span');
+            countSpan.className = 'text-muted';
+            countSpan.style.marginLeft = 'auto';
+            countSpan.style.fontSize = '11px';
+            countSpan.textContent = testCount > 0 ? `${testCount} test${testCount === 1 ? '' : 's'}` : '';
+
             label.appendChild(checkbox);
             label.appendChild(nameSpan);
+            if (testCount > 0) label.appendChild(countSpan);
             container.appendChild(label);
         });
+
+        updateManifestChecklistCounts();
     }
 
     async function saveManifestConfig() {
@@ -1418,12 +1458,22 @@ document.addEventListener('DOMContentLoaded', () => {
             currentManifest = data;
             const countBadge = document.getElementById('manifest-scripts-count');
             if (countBadge) {
-                countBadge.textContent = `${selected.length} script${selected.length === 1 ? '' : 's'}`;
+                const count = selected.length;
+                const testCount = currentManifest.totalTests !== undefined ? currentManifest.totalTests : 0;
+                countBadge.textContent = `${count} script${count === 1 ? '' : 's'} (${testCount} test${testCount === 1 ? '' : 's'})`;
+            }
+
+            const countTotal = document.getElementById('suite-count-total');
+            const tbody = document.getElementById('suite-results-tbody');
+            const hasResults = tbody && tbody.querySelectorAll('tr.suite-result-row').length > 0;
+            if (countTotal && !hasResults && currentManifest.totalTests !== undefined) {
+                countTotal.textContent = currentManifest.totalTests;
             }
 
             const statusText = document.getElementById('suite-status-text');
             if (statusText) {
-                statusText.textContent = `Manifest saved with ${selected.length} scripts. Ready to execute.`;
+                const testCount = currentManifest.totalTests !== undefined ? ` (${currentManifest.totalTests} tests)` : '';
+                statusText.textContent = `Manifest saved with ${selected.length} scripts${testCount}. Ready to execute.`;
             }
 
             const card = document.getElementById('manifest-config-card');
@@ -1535,7 +1585,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 r.scriptFile = msg.scriptFile;
                             }
                             stepCount++;
-                            if (msg.total && !totalTests) {
+                            if (msg.total && msg.total !== totalTests) {
                                 totalTests = msg.total;
                                 countTotal.textContent = totalTests;
                             }
@@ -1562,6 +1612,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else if (msg.type === 'complete') {
                             applySuiteFilter();
                             progressBar.style.width = '100%';
+                            if (msg.total) {
+                                countTotal.textContent = msg.total;
+                            }
                             const durStr = msg.durationMs ? ` in ${(msg.durationMs / 1000).toFixed(1)}s` : '';
                             const srcName = msg.manifestName || (currentManifest ? currentManifest.name : 'manifest');
                             statusText.textContent = `Completed ${msg.total} tests from ${srcName} (${msg.passed} passed, ${msg.failed} failed${durStr}).`;
@@ -2069,6 +2122,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnManifestSelectAll) {
             btnManifestSelectAll.addEventListener('click', () => {
                 document.querySelectorAll('.manifest-script-checkbox').forEach(cb => cb.checked = true);
+                if (typeof updateManifestChecklistCounts === 'function') updateManifestChecklistCounts();
             });
         }
 
@@ -2076,6 +2130,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnManifestDeselectAll) {
             btnManifestDeselectAll.addEventListener('click', () => {
                 document.querySelectorAll('.manifest-script-checkbox').forEach(cb => cb.checked = false);
+                if (typeof updateManifestChecklistCounts === 'function') updateManifestChecklistCounts();
             });
         }
 

@@ -1,0 +1,575 @@
+# Google Health API Body Fat Standard Tests
+name: "Google Health API Body Fat Tests"
+description: "Standard tests for Body Fat datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Body Fat List (Default)"
+    action: "list"
+    dataType: "body-fat"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat List (pageSize)"
+    action: "list"
+    dataType: "body-fat"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat List (pageToken)"
+    action: "list"
+    dataType: "body-fat"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat List (filter: sample_time >= datetime)"
+    action: "list"
+    dataType: "body-fat"
+    queryParams:
+      filter: 'body_fat.sample_time.physical_time>="2026-10-01T08:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat List (filter: sample_time date range)"
+    action: "list"
+    dataType: "body-fat"
+    queryParams:
+      filter: 'body_fat.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND body_fat.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "body-fat"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "body-fat"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "body-fat"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat List (combined)"
+    action: "list"
+    dataType: "body-fat"
+    queryParams:
+      filter: 'body_fat.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND body_fat.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat DailyRollUp (Default)"
+    action: "dailyrollup"
+    dataType: "body-fat"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        }
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Body Fat DailyRollUp (windowSizeDays)"
+    action: "dailyrollup"
+    dataType: "body-fat" 
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "windowSizeDays": 1
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Body Fat DailyRollUp (pageSize)"
+    action: "dailyrollup"
+    dataType: "body-fat"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "pageSize": 25
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Body Fat DailyRollUp (pageToken)"
+    action: "dailyrollup"
+    dataType: "body-fat"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "pageToken": ""
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Body Fat DailyRollUp (dataSourceFamily: all-sources)"
+    action: "dailyrollup"
+    dataType: "body-fat"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/all-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Body Fat DailyRollUp (dataSourceFamily: google-wearables)"
+    action: "dailyrollup"
+    dataType: "body-fat"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Body Fat DailyRollUp (dataSourceFamily: google-sources)"
+    action: "dailyrollup"
+    dataType: "body-fat"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Body Fat DailyRollUp (dataSourceFamily: self-sources)"
+    action: "dailyrollup"
+    dataType: "body-fat"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/self-sources"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Body Fat DailyRollUp (combined)"
+    action: "dailyrollup"
+    dataType: "body-fat"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "windowSizeDays": 1,
+        "pageSize": 25,
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Body Fat RollUp (Default)"
+    action: "rollup"
+    dataType: "body-fat"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+       "windowSize": "60s"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Body Fat RollUp (pageSize)"
+    action: "rollup"
+    dataType: "body-fat"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "pageSize": 25
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Body Fat RollUp (pageToken)"
+    action: "rollup"
+    dataType: "body-fat"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s","pageToken": ""
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Body Fat RollUp (dataSourceFamily: all-sources)"
+    action: "rollup"
+    dataType: "body-fat"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/all-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Body Fat RollUp (dataSourceFamily: google-wearables)"
+    action: "rollup"
+    dataType: "body-fat"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Body Fat RollUp (dataSourceFamily: google-sources)"
+    action: "rollup"
+    dataType: "body-fat"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Body Fat RollUp (dataSourceFamily: self-sources)"
+    action: "rollup"
+    dataType: "body-fat"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/self-sources"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Body Fat RollUp (combined)"
+    action: "rollup"
+    dataType: "body-fat"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "pageSize": 25,
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Body Fat Reconcile (Default)"
+    action: "reconcile"
+    dataType: "body-fat"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "body-fat"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "body-fat"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat Reconcile (filter: sample_time >= datetime)"
+    action: "reconcile"
+    dataType: "body-fat"
+    queryParams:
+      filter: 'body_fat.sample_time.physical_time>="2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat Reconcile (filter: sample_time date range)"
+    action: "reconcile"
+    dataType: "body-fat"
+    queryParams:
+      filter: 'body_fat.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND body_fat.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "body-fat"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "body-fat"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "body-fat"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat Reconcile (combined)"
+    action: "reconcile"
+    dataType: "body-fat"
+    queryParams:
+      filter: 'body_fat.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND body_fat.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

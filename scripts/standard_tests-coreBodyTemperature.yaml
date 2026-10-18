@@ -1,0 +1,575 @@
+# Google Health API Core Body Temperature Standard Tests
+name: "Google Health API Core Body Temperature Tests"
+description: "Standard tests for Core Body Temperature datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Core Body Temperature List (Default)"
+    action: "list"
+    dataType: "core-body-temperature"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature List (pageSize)"
+    action: "list"
+    dataType: "core-body-temperature"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature List (pageToken)"
+    action: "list"
+    dataType: "core-body-temperature"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature List (filter: sample_time >= datetime)"
+    action: "list"
+    dataType: "core-body-temperature"
+    queryParams:
+      filter: 'core_body_temperature.sample_time.physical_time>="2026-10-01T08:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature List (filter: sample_time date range)"
+    action: "list"
+    dataType: "core-body-temperature"
+    queryParams:
+      filter: 'core_body_temperature.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND core_body_temperature.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "core-body-temperature"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "core-body-temperature"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "core-body-temperature"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature List (combined)"
+    action: "list"
+    dataType: "core-body-temperature"
+    queryParams:
+      filter: 'core_body_temperature.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND core_body_temperature.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature DailyRollUp (Default)"
+    action: "dailyrollup"
+    dataType: "core-body-temperature"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        }
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Core Body Temperature DailyRollUp (windowSizeDays)"
+    action: "dailyrollup"
+    dataType: "core-body-temperature" 
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "windowSizeDays": 1
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Core Body Temperature DailyRollUp (pageSize)"
+    action: "dailyrollup"
+    dataType: "core-body-temperature"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "pageSize": 25
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Core Body Temperature DailyRollUp (pageToken)"
+    action: "dailyrollup"
+    dataType: "core-body-temperature"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "pageToken": ""
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Core Body Temperature DailyRollUp (dataSourceFamily: all-sources)"
+    action: "dailyrollup"
+    dataType: "core-body-temperature"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/all-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Core Body Temperature DailyRollUp (dataSourceFamily: google-wearables)"
+    action: "dailyrollup"
+    dataType: "core-body-temperature"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Core Body Temperature DailyRollUp (dataSourceFamily: google-sources)"
+    action: "dailyrollup"
+    dataType: "core-body-temperature"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Core Body Temperature DailyRollUp (dataSourceFamily: self-sources)"
+    action: "dailyrollup"
+    dataType: "core-body-temperature"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "dataSourceFamily": "users/me/dataSourceFamilies/self-sources"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Core Body Temperature DailyRollUp (combined)"
+    action: "dailyrollup"
+    dataType: "core-body-temperature"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        },
+        "windowSizeDays": 1,
+        "pageSize": 25,
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Core Body Temperature RollUp (Default)"
+    action: "rollup"
+    dataType: "core-body-temperature"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+       "windowSize": "60s"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Core Body Temperature RollUp (pageSize)"
+    action: "rollup"
+    dataType: "core-body-temperature"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "pageSize": 25
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Core Body Temperature RollUp (pageToken)"
+    action: "rollup"
+    dataType: "core-body-temperature"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s","pageToken": ""
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Core Body Temperature RollUp (dataSourceFamily: all-sources)"
+    action: "rollup"
+    dataType: "core-body-temperature"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/all-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Core Body Temperature RollUp (dataSourceFamily: google-wearables)"
+    action: "rollup"
+    dataType: "core-body-temperature"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Core Body Temperature RollUp (dataSourceFamily: google-sources)"
+    action: "rollup"
+    dataType: "core-body-temperature"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-sources"
+      }
+    assertStatus: [200]
+    
+  - name: "Standard: Core Body Temperature RollUp (dataSourceFamily: self-sources)"
+    action: "rollup"
+    dataType: "core-body-temperature"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "dataSourceFamily": "users/me/dataSourceFamilies/self-sources"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Core Body Temperature RollUp (combined)"
+    action: "rollup"
+    dataType: "core-body-temperature"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+        "windowSize": "60s",
+        "pageSize": 25,
+        "dataSourceFamily": "users/me/dataSourceFamilies/google-wearables"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Core Body Temperature Reconcile (Default)"
+    action: "reconcile"
+    dataType: "core-body-temperature"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "core-body-temperature"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "core-body-temperature"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature Reconcile (filter: sample_time >= datetime)"
+    action: "reconcile"
+    dataType: "core-body-temperature"
+    queryParams:
+      filter: 'core_body_temperature.sample_time.physical_time>="2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature Reconcile (filter: sample_time date range)"
+    action: "reconcile"
+    dataType: "core-body-temperature"
+    queryParams:
+      filter: 'core_body_temperature.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND core_body_temperature.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "core-body-temperature"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "core-body-temperature"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "core-body-temperature"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Core Body Temperature Reconcile (combined)"
+    action: "reconcile"
+    dataType: "core-body-temperature"
+    queryParams:
+      filter: 'core_body_temperature.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND core_body_temperature.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

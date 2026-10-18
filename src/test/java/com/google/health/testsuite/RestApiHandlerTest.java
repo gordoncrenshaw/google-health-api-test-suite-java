@@ -383,6 +383,7 @@ public class RestApiHandlerTest {
         assertTrue(root.has("scripts"));
         assertTrue(root.get("scripts").isArray());
         assertTrue(root.has("manifestPath"));
+        assertTrue(root.has("totalTests"));
     }
 
     @Test
@@ -407,6 +408,76 @@ public class RestApiHandlerTest {
         assertTrue(root.get("success").asBoolean());
         assertEquals("Custom Suite", root.get("name").asText());
         assertEquals(2, root.get("scripts").size());
+        assertTrue(root.has("totalTests"));
+    }
+
+    @Test
+    void testManifestCalculatesUserIdBothAsTwoTests() throws Exception {
+        File tempScript = new File("scripts/temp_manifest_both_test.yaml");
+        tempScript.deleteOnExit();
+
+        String scriptYaml = """
+            name: "Temp Manifest Both Users Script"
+            userId: both
+            stopOnError: false
+            steps:
+              - name: "Step 1"
+                action: "profile"
+              - name: "Step 2"
+                action: "devices"
+            """;
+        Files.writeString(tempScript.toPath(), scriptYaml);
+
+        try {
+            String saveBody = """
+                {
+                  "name": "Manifest Both Test",
+                  "description": "Testing userId both counted as 2 tests",
+                  "scripts": ["scripts/temp_manifest_both_test.yaml"]
+                }
+                """;
+            HttpRequest postReq = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:" + port + "/api/manifest"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(saveBody))
+                    .build();
+
+            HttpResponse<String> postResp = httpClient.send(postReq, HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, postResp.statusCode());
+            JsonNode postRoot = jsonMapper.readTree(postResp.body());
+            assertEquals(4, postRoot.get("totalTests").asInt(), "2 steps with userId: both should calculate as 4 tests");
+
+            HttpRequest getReq = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:" + port + "/api/manifest"))
+                    .GET()
+                    .build();
+            HttpResponse<String> getResp = httpClient.send(getReq, HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, getResp.statusCode());
+            JsonNode getRoot = jsonMapper.readTree(getResp.body());
+            assertEquals(4, getRoot.get("totalTests").asInt(), "GET manifest should return totalTests = 4");
+
+            // Also verify GET /api/scripts returns totalSteps = 4 for temp_manifest_both_test.yaml
+            HttpRequest scriptsReq = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:" + port + "/api/scripts"))
+                    .GET()
+                    .build();
+            HttpResponse<String> scriptsResp = httpClient.send(scriptsReq, HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, scriptsResp.statusCode());
+            JsonNode scriptsArr = jsonMapper.readTree(scriptsResp.body());
+            boolean found = false;
+            for (JsonNode sn : scriptsArr) {
+                if ("temp_manifest_both_test.yaml".equals(sn.path("filename").asText())) {
+                    found = true;
+                    assertEquals(4, sn.path("totalSteps").asInt());
+                    break;
+                }
+            }
+            assertTrue(found, "temp_manifest_both_test.yaml should appear in GET /api/scripts");
+        } finally {
+            if (tempScript.exists()) {
+                tempScript.delete();
+            }
+        }
     }
 
     @Test

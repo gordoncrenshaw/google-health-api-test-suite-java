@@ -10,7 +10,7 @@
 
 name: "Google Health API User Endpoints Standard Tests"
 description: "Standard tests for user endpoints"
-userId: me # Supported values: me, healthUserId, both
+userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

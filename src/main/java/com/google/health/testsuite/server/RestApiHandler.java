@@ -645,21 +645,8 @@ public class RestApiHandler implements HttpHandler {
                 return;
             }
 
-            int totalStepsAcrossAll = 0;
             List<String> scriptPaths = manifest.getScripts() != null ? manifest.getScripts() : Collections.emptyList();
-            for (String sp : scriptPaths) {
-                if (sp == null || sp.trim().isEmpty()) continue;
-                File sf = new File(sp.trim());
-                if (!sf.exists()) sf = new File("scripts", sp.trim());
-                if (sf.exists()) {
-                    try {
-                        TestSuiteScript s = sf.getName().endsWith(".json")
-                                ? jsonMapper.readValue(sf, TestSuiteScript.class)
-                                : yamlMapper.readValue(sf, TestSuiteScript.class);
-                        totalStepsAcrossAll += s.getSteps().size();
-                    } catch (Exception ignored) {}
-                }
-            }
+            int totalStepsAcrossAll = calculateTotalManifestTests(manifest);
 
             ObjectNode startNode = jsonMapper.createObjectNode();
             startNode.put("type", "start");
@@ -792,11 +779,37 @@ public class RestApiHandler implements HttpHandler {
         }
     }
 
+    /**
+     * Calculates the total number of executable test steps in a manifest, expanding
+     * each test where userId is "both" (either script-level or step-level) into 2 tests.
+     */
+    public int calculateTotalManifestTests(TestSuiteManifest manifest) {
+        if (manifest == null || manifest.getScripts() == null) {
+            return 0;
+        }
+        int total = 0;
+        for (String sp : manifest.getScripts()) {
+            if (sp == null || sp.trim().isEmpty()) continue;
+            File sf = new File(sp.trim());
+            if (!sf.exists()) sf = new File("scripts", sp.trim());
+            if (sf.exists()) {
+                try {
+                    TestSuiteScript s = sf.getName().endsWith(".json")
+                            ? jsonMapper.readValue(sf, TestSuiteScript.class)
+                            : yamlMapper.readValue(sf, TestSuiteScript.class);
+                    total += s.getExpandedSteps().size();
+                } catch (Exception ignored) {}
+            }
+        }
+        return total;
+    }
+
     private void handleGetManifest(HttpExchange exchange) throws IOException {
         TestSuiteManifest manifest = configManager.loadTestSuiteManifest();
         ObjectNode node = (ObjectNode) jsonMapper.valueToTree(manifest);
         node.put("manifestPath", configManager.getManifestFile().getPath());
         node.put("manifestFileExists", configManager.getManifestFile().exists());
+        node.put("totalTests", calculateTotalManifestTests(manifest));
         sendJson(exchange, 200, jsonMapper.writeValueAsString(node));
     }
 
@@ -808,6 +821,7 @@ public class RestApiHandler implements HttpHandler {
             ObjectNode node = (ObjectNode) jsonMapper.valueToTree(manifest);
             node.put("success", true);
             node.put("manifestPath", configManager.getManifestFile().getPath());
+            node.put("totalTests", calculateTotalManifestTests(manifest));
             node.put("message", "Test suite manifest saved successfully.");
             sendJson(exchange, 200, jsonMapper.writeValueAsString(node));
         } catch (Exception e) {
@@ -828,6 +842,15 @@ public class RestApiHandler implements HttpHandler {
                     sNode.put("filename", f.getName());
                     sNode.put("path", f.getPath());
                     sNode.put("sizeBytes", f.length());
+                    try {
+                        TestSuiteScript s = f.getName().endsWith(".json")
+                                ? jsonMapper.readValue(f, TestSuiteScript.class)
+                                : yamlMapper.readValue(f, TestSuiteScript.class);
+                        sNode.put("name", s.getName());
+                        sNode.put("description", s.getDescription());
+                        sNode.put("userId", s.getUserId());
+                        sNode.put("totalSteps", s.getExpandedSteps().size());
+                    } catch (Exception ignored) {}
                 }
             }
         }
