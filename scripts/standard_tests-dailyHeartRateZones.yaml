@@ -1,0 +1,148 @@
+# Google Health API Daily Heart Rate Zones Standard Tests
+name: "Google Health API Daily Heart Rate Zones Tests"
+description: "Standard tests for Daily Heart Rate Zones datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Daily Heart Rate Zones List (Default)"
+    action: "list"
+    dataType: "daily-heart-rate-zones"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones List (pageSize)"
+    action: "list"
+    dataType: "daily-heart-rate-zones"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones List (pageToken)"
+    action: "list"
+    dataType: "daily-heart-rate-zones"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones List (filter: date)"
+    action: "list"
+    dataType: "daily-heart-rate-zones"
+    queryParams:
+      filter: 'daily_heart_rate_zones.date >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones List (filter: date range)"
+    action: "list"
+    dataType: "daily-heart-rate-zones"
+    queryParams:
+      filter: 'daily_heart_rate_zones.date >= "2026-10-01" AND daily_heart_rate_zones.date < "2026-10-08"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "daily-heart-rate-zones"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "daily-heart-rate-zones"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "daily-heart-rate-zones"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones List (combined)"
+    action: "list"
+    dataType: "daily-heart-rate-zones"
+    queryParams:
+      filter: 'daily_heart_rate_zones.date >= "2026-10-01" AND daily_heart_rate_zones.date < "2026-10-08"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones Reconcile (Default)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-zones"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-zones"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-zones"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones Reconcile (filter: date)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-zones"
+    queryParams:
+      filter: 'daily_heart_rate_zones.date >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones Reconcile (filter: date range)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-zones"
+    queryParams:
+      filter: 'daily_heart_rate_zones.date >= "2026-10-01" AND daily_heart_rate_zones.date < "2026-10-08"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-zones"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-zones"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-zones"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Zones Reconcile (combined)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-zones"
+    queryParams:
+      filter: 'daily_heart_rate_zones.date >= "2026-10-01" AND daily_heart_rate_zones.date < "2026-10-08"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

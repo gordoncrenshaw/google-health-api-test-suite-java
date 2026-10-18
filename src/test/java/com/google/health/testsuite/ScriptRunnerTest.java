@@ -82,7 +82,7 @@ public class ScriptRunnerTest {
         assertFalse(results.isEmpty(), "Should have test steps");
         assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
                 "All user standard tests should pass");
-        assertEquals(4, results.size(), "Should have executed 4 test steps for userId: me");
+        assertEquals(8, results.size(), "Should have executed 8 test steps for userId: both (4 for me, 4 for healthUserId)");
     }
 
     @Test
@@ -94,8 +94,11 @@ public class ScriptRunnerTest {
         assertEquals(0, exitCode, "standard_tests_pairedDevices.yaml should pass with exit code 0 in mock mode");
 
         var results = runner.executeScript(scriptFile);
-        assertEquals(1, results.size());
+        assertEquals(2, results.size());
         assertTrue(results.get(0).isPassed());
+        assertTrue(results.get(1).isPassed());
+        assertEquals("Standard: User Paired Devices (me)", results.get(0).getTestName());
+        assertEquals("Standard: User Paired Devices (healthUserId)", results.get(1).getTestName());
     }
 
     @Test

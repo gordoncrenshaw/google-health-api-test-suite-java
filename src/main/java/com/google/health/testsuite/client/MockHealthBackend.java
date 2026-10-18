@@ -28,7 +28,12 @@ public class MockHealthBackend {
 
         String effectiveUser = (healthUserId != null && !healthUserId.isEmpty()) ? healthUserId : "me";
 
-        try {
+        if (path != null && (path.contains("/users/dummyValue") || path.contains("/users/invalid"))) {
+            statusCode = 400;
+            statusMessage = "Bad Request";
+            responseBody = "{\"error\":{\"code\":400,\"message\":\"Invalid user ID specified.\",\"status\":\"INVALID_ARGUMENT\"}}";
+        } else {
+            try {
             if (path.contains("/identity")) {
                 ObjectNode identity = jsonMapper.createObjectNode();
                 identity.put("name", "users/" + effectiveUser + "/identity");
@@ -179,6 +184,7 @@ public class MockHealthBackend {
             statusMessage = "Internal Mock Error: " + e.getMessage();
             responseBody = "{\"error\": \"" + e.getMessage() + "\"}";
         }
+    }
 
         long latency = System.currentTimeMillis() - startTime + 35; // simulate 35ms network latency
         Map<String, List<String>> headers = new HashMap<>();

@@ -9,7 +9,7 @@ public final class AppVersion {
     /**
      * Current application semantic version (MAJOR.MINOR.PATCH).
      */
-    public static final String VERSION = "1.1.0";
+    public static final String VERSION = "1.1.1";
 
     /**
      * Target Google Health API version.
@@ -19,7 +19,7 @@ public final class AppVersion {
     /**
      * Release date of the current build.
      */
-    public static final String RELEASE_DATE = "2026-10-17";
+    public static final String RELEASE_DATE = "2026-10-18";
 
     /**
      * Application title.

@@ -1,0 +1,148 @@
+# Google Health API Daily Heart Rate Variability Standard Tests
+name: "Google Health API Daily Heart Rate Variability Tests"
+description: "Standard tests for Daily Heart Rate Variability datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Daily Heart Rate Variability List (Default)"
+    action: "list"
+    dataType: "daily-heart-rate-variability"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability List (pageSize)"
+    action: "list"
+    dataType: "daily-heart-rate-variability"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability List (pageToken)"
+    action: "list"
+    dataType: "daily-heart-rate-variability"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability List (filter: date)"
+    action: "list"
+    dataType: "daily-heart-rate-variability"
+    queryParams:
+      filter: 'daily_heart_rate_variability.date >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability List (filter: date range)"
+    action: "list"
+    dataType: "daily-heart-rate-variability"
+    queryParams:
+      filter: 'daily_heart_rate_variability.date >= "2026-10-01" AND daily_heart_rate_variability.date < "2026-10-08"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "daily-heart-rate-variability"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "daily-heart-rate-variability"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "daily-heart-rate-variability"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability List (combined)"
+    action: "list"
+    dataType: "daily-heart-rate-variability"
+    queryParams:
+      filter: 'daily_heart_rate_variability.date >= "2026-10-01" AND daily_heart_rate_variability.date < "2026-10-08"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability Reconcile (Default)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-variability"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-variability"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-variability"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability Reconcile (filter: date)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-variability"
+    queryParams:
+      filter: 'daily_heart_rate_variability.date >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability Reconcile (filter: date range)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-variability"
+    queryParams:
+      filter: 'daily_heart_rate_variability.date >= "2026-10-01" AND daily_heart_rate_variability.date < "2026-10-08"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-variability"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-variability"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-variability"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Heart Rate Variability Reconcile (combined)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-variability"
+    queryParams:
+      filter: 'daily_heart_rate_variability.date >= "2026-10-01" AND daily_heart_rate_variability.date < "2026-10-08"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

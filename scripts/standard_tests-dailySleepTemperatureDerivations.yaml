@@ -1,0 +1,148 @@
+# Google Health API Daily Sleep Temperature Derivations Standard Tests
+name: "Google Health API Daily Sleep Temperature Derivations Tests"
+description: "Standard tests for Daily Sleep Temperature Derivations datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Daily Sleep Temperature Derivations List (Default)"
+    action: "list"
+    dataType: "daily-sleep-temperature-derivations"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations List (pageSize)"
+    action: "list"
+    dataType: "daily-sleep-temperature-derivations"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations List (pageToken)"
+    action: "list"
+    dataType: "daily-sleep-temperature-derivations"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations List (filter: date)"
+    action: "list"
+    dataType: "daily-sleep-temperature-derivations"
+    queryParams:
+      filter: 'daily_sleep_temperature_derivations.date >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations List (filter: date range)"
+    action: "list"
+    dataType: "daily-sleep-temperature-derivations"
+    queryParams:
+      filter: 'daily_sleep_temperature_derivations.date >= "2026-10-01" AND daily_sleep_temperature_derivations.date < "2026-10-08"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "daily-sleep-temperature-derivations"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "daily-sleep-temperature-derivations"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "daily-sleep-temperature-derivations"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations List (combined)"
+    action: "list"
+    dataType: "daily-sleep-temperature-derivations"
+    queryParams:
+      filter: 'daily_sleep_temperature_derivations.date >= "2026-10-01" AND daily_sleep_temperature_derivations.date < "2026-10-08"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations Reconcile (Default)"
+    action: "reconcile"
+    dataType: "daily-sleep-temperature-derivations"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "daily-sleep-temperature-derivations"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "daily-sleep-temperature-derivations"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations Reconcile (filter: date)"
+    action: "reconcile"
+    dataType: "daily-sleep-temperature-derivations"
+    queryParams:
+      filter: 'daily_sleep_temperature_derivations.date >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations Reconcile (filter: date range)"
+    action: "reconcile"
+    dataType: "daily-sleep-temperature-derivations"
+    queryParams:
+      filter: 'daily_sleep_temperature_derivations.date >= "2026-10-01" AND daily_sleep_temperature_derivations.date < "2026-10-08"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "daily-sleep-temperature-derivations"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "daily-sleep-temperature-derivations"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "daily-sleep-temperature-derivations"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Sleep Temperature Derivations Reconcile (combined)"
+    action: "reconcile"
+    dataType: "daily-sleep-temperature-derivations"
+    queryParams:
+      filter: 'daily_sleep_temperature_derivations.date >= "2026-10-01" AND daily_sleep_temperature_derivations.date < "2026-10-08"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

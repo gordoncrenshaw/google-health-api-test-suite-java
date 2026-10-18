@@ -1,0 +1,148 @@
+# Google Health API Daily Resting Heart Rate Standard Tests
+name: "Google Health API Daily Resting Heart Rate Tests"
+description: "Standard tests for Daily Resting Heart Rate datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Daily Resting Heart Rate List (Default)"
+    action: "list"
+    dataType: "daily-resting-heart-rate"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate List (pageSize)"
+    action: "list"
+    dataType: "daily-resting-heart-rate"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate List (pageToken)"
+    action: "list"
+    dataType: "daily-resting-heart-rate"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate List (filter: date)"
+    action: "list"
+    dataType: "daily-resting-heart-rate"
+    queryParams:
+      filter: 'daily_resting_heart_rate.date >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate List (filter: date range)"
+    action: "list"
+    dataType: "daily-resting-heart-rate"
+    queryParams:
+      filter: 'daily_resting_heart_rate.date >= "2026-10-01" AND daily_resting_heart_rate.date < "2026-10-08"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "daily-resting-heart-rate"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "daily-resting-heart-rate"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "daily-resting-heart-rate"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate List (combined)"
+    action: "list"
+    dataType: "daily-resting-heart-rate"
+    queryParams:
+      filter: 'daily_resting_heart_rate.date >= "2026-10-01" AND daily_resting_heart_rate.date < "2026-10-08"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate Reconcile (Default)"
+    action: "reconcile"
+    dataType: "daily-resting-heart-rate"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "daily-resting-heart-rate"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "daily-resting-heart-rate"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate Reconcile (filter: date)"
+    action: "reconcile"
+    dataType: "daily-resting-heart-rate"
+    queryParams:
+      filter: 'daily_resting_heart_rate.date >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate Reconcile (filter: date range)"
+    action: "reconcile"
+    dataType: "daily-resting-heart-rate"
+    queryParams:
+      filter: 'daily_resting_heart_rate.date >= "2026-10-01" AND daily_resting_heart_rate.date < "2026-10-08"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "daily-resting-heart-rate"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "daily-resting-heart-rate"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "daily-resting-heart-rate"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Daily Resting Heart Rate Reconcile (combined)"
+    action: "reconcile"
+    dataType: "daily-resting-heart-rate"
+    queryParams:
+      filter: 'daily_resting_heart_rate.date >= "2026-10-01" AND daily_resting_heart_rate.date < "2026-10-08"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

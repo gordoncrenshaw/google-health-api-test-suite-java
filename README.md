@@ -609,6 +609,36 @@ public final class AppVersion {
 
 ## 📋 Version History & Changelog
 
+### Version 1.1.1 (October 18, 2026) - Milestone 1.1.1 Release
+
+#### 🌟 New Features, Standard Test Suites & Enhancements (Closes #50, #51, #52, #53, #54, #55, #56, #57, #58, #78)
+- **Standard Test Suites for 9 Additional Health Data Types**:
+  - **Blood Glucose (Closes #50)**: Added [`scripts/standard_tests-bloodGlucose.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-bloodGlucose.yaml) with comprehensive list, pagination, and AIP-160 filter validation.
+  - **Body Fat (Closes #51)**: Added [`scripts/standard_tests-bodyFat.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-bodyFat.yaml) with standard query and range assertions.
+  - **Core Body Temperature (Closes #52)**: Added [`scripts/standard_tests-coreBodyTemperature.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-coreBodyTemperature.yaml) validating temperature thresholds.
+  - **Daily Heart Rate Variability (Closes #53)**: Added [`scripts/standard_tests-dailyHeartRateVariability.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-dailyHeartRateVariability.yaml) supporting dual-user query validation.
+  - **Daily Heart Rate Zones (Closes #54)**: Added [`scripts/standard_tests-dailyHeartRateZones.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-dailyHeartRateZones.yaml) testing zone derivations.
+  - **Daily Oxygen Saturation (Closes #55)**: Added [`scripts/standard_tests-dailyOxygenSaturation.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-dailyOxygenSaturation.yaml) testing SpO2 aggregation metrics.
+  - **Daily Respiratory Rate (Closes #56)**: Added [`scripts/standard_tests-dailyRespiratoryRate.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-dailyRespiratoryRate.yaml) covering resting and sleep breathing rates.
+  - **Daily Resting Heart Rate (Closes #57)**: Added [`scripts/standard_tests-dailyRestingHeartRate.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-dailyRestingHeartRate.yaml) validating resting bpm data points.
+  - **Daily Sleep Temperature Derivations (Closes #58)**: Added [`scripts/standard_tests-dailySleepTemperatureDerivations.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-dailySleepTemperatureDerivations.yaml) testing sleep temperature delta intervals.
+- **Explicit User ID Tests & Duplication (Closes #78)**:
+  - Updated [`scripts/standard_tests_pairedDevices.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_pairedDevices.yaml):
+    - Removed root-level `userId: both`.
+    - Duplicated steps into two separate, explicit tests: `Standard: User Paired Devices (me)` with `userId: me` and `Standard: User Paired Devices (healthUserId)` with `userId: healthUserId`.
+- **Full Test Suite Tab: `userId = both` Calculation (Closes #78)**:
+  - Updated [`RestApiHandler.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/server/RestApiHandler.java) with `calculateTotalManifestTests(TestSuiteManifest)` to expand each test where `userId = both` (at script or step level) into **2 executable tests**.
+  - `GET /api/manifest` and `POST /api/manifest` now return `totalTests` reflecting full expanded test counts.
+  - `POST /api/test/run-all` real-time streaming start and complete events accurately stream the expanded total step count.
+  - Enhanced [`app.js`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/resources/web/app.js) to show total tests in the **Total Tests** metric card and dynamically recalculate test counts when selecting/deselecting scripts in the Manifest Configuration checklist.
+- **Manifest Integration**:
+  - Added all newly created standard data type scripts to [`config/test_suite_manifest.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/config/test_suite_manifest.yaml) bringing the full test suite to 29 scripts and 1,130 total executable test steps.
+- **Testing & Verification**:
+  - Updated [`ScriptRunnerTest.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/test/java/com/google/health/testsuite/ScriptRunnerTest.java) and [`RestApiHandlerTest.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/test/java/com/google/health/testsuite/RestApiHandlerTest.java).
+  - All test suites passing in mock mode.
+
+---
+
 ### Version 1.1.0 (October 17, 2026)
 
 #### 🌟 New Features & API Enhancements (Closes #44)

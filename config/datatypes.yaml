@@ -37,13 +37,13 @@ dataTypes:
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
     endpointsSupported:
       list: true
-      get: true
-      create: true
-      batchDelete: true
+      get: false
+      create: false
+      batchDelete: false
       rollUp: true
       dailyRollUp: true
       exportExerciseTcx: false
-      reconcile: false
+      reconcile: true
       patch: false
     filterParameterName: "active_energy_burned.interval.start_time"
     webhooksSupported: false
@@ -59,16 +59,16 @@ dataTypes:
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
     endpointsSupported:
       list: true
-      get: true
-      create: true
-      batchDelete: true
+      get: false
+      create: false
+      batchDelete: false
       rollUp: true
       dailyRollUp: true
       exportExerciseTcx: false
       reconcile: true
       patch: false
     filterParameterName: "active_minutes.interval.start_time"
-    webhooksSupported: false
+    webhooksSupported: true
     minValue: 0
     maxValue: 1440
     unit: "minutes"
@@ -81,16 +81,16 @@ dataTypes:
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
     endpointsSupported:
       list: true
-      get: true
-      create: true
-      batchDelete: true
+      get: false
+      create: false
+      batchDelete: false
       rollUp: true
       dailyRollUp: true
       exportExerciseTcx: false
-      reconcile: false
+      reconcile: true
       patch: false
     filterParameterName: "active_zone_minutes.interval.start_time"
-    webhooksSupported: false
+    webhooksSupported: true
     minValue: 0
     maxValue: 1440
     unit: "minutes"
@@ -103,9 +103,9 @@ dataTypes:
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
     endpointsSupported:
       list: true
-      get: true
-      create: true
-      batchDelete: true
+      get: false
+      create: false
+      batchDelete: false
       rollUp: false
       dailyRollUp: false
       exportExerciseTcx: false
@@ -123,13 +123,13 @@ dataTypes:
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.writeonly"
     endpointsSupported:
       list: true
-      get: true
-      create: true
-      batchDelete: true
+      get: false
+      create: false
+      batchDelete: false
       rollUp: true
       dailyRollUp: true
       exportExerciseTcx: false
-      reconcile: false
+      reconcile: true
       patch: false
     filterParameterName: "altitude.interval.start_time"
     webhooksSupported: true
@@ -146,22 +146,22 @@ dataTypes:
     endpointsSupported:
       list: true
       get: true
-      create: true
-      batchDelete: true
+      create: false
+      batchDelete: false
       rollUp: true
       dailyRollUp: true
       exportExerciseTcx: false
-      reconcile: false
+      reconcile: true
       patch: false
     filterParameterName: "blood_glucose.sample_time.physical_time"
-    webhooksSupported: false
+    webhooksSupported: true
     minValue: 0
     maxValue: 900
     unit: "mg/dL"
     sampleValueField: "bloodGlucose.bloodGlucoseMilligramsPerDeciliter"
 
   - name: "body-fat"
-    displayName: "Body Fat Percentage"
+    displayName: "Body Fat"
     endpointVersion: "v4"
     scopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
     writeScopeRequired: "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.writeonly"
@@ -173,10 +173,10 @@ dataTypes:
       rollUp: true
       dailyRollUp: true
       exportExerciseTcx: false
-      reconcile: false
-      patch: false
+      reconcile: true
+      patch: true
     filterParameterName: "body_fat.sample_time.physical_time"
-    webhooksSupported: false
+    webhooksSupported: true
     minValue: 0
     maxValue: 100
     unit: "percentage"
