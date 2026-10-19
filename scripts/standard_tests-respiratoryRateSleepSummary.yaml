@@ -1,0 +1,148 @@
+# Google Health API Respiratory Rate Sleep Summary Standard Tests
+name: "Google Health API Respiratory Rate Sleep Summary Tests"
+description: "Standard tests for Respiratory Rate Sleep Summary datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Respiratory Rate Sleep Summary List (Default)"
+    action: "list"
+    dataType: "respiratory-rate-sleep-summary"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary List (pageSize)"
+    action: "list"
+    dataType: "respiratory-rate-sleep-summary"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary List (pageToken)"
+    action: "list"
+    dataType: "respiratory-rate-sleep-summary"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary List (filter: physical_time)"
+    action: "list"
+    dataType: "respiratory-rate-sleep-summary"
+    queryParams:
+      filter: 'respiratory_rate_sleep_summary.sample_time.physical_time >= "2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary List (filter: physical_time range)"
+    action: "list"
+    dataType: "respiratory-rate-sleep-summary"
+    queryParams:
+      filter: 'respiratory_rate_sleep_summary.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND respiratory_rate_sleep_summary.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "respiratory-rate-sleep-summary"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "respiratory-rate-sleep-summary"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "respiratory-rate-sleep-summary"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary List (combined)"
+    action: "list"
+    dataType: "respiratory-rate-sleep-summary"
+    queryParams:
+      filter: 'respiratory_rate_sleep_summary.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND respiratory_rate_sleep_summary.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary Reconcile (Default)"
+    action: "reconcile"
+    dataType: "respiratory-rate-sleep-summary"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "respiratory-rate-sleep-summary"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "respiratory-rate-sleep-summary"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary Reconcile (filter: physical_time)"
+    action: "reconcile"
+    dataType: "respiratory-rate-sleep-summary"
+    queryParams:
+      filter: 'respiratory_rate_sleep_summary.sample_time.physical_time >= "2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary Reconcile (filter: physical_time range)"
+    action: "reconcile"
+    dataType: "respiratory-rate-sleep-summary"
+    queryParams:
+      filter: 'respiratory_rate_sleep_summary.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND respiratory_rate_sleep_summary.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "respiratory-rate-sleep-summary"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "respiratory-rate-sleep-summary"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "respiratory-rate-sleep-summary"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Respiratory Rate Sleep Summary Reconcile (combined)"
+    action: "reconcile"
+    dataType: "respiratory-rate-sleep-summary"
+    queryParams:
+      filter: 'respiratory_rate_sleep_summary.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND respiratory_rate_sleep_summary.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

@@ -1,0 +1,69 @@
+# Google Health API Electrocardiogram Standard Tests
+name: "Google Health API Electrocardiogram Tests"
+description: "Standard tests for Electrocardiogram datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Electrocardiogram List (Default)"
+    action: "list"
+    dataType: "electrocardiogram"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Electrocardiogram List (pageSize)"
+    action: "list"
+    dataType: "electrocardiogram"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Electrocardiogram List (pageToken)"
+    action: "list"
+    dataType: "electrocardiogram"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Electrocardiogram List (filter: start_time)"
+    action: "list"
+    dataType: "electrocardiogram"
+    queryParams:
+      filter: 'electrocardiogram.interval.start_time >= "2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Electrocardiogram List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "electrocardiogram"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Electrocardiogram List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "electrocardiogram"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Electrocardiogram List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "electrocardiogram"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Electrocardiogram List (combined)"
+    action: "list"
+    dataType: "electrocardiogram"
+    queryParams:
+      filter: 'electrocardiogram.interval.start_time >= "2026-10-01T00:00:00Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

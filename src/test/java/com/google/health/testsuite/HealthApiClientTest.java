@@ -359,10 +359,13 @@ public class HealthApiClientTest {
     void testSuiteExecutionEngineEnableAllEndpoints() {
         SuiteExecutionEngine engine = new SuiteExecutionEngine(configManager, registry, client);
 
-        // When enableAllEndpoints is false, patch is not supported by any datatype
+        // When enableAllEndpoints is false, only datatypes supporting patch are tested
         configManager.getPreferences().setEnableAllEndpoints(false);
         List<TestResult> resultsDisabled = engine.executeAllDataTypesTest("patch");
-        assertEquals(0, resultsDisabled.size(), "No datatypes support patch by default");
+        long expectedPatchCount = registry.getAllDataTypes().stream()
+                .filter(dt -> dt.supportsEndpoint("patch"))
+                .count();
+        assertEquals(expectedPatchCount, resultsDisabled.size(), "Only datatypes supporting patch run when enableAllEndpoints is false");
 
         // When enableAllEndpoints is true, all datatypes must run patch test
         configManager.getPreferences().setEnableAllEndpoints(true);

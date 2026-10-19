@@ -609,6 +609,34 @@ public final class AppVersion {
 
 ## 📋 Version History & Changelog
 
+### Version 1.1.2 (October 19, 2026) - Milestone 1.1.2 Release
+
+#### 🌟 Standard Test Suites & Enhancements (Closes #59, #60, #61, #62, #63, #64, #65, #66, #67, #68, #70, #72, #73, #74, #75, #76, #77)
+- **Standard Test Suites for 15 Health Data Types**:
+  - **Electrocardiogram (Closes #59)**: Added [`scripts/standard_tests-electrocardiogram.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-electrocardiogram.yaml) validating ECG list queries, interval start_time filters, and data source families.
+  - **Exercise (Closes #60)**: Added [`scripts/standard_tests-exercise.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-exercise.yaml) testing exercise workouts list, interval `civil_start_time` queries, and reconcile endpoint operations.
+  - **Food (Closes #61)**: Added [`scripts/standard_tests-food.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-food.yaml) covering food logging data queries and pagination.
+  - **Food Measurement Unit (Closes #62)**: Added [`scripts/standard_tests-foodMeasurementUnit.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-foodMeasurementUnit.yaml) validating food measurement units.
+  - **Heart Rate (Closes #63)**: Added [`scripts/standard_tests-heartRate.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-heartRate.yaml) validating real-time heart rate bpm data points, `sample_time.physical_time` filters, rollup, dailyRollUp, and reconcile.
+  - **Heart Rate Variability (Closes #64)**: Added [`scripts/standard_tests-heartRateVariability.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-heartRateVariability.yaml) testing HRV RMSSD metrics.
+  - **Height (Closes #65)**: Added [`scripts/standard_tests-height.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-height.yaml) testing user height measurements and unit conversion limits.
+  - **Hydration Log (Closes #66)**: Added [`scripts/standard_tests-hydrationLog.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-hydrationLog.yaml) testing hydration volume intake logging.
+  - **Irregular Rhythm Notification (Closes #67)**: Added [`scripts/standard_tests-irregularRhythmNotification.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-irregularRhythmNotification.yaml) covering IRN events and audit queries.
+  - **Menstrual Period (Closes #68)**: Standardized test coverage and query handling for menstrual period data type.
+  - **Nutrition Log (Closes #70)**: Added [`scripts/standard_tests-nutritionLog.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-nutritionLog.yaml) covering detailed macronutrient and micronutrient logging.
+  - **Oxygen Saturation (Closes #72)**: Added [`scripts/standard_tests-oxygenSaturation.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-oxygenSaturation.yaml) testing continuous SpO2 data points.
+  - **Respiratory Rate Sleep Summary (Closes #73)**: Added [`scripts/standard_tests-respiratoryRateSleepSummary.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-respiratoryRateSleepSummary.yaml) validating overnight respiration summaries.
+  - **Skin Temperature Sensors (Closes #74)**: Added [`scripts/standard_tests-skinTemperatureSensors.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-skinTemperatureSensors.yaml) testing skin sensor telemetry data.
+  - **Sleep (Closes #75)**: Added [`scripts/standard_tests-sleep.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-sleep.yaml) validating sleep stages and duration intervals with `end_time` filters.
+  - **Symptoms (Closes #76)**: Standardized test coverage and query handling for logged symptoms data type.
+  - **Weight (Closes #77)**: Added [`scripts/standard_tests-weight.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-weight.yaml) validating body weight measurements with `sample_time.physical_time` filters.
+- **Dual User ID (`userId: both`) Standard Tests**:
+  - Updated standard test scripts to support dual execution (`userId: both`) across `distance`, `floors`, `runVo2Max`, `sedentaryPeriod`, `swimLengthsData`, `timeInHeartRateZone`, `totalCalories`, and `vo2Max`.
+- **Master Test Suite Manifest**:
+  - Maintained comprehensive master manifest in [`config/test_suite_manifest.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/config/test_suite_manifest.yaml) incorporating all standard data types and full regression scripts.
+
+---
+
 ### Version 1.1.1 (October 18, 2026) - Milestone 1.1.1 Release
 
 #### 🌟 New Features, Standard Test Suites & Enhancements (Closes #50, #51, #52, #53, #54, #55, #56, #57, #58, #78)

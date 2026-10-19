@@ -1,7 +1,7 @@
 # Google Health API Swim Lengths Data Standard Tests
 name: "Google Health API Swim Lengths Data Tests"
 description: "Standard tests for Swim Lengths Data datatype"
-userId: me # Supported values: me, healthUserId, both
+userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

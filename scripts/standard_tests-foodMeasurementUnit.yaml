@@ -1,0 +1,28 @@
+# Google Health API Food Measurement Unit Standard Tests
+name: "Google Health API Food Measurement Unit Tests"
+description: "Standard tests for Food Measurement Unit datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Food Measurement Unit List (Default)"
+    action: "list"
+    dataType: "food-measurement-unit"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Food Measurement Unit List (pageSize)"
+    action: "list"
+    dataType: "food-measurement-unit"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Food Measurement Unit List (pageToken)"
+    action: "list"
+    dataType: "food-measurement-unit"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true

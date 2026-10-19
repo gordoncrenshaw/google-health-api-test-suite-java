@@ -1,0 +1,148 @@
+# Google Health API Heart Rate Variability Standard Tests
+name: "Google Health API Heart Rate Variability Tests"
+description: "Standard tests for Heart Rate Variability datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Heart Rate Variability List (Default)"
+    action: "list"
+    dataType: "heart-rate-variability"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability List (pageSize)"
+    action: "list"
+    dataType: "heart-rate-variability"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability List (pageToken)"
+    action: "list"
+    dataType: "heart-rate-variability"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability List (filter: physical_time)"
+    action: "list"
+    dataType: "heart-rate-variability"
+    queryParams:
+      filter: 'heart_rate_variability.sample_time.physical_time >= "2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability List (filter: physical_time range)"
+    action: "list"
+    dataType: "heart-rate-variability"
+    queryParams:
+      filter: 'heart_rate_variability.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND heart_rate_variability.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "heart-rate-variability"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "heart-rate-variability"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "heart-rate-variability"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability List (combined)"
+    action: "list"
+    dataType: "heart-rate-variability"
+    queryParams:
+      filter: 'heart_rate_variability.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND heart_rate_variability.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability Reconcile (Default)"
+    action: "reconcile"
+    dataType: "heart-rate-variability"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "heart-rate-variability"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "heart-rate-variability"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability Reconcile (filter: physical_time)"
+    action: "reconcile"
+    dataType: "heart-rate-variability"
+    queryParams:
+      filter: 'heart_rate_variability.sample_time.physical_time >= "2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability Reconcile (filter: physical_time range)"
+    action: "reconcile"
+    dataType: "heart-rate-variability"
+    queryParams:
+      filter: 'heart_rate_variability.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND heart_rate_variability.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "heart-rate-variability"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "heart-rate-variability"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "heart-rate-variability"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Heart Rate Variability Reconcile (combined)"
+    action: "reconcile"
+    dataType: "heart-rate-variability"
+    queryParams:
+      filter: 'heart_rate_variability.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND heart_rate_variability.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

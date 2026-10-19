@@ -281,7 +281,7 @@ public class DataTypeRegistryTest {
         assertEquals(0.0, actMin.getMinValue());
         assertEquals(1440.0, actMin.getMaxValue());
         assertEquals("minutes", actMin.getUnit());
-        assertFalse(actMin.isWebhooksSupported());
+        assertTrue(actMin.isWebhooksSupported());
 
         DataTypeDefinition sed = registry.getDataType("sedentary-period").orElseThrow();
         assertEquals("Sedentary Period", sed.getDisplayName());

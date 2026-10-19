@@ -1,0 +1,148 @@
+# Google Health API Oxygen Saturation Standard Tests
+name: "Google Health API Oxygen Saturation Tests"
+description: "Standard tests for Oxygen Saturation datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Oxygen Saturation List (Default)"
+    action: "list"
+    dataType: "oxygen-saturation"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation List (pageSize)"
+    action: "list"
+    dataType: "oxygen-saturation"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation List (pageToken)"
+    action: "list"
+    dataType: "oxygen-saturation"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation List (filter: physical_time)"
+    action: "list"
+    dataType: "oxygen-saturation"
+    queryParams:
+      filter: 'oxygen_saturation.sample_time.physical_time >= "2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation List (filter: physical_time range)"
+    action: "list"
+    dataType: "oxygen-saturation"
+    queryParams:
+      filter: 'oxygen_saturation.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND oxygen_saturation.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "oxygen-saturation"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "oxygen-saturation"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "oxygen-saturation"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation List (combined)"
+    action: "list"
+    dataType: "oxygen-saturation"
+    queryParams:
+      filter: 'oxygen_saturation.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND oxygen_saturation.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation Reconcile (Default)"
+    action: "reconcile"
+    dataType: "oxygen-saturation"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "oxygen-saturation"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "oxygen-saturation"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation Reconcile (filter: physical_time)"
+    action: "reconcile"
+    dataType: "oxygen-saturation"
+    queryParams:
+      filter: 'oxygen_saturation.sample_time.physical_time >= "2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation Reconcile (filter: physical_time range)"
+    action: "reconcile"
+    dataType: "oxygen-saturation"
+    queryParams:
+      filter: 'oxygen_saturation.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND oxygen_saturation.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "oxygen-saturation"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "oxygen-saturation"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "oxygen-saturation"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Oxygen Saturation Reconcile (combined)"
+    action: "reconcile"
+    dataType: "oxygen-saturation"
+    queryParams:
+      filter: 'oxygen_saturation.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND oxygen_saturation.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

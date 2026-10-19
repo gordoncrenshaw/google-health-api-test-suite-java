@@ -1,0 +1,148 @@
+# Google Health API Sleep Standard Tests
+name: "Google Health API Sleep Tests"
+description: "Standard tests for Sleep datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+sleep:
+  - name: "Standard: Sleep List (Default)"
+    action: "list"
+    dataType: "sleep"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep List (pageSize)"
+    action: "list"
+    dataType: "sleep"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep List (pageToken)"
+    action: "list"
+    dataType: "sleep"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep List (filter: civil_end_time)"
+    action: "list"
+    dataType: "sleep"
+    queryParams:
+      filter: 'sleep.interval.end_time >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep List (filter: end_time range)"
+    action: "list"
+    dataType: "sleep"
+    queryParams:
+      filter: 'sleep.interval.end_time >= "2026-10-01T00:00:00Z" AND sleep.interval.end_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "sleep"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "sleep"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "sleep"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep List (combined)"
+    action: "list"
+    dataType: "sleep"
+    queryParams:
+      filter: 'sleep.interval.end_time >= "2026-10-01T00:00:00Z" AND sleep.interval.end_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep Reconcile (Default)"
+    action: "reconcile"
+    dataType: "sleep"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep Reconcile (pageSize)"
+    action: "reconcile"
+    dataType: "sleep"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep Reconcile (pageToken)"
+    action: "reconcile"
+    dataType: "sleep"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep Reconcile (filter: civil_end_time)"
+    action: "reconcile"
+    dataType: "sleep"
+    queryParams:
+      filter: 'sleep.interval.end_time >= "2026-10-01"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep Reconcile (filter: end_time range)"
+    action: "reconcile"
+    dataType: "sleep"
+    queryParams:
+      filter: 'sleep.interval.end_time >= "2026-10-01T00:00:00Z" AND sleep.interval.end_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep Reconcile (dataSourceFamily: all-sources)"
+    action: "reconcile"
+    dataType: "sleep"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep Reconcile (dataSourceFamily: google-wearables)"
+    action: "reconcile"
+    dataType: "sleep"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep Reconcile (dataSourceFamily: google-sources)"
+    action: "reconcile"
+    dataType: "sleep"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep Reconcile (combined)"
+    action: "reconcile"
+    dataType: "sleep"
+    queryParams:
+      filter: 'sleep.interval.end_time >= "2026-10-01T00:00:00Z" AND sleep.interval.end_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true

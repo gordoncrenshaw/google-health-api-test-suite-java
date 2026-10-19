@@ -1,0 +1,77 @@
+# Google Health API Skin Temperature Sensors Standard Tests
+name: "Google Health API Skin Temperature Sensors Tests"
+description: "Standard tests for Skin Temperature Sensors datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Standard: Skin Temperature Sensors List (Default)"
+    action: "list"
+    dataType: "skin-temperature-sensors"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Skin Temperature Sensors List (pageSize)"
+    action: "list"
+    dataType: "skin-temperature-sensors"
+    queryParams:
+      pageSize: "5"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Skin Temperature Sensors List (pageToken)"
+    action: "list"
+    dataType: "skin-temperature-sensors"
+    queryParams:
+      pageToken: ""
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Skin Temperature Sensors List (filter: physical_time)"
+    action: "list"
+    dataType: "skin-temperature-sensors"
+    queryParams:
+      filter: 'skin_temperature_sensors.sample_time.physical_time >= "2026-10-01T00:00:00Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Skin Temperature Sensors List (filter: physical_time range)"
+    action: "list"
+    dataType: "skin-temperature-sensors"
+    queryParams:
+      filter: 'skin_temperature_sensors.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND skin_temperature_sensors.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Skin Temperature Sensors List (dataSourceFamily: all-sources)"
+    action: "list"
+    dataType: "skin-temperature-sensors"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Skin Temperature Sensors List (dataSourceFamily: google-wearables)"
+    action: "list"
+    dataType: "skin-temperature-sensors"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Skin Temperature Sensors List (dataSourceFamily: google-sources)"
+    action: "list"
+    dataType: "skin-temperature-sensors"
+    queryParams:
+      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Skin Temperature Sensors List (combined)"
+    action: "list"
+    dataType: "skin-temperature-sensors"
+    queryParams:
+      filter: 'skin_temperature_sensors.sample_time.physical_time >= "2026-10-01T00:00:00Z" AND skin_temperature_sensors.sample_time.physical_time < "2026-10-08T23:59:59Z"'
+      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+    assertStatus: [200]
+    validateRange: true
