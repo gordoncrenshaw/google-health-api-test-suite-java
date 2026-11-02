@@ -1,0 +1,13 @@
+# Google Health API Skin Temperature Sensors Custom Tests
+name: "Google Health API Skin Temperature Sensors Tests"
+description: "Custom tests for Skin Temperature Sensors datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Skin Temperature Sensors List (userId: dummyValue)"
+    action: "list"
+    dataType: "skin-temperature-sensors"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true

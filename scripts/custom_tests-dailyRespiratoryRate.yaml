@@ -1,0 +1,20 @@
+# Google Health API Daily Respiratory Rate Custom Tests
+name: "Google Health API Daily Respiratory Rate Tests"
+description: "Custom tests for Daily Respiratory Rate datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Daily Respiratory Rate List (userId: dummyValue)"
+    action: "list"
+    dataType: "daily-respiratory-rate"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true
+
+  - name: "Custom: Daily Respiratory Rate Reconcile (userId: dummyValue)"
+    action: "reconcile"
+    dataType: "daily-respiratory-rate"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true

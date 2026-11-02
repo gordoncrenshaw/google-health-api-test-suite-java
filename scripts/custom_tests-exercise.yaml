@@ -1,0 +1,20 @@
+# Google Health API Exercise Custom Tests
+name: "Google Health API Exercise Tests"
+description: "Custom tests for Exercise datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Exercise List (userId: dummyValue)"
+    action: "list"
+    dataType: "exercise"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true
+
+  - name: "Custom: Exercise Reconcile (userId: dummyValue)"
+    action: "reconcile"
+    dataType: "exercise"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true

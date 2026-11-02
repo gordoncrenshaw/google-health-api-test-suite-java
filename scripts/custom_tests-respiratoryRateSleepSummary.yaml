@@ -1,0 +1,20 @@
+# Google Health API Respiratory Rate Sleep Summary Custom Tests
+name: "Google Health API Respiratory Rate Sleep Summary Tests"
+description: "Custom tests for Respiratory Rate Sleep Summary datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Respiratory Rate Sleep Summary List (userId: dummyValue)"
+    action: "list"
+    dataType: "respiratory-rate-sleep-summary"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true
+
+  - name: "Custom: Respiratory Rate Sleep Summary Reconcile (userId: dummyValue)"
+    action: "reconcile"
+    dataType: "respiratory-rate-sleep-summary"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true

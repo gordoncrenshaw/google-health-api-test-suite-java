@@ -1,0 +1,13 @@
+# Google Health API Food Custom Tests
+name: "Google Health API Food Tests"
+description: "Custom tests for Food datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Food List (userId: dummyValue)"
+    action: "list"
+    dataType: "food"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true

@@ -1,0 +1,20 @@
+# Google Health API Daily Sleep Temperature Derivations Custom Tests
+name: "Google Health API Daily Sleep Temperature Derivations Tests"
+description: "Custom tests for Daily Sleep Temperature Derivations datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Daily Sleep Temperature Derivations List (userId: dummyValue)"
+    action: "list"
+    dataType: "daily-sleep-temperature-derivations"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true
+
+  - name: "Custom: Daily Sleep Temperature Derivations Reconcile (userId: dummyValue)"
+    action: "reconcile"
+    dataType: "daily-sleep-temperature-derivations"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true

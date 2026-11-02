@@ -1,0 +1,55 @@
+# Google Health API Total Calories Custom Tests
+name: "Google Health API Total Calories Tests"
+description: "Custom tests for Total Calories datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Total Calories DailyRollUp (userId: dummyValue)"
+    action: "dailyrollup"
+    dataType: "total-calories"
+    userId: dummyValue
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        }
+      }
+    assertStatus: [403]
+
+  - name: "Custom: Total Calories RollUp (userId: dummyValue)"
+    action: "rollup"
+    dataType: "total-calories"
+    userId: dummyValue
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+       "windowSize": "60s"
+      }
+    assertStatus: [403]

@@ -45,7 +45,7 @@ steps:
           }
         }
       }
-    assertStatus: [200]
+    assertStatus: [403]
 
   - name: "Custom: Blood Glucose RollUp (userId: dummyValue)"
     action: "rollup"

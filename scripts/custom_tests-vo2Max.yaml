@@ -1,0 +1,20 @@
+# Google Health API VO2 Max Custom Tests
+name: "Google Health API VO2 Max Tests"
+description: "Custom tests for VO2 Max datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: VO2 Max List (userId: dummyValue)"
+    action: "list"
+    dataType: "vo2-max"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true
+
+  - name: "Custom: VO2 Max Reconcile (userId: dummyValue)"
+    action: "reconcile"
+    dataType: "vo2-max"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true

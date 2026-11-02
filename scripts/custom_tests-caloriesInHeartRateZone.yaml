@@ -1,0 +1,55 @@
+# Google Health API Calories In Heart Rate Zone Custom Tests
+name: "Google Health API Calories In Heart Rate Zone Tests"
+description: "Custom tests for Calories In Heart Rate Zone datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Calories In Heart Rate Zone DailyRollUp (userId: dummyValue)"
+    action: "dailyrollup"
+    dataType: "calories-in-heart-rate-zone"
+    userId: dummyValue
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        }
+      }
+    assertStatus: [403]
+
+  - name: "Custom: Calories In Heart Rate Zone RollUp (userId: dummyValue)"
+    action: "rollup"
+    dataType: "calories-in-heart-rate-zone"
+    userId: dummyValue
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+       "windowSize": "60s"
+      }
+    assertStatus: [403]
