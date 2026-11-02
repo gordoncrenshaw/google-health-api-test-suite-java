@@ -1,0 +1,20 @@
+# Google Health API Activity Level Custom Tests
+name: "Google Health API Activity Level Tests"
+description: "Custom tests for Activity Level datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Activity Level List (userId: dummyValue)"
+    action: "list"
+    dataType: "activity-level"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true
+
+  - name: "Custom: Activity Level Reconcile (userId: dummyValue)"
+    action: "reconcile"
+    dataType: "activity-level"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true

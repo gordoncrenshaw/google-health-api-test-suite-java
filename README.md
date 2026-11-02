@@ -609,6 +609,22 @@ public final class AppVersion {
 
 ## 📋 Version History & Changelog
 
+### Version 1.1.3 (November 1, 2026) - Release 1.1.3
+
+#### 🌟 Latency Test Suite & Custom Negative Test Enhancements
+- **Standard Latency Test Suite ([`scripts/standard_tests-latency.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-latency.yaml))**:
+  - Added [`scripts/standard_tests-latency.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests-latency.yaml) combining all 35 standard tests from `active-energy-burned` and all 35 standard tests from `active-minutes` (140 expanded test executions across `me` and `healthUserId`).
+  - Configured with a top-level global latency threshold `maxLatencyMs: 1000` (failing any endpoint exceeding 1000 ms) and documented step-level `maxLatencyMs` overrides.
+- **Global & Endpoint-Specific Latency Assertion Support**:
+  - Updated [`TestSuiteScript.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/model/TestSuiteScript.java) and [`TestStep.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/model/TestStep.java) to support top-level `maxLatencyMs` inheritance and per-step `maxLatencyMs` overrides.
+  - Updated [`SuiteExecutionEngine.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/runner/SuiteExecutionEngine.java) (`executeStep`) to evaluate response latency against `maxLatencyMs` and fail steps exceeding the configured limit.
+  - Updated [`RestApiHandler.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/server/RestApiHandler.java) and [`app.js`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/resources/web/app.js) to expose `maxLatencyMs` metadata and display `Latency Exceeded` badges in the Web UI results table.
+- **Negative & Custom Test Scripts (`dummyValue` User ID)**:
+  - Added and updated negative test scripts validating `HTTP 403` responses for invalid `userId: dummyValue` across [`scripts/custom_tests_user.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/custom_tests_user.yaml), [`scripts/custom_tests_pairedDevices.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/custom_tests_pairedDevices.yaml), [`scripts/custom_tests-activeEnergyBurned.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/custom_tests-activeEnergyBurned.yaml), [`scripts/custom_tests-activeMinutes.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/custom_tests-activeMinutes.yaml), [`scripts/custom_tests-activeZoneMinutes.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/custom_tests-activeZoneMinutes.yaml), [`scripts/custom_tests-activityLevel.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/custom_tests-activityLevel.yaml), [`scripts/custom_tests-altitude.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/custom_tests-altitude.yaml), [`scripts/custom_tests-bloodGlucose.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/custom_tests-bloodGlucose.yaml), and [`scripts/custom_tests-bodyFat.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/custom_tests-bodyFat.yaml).
+  - Updated [`scripts/standard_tests_pairedDevices.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_pairedDevices.yaml) to use `userId: both`.
+
+---
+
 ### Version 1.1.2 (October 19, 2026) - Milestone 1.1.2 Release
 
 #### 🌟 Standard Test Suites & Enhancements (Closes #59, #60, #61, #62, #63, #64, #65, #66, #67, #68, #70, #72, #73, #74, #75, #76, #77)

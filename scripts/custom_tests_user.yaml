@@ -2,7 +2,10 @@
 # Google Health API Test Suite - User Endpoints Custom Tests
 # ==============================================================================
 # Tests user-level endpoints:
+#   - getProfile (GET /v4/users/{userId}/profile)
 #   - getIdentity (GET /v4/users/{userId}/identity)
+#   - getIrnProfile (GET /v4/users/{userId}/irnProfile)
+#   - getSettings (GET /v4/users/{userId}/settings)
 # ==============================================================================
 
 name: "Google Health API User Endpoints Custom Tests"
@@ -11,10 +14,33 @@ stopOnError: false
 
 steps:
   # ----------------------------------------------------------------------------
+  # 1. User Profile (GET /v4/users/{userId}/profile)
+  # ----------------------------------------------------------------------------
+  - name: "Custom: User Profile (userId: dummyValue)"
+    action: "getProfile"
+    userId: dummyValue
+    assertStatus: [403]
+
+  # ----------------------------------------------------------------------------
   # 2. User Identity (GET /v4/users/{userId}/identity)
   # ----------------------------------------------------------------------------
-  - name: "Custom: User Identity with invalid userId"
+  - name: "Custom: User Identity (userId: dummyValue)"
     action: "getIdentity"
-    userId: "dummyValue"
-    ticketId: b/12345678
-    assertStatus: [400]
+    userId: dummyValue
+    assertStatus: [403]
+
+  # ----------------------------------------------------------------------------
+  # 3. Irregular Rhythm Notifications (IRN) Profile (GET /v4/users/{userId}/irnProfile)
+  # ----------------------------------------------------------------------------
+  - name: "Custom: User IRN Profile (userId: dummyValue)"
+    action: "getIrnProfile"
+    userId: dummyValue
+    assertStatus: [403]
+
+  # ----------------------------------------------------------------------------
+  # 4. User Settings (GET /v4/users/{userId}/settings)
+  # ----------------------------------------------------------------------------
+  - name: "Custom: User Settings (userId: dummyValue)"
+    action: "getSettings"
+    userId: dummyValue
+    assertStatus: [403]

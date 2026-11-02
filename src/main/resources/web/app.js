@@ -1221,11 +1221,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 endpointError = 'Endpoint returned error';
             }
 
+            const isLatencyError = (r.message && r.message.toLowerCase().includes('latency')) || endpointError.toLowerCase().includes('latency');
+            const errorLabel = isLatencyError
+                ? 'Latency Exceeded'
+                : (httpCode >= 200 && httpCode < 300 ? 'Assertion Failed' : `HTTP ${escapeHtml(String(httpCode))} Error`);
+
             detailHtml = `
                 <div class="suite-error-cell" title="${escapeHtml(endpointError)}">
                     <span class="suite-error-code font-mono">
                         <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                        HTTP ${escapeHtml(String(httpCode))} Error
+                        ${errorLabel}
                     </span>
                     <span class="suite-error-msg font-mono">${escapeHtml(endpointError)}</span>
                 </div>

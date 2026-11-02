@@ -28,7 +28,11 @@ public class MockHealthBackend {
 
         String effectiveUser = (healthUserId != null && !healthUserId.isEmpty()) ? healthUserId : "me";
 
-        if (path != null && (path.contains("/users/dummyValue") || path.contains("/users/invalid"))) {
+        if (path != null && path.contains("/users/dummyValue")) {
+            statusCode = 403;
+            statusMessage = "Forbidden";
+            responseBody = "{\"error\":{\"code\":403,\"message\":\"Permission denied for user dummyValue.\",\"status\":\"PERMISSION_DENIED\"}}";
+        } else if (path != null && path.contains("/users/invalid")) {
             statusCode = 400;
             statusMessage = "Bad Request";
             responseBody = "{\"error\":{\"code\":400,\"message\":\"Invalid user ID specified.\",\"status\":\"INVALID_ARGUMENT\"}}";
