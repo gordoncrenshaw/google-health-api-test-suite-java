@@ -109,7 +109,7 @@ public class ScriptRunnerTest {
         assertEquals(0, exitCode, "latency_tests.yaml should pass with exit code 0 in mock mode");
 
         var results = runner.executeScript(scriptFile);
-        assertEquals(140, results.size(), "35 activeEnergyBurned + 35 activeMinutes steps with userId: both should expand to 140 steps");
+        assertEquals(1892, results.size(), "946 standard test steps with userId: both should expand to 1892 steps");
         assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
                 "All latency tests should pass when latency <= 1000ms");
     }

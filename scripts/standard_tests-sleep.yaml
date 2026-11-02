@@ -4,7 +4,7 @@ description: "Standard tests for Sleep datatype"
 userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
-sleep:
+steps:
   - name: "Standard: Sleep List (Default)"
     action: "list"
     dataType: "sleep"

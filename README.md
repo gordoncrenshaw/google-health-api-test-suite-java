@@ -612,9 +612,9 @@ public final class AppVersion {
 ### Version 1.1.3 (November 1, 2026) - Release 1.1.3
 
 #### 🌟 Latency Test Suite & Custom Negative Test Enhancements
-- **Standard Latency Test Suite ([`scripts/latency_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/latency_tests.yaml))**:
-  - Added [`scripts/latency_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/latency_tests.yaml) combining all 35 standard tests from `active-energy-burned` and all 35 standard tests from `active-minutes` (140 expanded test executions across `me` and `healthUserId`).
-  - Configured with a top-level global latency threshold `maxLatencyMs: 1000` (failing any endpoint exceeding 1000 ms) and documented step-level `maxLatencyMs` overrides.
+- **Latency Test Suite ([`scripts/latency_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/latency_tests.yaml))**:
+  - Added [`scripts/latency_tests.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/latency_tests.yaml) combining all 946 latency test steps across all 40 health data types, paired devices, and user endpoints (1,892 expanded test executions across `me` and `healthUserId`).
+  - Configured with a top-level global latency threshold `maxLatencyMs: 1000` (failing any endpoint exceeding 1000 ms) and step-level `# maxLatencyMs: 1000` override flags on every step.
 - **Global & Endpoint-Specific Latency Assertion Support**:
   - Updated [`TestSuiteScript.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/model/TestSuiteScript.java) and [`TestStep.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/model/TestStep.java) to support top-level `maxLatencyMs` inheritance and per-step `maxLatencyMs` overrides.
   - Updated [`SuiteExecutionEngine.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/runner/SuiteExecutionEngine.java) (`executeStep`) to evaluate response latency against `maxLatencyMs` and fail steps exceeding the configured limit.
