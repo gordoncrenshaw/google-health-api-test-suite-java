@@ -1,5 +1,6 @@
 package com.google.health.testsuite.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
@@ -23,6 +24,11 @@ public class TestSuiteScript {
 
     @JsonProperty("stopOnError")
     private boolean stopOnError = false;
+
+    @JsonProperty("maxLatencyMs")
+    @JsonAlias({"maxLatency", "latencyMs", "latency", "assertMaxLatencyMs", "assertLatencyMs"})
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private Long maxLatencyMs = null;
 
     @JsonProperty("steps")
     private List<TestStep> steps = new ArrayList<>();
@@ -69,6 +75,14 @@ public class TestSuiteScript {
         this.stopOnError = stopOnError;
     }
 
+    public Long getMaxLatencyMs() {
+        return maxLatencyMs;
+    }
+
+    public void setMaxLatencyMs(Long maxLatencyMs) {
+        this.maxLatencyMs = maxLatencyMs;
+    }
+
     public List<TestStep> getSteps() {
         return steps;
     }
@@ -80,7 +94,8 @@ public class TestSuiteScript {
     /**
      * Returns the list of executable test steps, expanding any steps configured with
      * userId "both" (either explicitly on the step or inherited from the script) into
-     * separate steps for "me" and "healthUserId".
+     * separate steps for "me" and "healthUserId", and inheriting global maxLatencyMs
+     * when not overridden on the step.
      */
     @com.fasterxml.jackson.annotation.JsonIgnore
     public List<TestStep> getExpandedSteps() {
@@ -91,20 +106,26 @@ public class TestSuiteScript {
             String stepUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty())
                     ? step.getUserId().trim()
                     : scriptUser;
+            Long effectiveMaxLatency = step.getMaxLatencyMs() != null
+                    ? step.getMaxLatencyMs()
+                    : this.maxLatencyMs;
 
             if ("both".equalsIgnoreCase(stepUser)) {
                 TestStep stepMe = step.copy();
                 stepMe.setUserId("me");
+                stepMe.setMaxLatencyMs(effectiveMaxLatency);
                 stepMe.setName(appendUserSuffix(step.getName(), "me"));
                 expanded.add(stepMe);
 
                 TestStep stepHealthUser = step.copy();
                 stepHealthUser.setUserId("healthUserId");
+                stepHealthUser.setMaxLatencyMs(effectiveMaxLatency);
                 stepHealthUser.setName(appendUserSuffix(step.getName(), "healthUserId"));
                 expanded.add(stepHealthUser);
             } else {
                 TestStep s = step.copy();
                 s.setUserId(stepUser);
+                s.setMaxLatencyMs(effectiveMaxLatency);
                 expanded.add(s);
             }
         }

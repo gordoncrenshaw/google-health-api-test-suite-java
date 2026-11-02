@@ -1,0 +1,20 @@
+# Google Health API Daily Oxygen Saturation Custom Tests
+name: "Google Health API Daily Oxygen Saturation Tests"
+description: "Custom tests for Daily Oxygen Saturation datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Daily Oxygen Saturation List (userId: dummyValue)"
+    action: "list"
+    dataType: "daily-oxygen-saturation"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true
+
+  - name: "Custom: Daily Oxygen Saturation Reconcile (userId: dummyValue)"
+    action: "reconcile"
+    dataType: "daily-oxygen-saturation"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true

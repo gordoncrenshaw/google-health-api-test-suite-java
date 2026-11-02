@@ -1,10 +1,49 @@
 name: Google Health API Full Test Suite
 description: Master test suite executing data type and endpoint test scripts
 scripts:
+  - scripts/custom_tests_pairedDevices.yaml
   - scripts/custom_tests_user.yaml
-  - scripts/full_regression.yaml
-  - scripts/sample_suite.yaml
-  - scripts/smoke_test.yaml
+  - scripts/custom_tests-activeEnergyBurned.yaml
+  - scripts/custom_tests-activeMinutes.yaml
+  - scripts/custom_tests-activeZoneMinutes.yaml
+  - scripts/custom_tests-activityLevel.yaml
+  - scripts/custom_tests-altitude.yaml
+  - scripts/custom_tests-bloodGlucose.yaml
+  - scripts/custom_tests-bodyFat.yaml
+  - scripts/custom_tests-caloriesInHeartRateZone.yaml
+  - scripts/custom_tests-coreBodyTemperature.yaml
+  - scripts/custom_tests-dailyHeartRateVariability.yaml
+  - scripts/custom_tests-dailyHeartRateZones.yaml
+  - scripts/custom_tests-dailyOxygenSaturation.yaml
+  - scripts/custom_tests-dailyRespiratoryRate.yaml
+  - scripts/custom_tests-dailyRestingHeartRate.yaml
+  - scripts/custom_tests-dailySleepTemperatureDerivations.yaml
+  - scripts/custom_tests-dailyVo2Max.yaml
+  - scripts/custom_tests-distance.yaml
+  - scripts/custom_tests-electrocardiogram.yaml
+  - scripts/custom_tests-exercise.yaml
+  - scripts/custom_tests-floors.yaml
+  - scripts/custom_tests-food.yaml
+  - scripts/custom_tests-foodMeasurementUnit.yaml
+  - scripts/custom_tests-heartRate.yaml
+  - scripts/custom_tests-heartRateVariability.yaml
+  - scripts/custom_tests-height.yaml
+  - scripts/custom_tests-hydrationLog.yaml
+  - scripts/custom_tests-irregularRhythmNotification.yaml
+  - scripts/custom_tests-nutritionLog.yaml
+  - scripts/custom_tests-oxygenSaturation.yaml
+  - scripts/custom_tests-respiratoryRateSleepSummary.yaml
+  - scripts/custom_tests-runVo2Max.yaml
+  - scripts/custom_tests-sedentaryPeriod.yaml
+  - scripts/custom_tests-skinTemperatureSensors.yaml
+  - scripts/custom_tests-sleep.yaml
+  - scripts/custom_tests-steps.yaml
+  - scripts/custom_tests-swimLengthsData.yaml
+  - scripts/custom_tests-timeInHeartRateZone.yaml
+  - scripts/custom_tests-totalCalories.yaml
+  - scripts/custom_tests-vo2Max.yaml
+  - scripts/custom_tests-weight.yaml
+  - scripts/latency_tests.yaml
   - scripts/standard_tests_auth.yaml
   - scripts/standard_tests_pairedDevices.yaml
   - scripts/standard_tests_user.yaml

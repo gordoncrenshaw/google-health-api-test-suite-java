@@ -1,0 +1,20 @@
+# Google Health API Height Custom Tests
+name: "Google Health API Height Tests"
+description: "Custom tests for Height datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Height List (userId: dummyValue)"
+    action: "list"
+    dataType: "height"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true
+
+  - name: "Custom: Height Reconcile (userId: dummyValue)"
+    action: "reconcile"
+    dataType: "height"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true

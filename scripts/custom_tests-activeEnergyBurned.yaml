@@ -1,0 +1,70 @@
+# Google Health API Active Energy Burned Custom Tests
+name: "Google Health API Active Energy Burned Tests"
+description: "Custom tests for Active Energy Burned datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Active Energy Burned List (userId: dummyValue)"
+    action: "list"
+    dataType: "active-energy-burned"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true
+
+  - name: "Custom: Active Energy Burned DailyRollUp (userId: dummyValue)"
+    action: "dailyrollup"
+    userId: dummyValue
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        }
+      }
+    assertStatus: [403]
+
+  - name: "Custom: Active Energy Burned RollUp (userId: dummyValue)"
+    action: "rollup"
+    userId: dummyValue
+    dataType: "active-energy-burned"
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+       "windowSize": "60s"
+      }
+    assertStatus: [403]
+
+  - name: "Custom: Active Energy Burned Reconcile (userId: dummyValue)"
+    action: "reconcile"
+    dataType: "active-energy-burned"
+    userId: dummyValue 
+    assertStatus: [403]
+    validateRange: true
+

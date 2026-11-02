@@ -1,14 +1,23 @@
 package com.google.health.testsuite.runner;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.health.testsuite.client.HealthApiClient;
 import com.google.health.testsuite.client.ValidationEngine;
 import com.google.health.testsuite.config.ConfigManager;
 import com.google.health.testsuite.config.DataTypeRegistry;
-import com.google.health.testsuite.model.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.*;
+import com.google.health.testsuite.model.ApiResponse;
+import com.google.health.testsuite.model.DataTypeDefinition;
+import com.google.health.testsuite.model.TestResult;
+import com.google.health.testsuite.model.TestStep;
+import com.google.health.testsuite.model.ValidationResult;
 
 /**
  * Core test execution engine shared across CLI Menu, Web UX, and Script Runner.
@@ -251,7 +260,15 @@ public class SuiteExecutionEngine {
                 }
             }
 
-            boolean overallPassed = statusPassed && valResult.isValid() && containsPassed;
+            boolean latencyPassed = true;
+            Long maxLatencyMs = step.getMaxLatencyMs();
+            if (maxLatencyMs != null && maxLatencyMs > 0) {
+                if (response.getLatencyMs() > maxLatencyMs) {
+                    latencyPassed = false;
+                }
+            }
+
+            boolean overallPassed = statusPassed && valResult.isValid() && containsPassed && latencyPassed;
             StringBuilder msg = new StringBuilder();
             if (!statusPassed) {
                 msg.append("Expected status ").append(step.getAssertStatus())
@@ -273,8 +290,18 @@ public class SuiteExecutionEngine {
             if (!containsPassed) {
                 msg.append("Response missing expected substring: '").append(missingText).append("'. ");
             }
+            if (!latencyPassed) {
+                msg.append("Latency ").append(response.getLatencyMs())
+                        .append("ms exceeded max allowed ").append(maxLatencyMs).append("ms. ");
+            }
             if (overallPassed) {
-                msg.append("Passed (HTTP ").append(response.getStatusCode()).append(")");
+                if (maxLatencyMs != null && maxLatencyMs > 0) {
+                    msg.append("Passed (HTTP ").append(response.getStatusCode())
+                            .append(", latency ").append(response.getLatencyMs())
+                            .append("ms <= ").append(maxLatencyMs).append("ms)");
+                } else {
+                    msg.append("Passed (HTTP ").append(response.getStatusCode()).append(")");
+                }
             }
 
             return new TestResult(step.getName(), dtName != null ? dtName : "api", action,

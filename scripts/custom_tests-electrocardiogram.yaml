@@ -1,0 +1,13 @@
+# Google Health API Electrocardiogram Custom Tests
+name: "Google Health API Electrocardiogram Tests"
+description: "Custom tests for Electrocardiogram datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Electrocardiogram List (userId: dummyValue)"
+    action: "list"
+    dataType: "electrocardiogram"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true

@@ -1,0 +1,20 @@
+# Google Health API Daily Heart Rate Variability Custom Tests
+name: "Google Health API Daily Heart Rate Variability Tests"
+description: "Custom tests for Daily Heart Rate Variability datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Daily Heart Rate Variability List (userId: dummyValue)"
+    action: "list"
+    dataType: "daily-heart-rate-variability"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true
+
+  - name: "Custom: Daily Heart Rate Variability Reconcile (userId: dummyValue)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-variability"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true

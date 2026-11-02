@@ -849,6 +849,9 @@ public class RestApiHandler implements HttpHandler {
                         sNode.put("name", s.getName());
                         sNode.put("description", s.getDescription());
                         sNode.put("userId", s.getUserId());
+                        if (s.getMaxLatencyMs() != null) {
+                            sNode.put("maxLatencyMs", s.getMaxLatencyMs());
+                        }
                         sNode.put("totalSteps", s.getExpandedSteps().size());
                     } catch (Exception ignored) {}
                 }

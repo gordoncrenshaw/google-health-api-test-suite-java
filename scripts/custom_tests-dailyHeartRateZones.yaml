@@ -1,0 +1,20 @@
+# Google Health API Daily Heart Rate Zones Custom Tests
+name: "Google Health API Daily Heart Rate Zones Tests"
+description: "Custom tests for Daily Heart Rate Zones datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Daily Heart Rate Zones List (userId: dummyValue)"
+    action: "list"
+    dataType: "daily-heart-rate-zones"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true
+
+  - name: "Custom: Daily Heart Rate Zones Reconcile (userId: dummyValue)"
+    action: "reconcile"
+    dataType: "daily-heart-rate-zones"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true

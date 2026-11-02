@@ -1,0 +1,19 @@
+# ==============================================================================
+# Google Health API Test Suite - Paired Devices Custom Tests
+# ==============================================================================
+# Tests user paired devices endpoints:
+#   - listDevices (GET /v4/users/{userId}/pairedDevices)
+# ==============================================================================
+
+name: "Google Health API Paired Devices Endpoints Custom Tests"
+description: "Custom tests for paired devices endpoints"
+stopOnError: false
+
+steps:
+  # ----------------------------------------------------------------------------
+  # 1. Paired Devices (GET /v4/users/{userId}/pairedDevices)
+  # ----------------------------------------------------------------------------
+  - name: "Custom: User Paired Devices (userId: dummyValue)"
+    action: "devices"
+    userId: dummyValue
+    assertStatus: [403]

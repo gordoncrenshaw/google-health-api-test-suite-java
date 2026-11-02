@@ -1,5 +1,6 @@
 package com.google.health.testsuite.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
@@ -70,6 +71,10 @@ public class TestStep {
 
     @JsonProperty("assertContains")
     private List<String> assertContains = new ArrayList<>();
+
+    @JsonProperty("maxLatencyMs")
+    @JsonAlias({"maxLatency", "latencyMs", "latency", "assertMaxLatencyMs", "assertLatencyMs"})
+    private Long maxLatencyMs;
 
     public TestStep() {
     }
@@ -178,6 +183,14 @@ public class TestStep {
         this.ticketId = ticketId;
     }
 
+    public Long getMaxLatencyMs() {
+        return maxLatencyMs;
+    }
+
+    public void setMaxLatencyMs(Long maxLatencyMs) {
+        this.maxLatencyMs = maxLatencyMs;
+    }
+
     public TestStep copy() {
         TestStep copy = new TestStep();
         copy.setName(this.name);
@@ -197,6 +210,7 @@ public class TestStep {
         if (this.assertContains != null) {
             copy.setAssertContains(new ArrayList<>(this.assertContains));
         }
+        copy.setMaxLatencyMs(this.maxLatencyMs);
         return copy;
     }
 }

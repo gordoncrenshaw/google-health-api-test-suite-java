@@ -1,0 +1,69 @@
+# Google Health API Swim Lengths Data Custom Tests
+name: "Google Health API Swim Lengths Data Tests"
+description: "Custom tests for Swim Lengths Data datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Swim Lengths Data List (userId: dummyValue)"
+    action: "list"
+    dataType: "swim-lengths-data"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true
+
+  - name: "Custom: Swim Lengths Data DailyRollUp (userId: dummyValue)"
+    action: "dailyrollup"
+    dataType: "swim-lengths-data"
+    userId: dummyValue
+    body: |
+      {
+        "range": {
+          "start": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 1
+            }, 
+            "time": {
+              "hours": 0, 
+              "minutes": 0, 
+              "seconds": 0
+            }
+          },
+          "end": {
+            "date": {
+              "year": 2026, 
+              "month": 10, 
+              "day": 8
+            }, 
+            "time": {
+              "hours": 23, 
+              "minutes": 59, 
+              "seconds": 59
+            }
+          }
+        }
+      }
+    assertStatus: [403]
+
+  - name: "Custom: Swim Lengths Data RollUp (userId: dummyValue)"
+    action: "rollup"
+    dataType: "swim-lengths-data"
+    userId: dummyValue
+    body: |
+      {
+        "range": {
+          "startTime": "2026-10-01T00:00:00Z", 
+          "endTime": "2026-10-08T23:59:59Z"
+        },
+       "windowSize": "60s"
+      }
+    assertStatus: [403]
+
+  - name: "Custom: Swim Lengths Data Reconcile (userId: dummyValue)"
+    action: "reconcile"
+    dataType: "swim-lengths-data"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true

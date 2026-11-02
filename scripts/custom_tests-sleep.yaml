@@ -1,0 +1,20 @@
+# Google Health API Sleep Custom Tests
+name: "Google Health API Sleep Tests"
+description: "Custom tests for Sleep datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Sleep List (userId: dummyValue)"
+    action: "list"
+    dataType: "sleep"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true
+
+  - name: "Custom: Sleep Reconcile (userId: dummyValue)"
+    action: "reconcile"
+    dataType: "sleep"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true

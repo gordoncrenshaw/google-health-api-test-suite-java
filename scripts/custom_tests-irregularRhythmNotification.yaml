@@ -1,0 +1,13 @@
+# Google Health API Irregular Rhythm Notification Custom Tests
+name: "Google Health API Irregular Rhythm Notification Tests"
+description: "Custom tests for Irregular Rhythm Notification datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Irregular Rhythm Notification List (userId: dummyValue)"
+    action: "list"
+    dataType: "irregular-rhythm-notification"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true

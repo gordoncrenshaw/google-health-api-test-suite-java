@@ -1,0 +1,13 @@
+# Google Health API Food Measurement Unit Custom Tests
+name: "Google Health API Food Measurement Unit Tests"
+description: "Custom tests for Food Measurement Unit datatype"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  - name: "Custom: Food Measurement Unit List (userId: dummyValue)"
+    action: "list"
+    dataType: "food-measurement-unit"
+    userId: dummyValue
+    assertStatus: [403]
+    validateRange: true
