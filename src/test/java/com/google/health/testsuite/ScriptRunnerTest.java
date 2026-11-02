@@ -102,11 +102,11 @@ public class ScriptRunnerTest {
 
     @Test
     void testRunStandardLatencyTestsScript() throws Exception {
-        File scriptFile = new File("scripts/standard_tests-latency.yaml");
-        assertTrue(scriptFile.exists(), "standard_tests-latency.yaml script must exist");
+        File scriptFile = new File("scripts/latency_tests.yaml");
+        assertTrue(scriptFile.exists(), "latency_tests.yaml script must exist");
 
         int exitCode = runner.runScript(scriptFile);
-        assertEquals(0, exitCode, "standard_tests-latency.yaml should pass with exit code 0 in mock mode");
+        assertEquals(0, exitCode, "latency_tests.yaml should pass with exit code 0 in mock mode");
 
         var results = runner.executeScript(scriptFile);
         assertEquals(140, results.size(), "35 activeEnergyBurned + 35 activeMinutes steps with userId: both should expand to 140 steps");
