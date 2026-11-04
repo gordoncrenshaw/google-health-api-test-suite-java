@@ -76,6 +76,10 @@ public class TestStep {
     @JsonAlias({"maxLatency", "latencyMs", "latency", "assertMaxLatencyMs", "assertLatencyMs"})
     private Long maxLatencyMs;
 
+    @JsonProperty("verifyWithGet")
+    @JsonAlias({"verifyGet", "verify_with_get"})
+    private boolean verifyWithGet = false;
+
     public TestStep() {
     }
 
@@ -191,6 +195,14 @@ public class TestStep {
         this.maxLatencyMs = maxLatencyMs;
     }
 
+    public boolean isVerifyWithGet() {
+        return verifyWithGet;
+    }
+
+    public void setVerifyWithGet(boolean verifyWithGet) {
+        this.verifyWithGet = verifyWithGet;
+    }
+
     public TestStep copy() {
         TestStep copy = new TestStep();
         copy.setName(this.name);
@@ -211,6 +223,7 @@ public class TestStep {
             copy.setAssertContains(new ArrayList<>(this.assertContains));
         }
         copy.setMaxLatencyMs(this.maxLatencyMs);
+        copy.setVerifyWithGet(this.verifyWithGet);
         return copy;
     }
 }

@@ -9,6 +9,8 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.health.testsuite.client.HealthApiClient;
 import com.google.health.testsuite.client.ValidationEngine;
 import com.google.health.testsuite.config.ConfigManager;
@@ -30,6 +32,7 @@ public class SuiteExecutionEngine {
     private final DataTypeRegistry dataTypeRegistry;
     private final HealthApiClient apiClient;
     private final ValidationEngine validationEngine;
+    private final ObjectMapper jsonMapper = new ObjectMapper();
 
     public SuiteExecutionEngine(ConfigManager configManager, DataTypeRegistry dataTypeRegistry,
                                 HealthApiClient apiClient) {
@@ -206,7 +209,7 @@ public class SuiteExecutionEngine {
                     response = apiClient.getProfile(step.getUserId());
                 }
                 case "update_profile", "patch_profile", "updateprofile", "patchprofile" -> {
-                    response = apiClient.updateProfile(step.getUserId(), step.getBody());
+                    response = apiClient.updateProfile(step.getUserId(), step.getQueryParams(), step.getBody());
                 }
                 case "irn_profile", "get_irn_profile", "irnprofile", "getirnprofile" -> {
                     response = apiClient.getIrnProfile(step.getUserId());
@@ -215,7 +218,7 @@ public class SuiteExecutionEngine {
                     response = apiClient.getSettings(step.getUserId());
                 }
                 case "update_settings", "patch_settings", "updatesettings", "patchsettings" -> {
-                    response = apiClient.updateSettings(step.getUserId(), step.getBody());
+                    response = apiClient.updateSettings(step.getUserId(), step.getQueryParams(), step.getBody());
                 }
                 case "devices", "list_devices", "listdevices", "get_devices", "getdevices" -> {
                     response = apiClient.listPairedDevices(step.getUserId());
@@ -248,6 +251,56 @@ public class SuiteExecutionEngine {
                 valResult = validationEngine.validate(def, response.getBody());
             }
 
+            boolean verifyGetPassed = true;
+            String verifyGetError = null;
+            if (step.isVerifyWithGet() && statusPassed && response.isSuccess()) {
+                ApiResponse getResponse = null;
+                String getEndpointName = "GET";
+                if (action.contains("profile")) {
+                    getResponse = apiClient.getProfile(step.getUserId());
+                    getEndpointName = "getProfile";
+                } else if (action.contains("settings")) {
+                    getResponse = apiClient.getSettings(step.getUserId());
+                    getEndpointName = "getSettings";
+                }
+
+                if (getResponse != null) {
+                    if (!getResponse.isSuccess()) {
+                        verifyGetPassed = false;
+                        verifyGetError = getEndpointName + " verification returned HTTP " + getResponse.getStatusCode()
+                                + (getResponse.getErrorMessage() != null ? " - " + getResponse.getErrorMessage() : "");
+                    } else if (step.getBody() != null && !step.getBody().isBlank()) {
+                        try {
+                            JsonNode expectedNode = jsonMapper.readTree(step.getBody());
+                            JsonNode actualNode = jsonMapper.readTree(getResponse.getBody());
+                            if (expectedNode.isObject()) {
+                                var fields = expectedNode.fields();
+                                while (fields.hasNext()) {
+                                    var entry = fields.next();
+                                    String fieldName = entry.getKey();
+                                    if ("name".equals(fieldName)) continue;
+                                    JsonNode expectedVal = entry.getValue();
+                                    JsonNode actualVal = actualNode.get(fieldName);
+                                    boolean matched = actualVal != null && (expectedVal.equals(actualVal)
+                                            || (expectedVal.isValueNode() && actualVal.isValueNode()
+                                                    && expectedVal.asText().equals(actualVal.asText())));
+                                    if (!matched) {
+                                        verifyGetPassed = false;
+                                        verifyGetError = getEndpointName + " verification failed for field '"
+                                                + fieldName + "': expected " + expectedVal + " but got "
+                                                + (actualVal != null ? actualVal : "null");
+                                        break;
+                                    }
+                                }
+                            }
+                        } catch (Exception jsonEx) {
+                            verifyGetPassed = false;
+                            verifyGetError = getEndpointName + " verification failed to parse JSON: " + jsonEx.getMessage();
+                        }
+                    }
+                }
+            }
+
             boolean containsPassed = true;
             String missingText = null;
             if (step.getAssertContains() != null) {
@@ -268,7 +321,7 @@ public class SuiteExecutionEngine {
                 }
             }
 
-            boolean overallPassed = statusPassed && valResult.isValid() && containsPassed && latencyPassed;
+            boolean overallPassed = statusPassed && valResult.isValid() && containsPassed && latencyPassed && verifyGetPassed;
             StringBuilder msg = new StringBuilder();
             if (!statusPassed) {
                 msg.append("Expected status ").append(step.getAssertStatus())
@@ -290,18 +343,23 @@ public class SuiteExecutionEngine {
             if (!containsPassed) {
                 msg.append("Response missing expected substring: '").append(missingText).append("'. ");
             }
+            if (!verifyGetPassed && verifyGetError != null) {
+                msg.append(verifyGetError).append(". ");
+            }
             if (!latencyPassed) {
                 msg.append("Latency ").append(response.getLatencyMs())
                         .append("ms exceeded max allowed ").append(maxLatencyMs).append("ms. ");
             }
             if (overallPassed) {
-                if (maxLatencyMs != null && maxLatencyMs > 0) {
-                    msg.append("Passed (HTTP ").append(response.getStatusCode())
-                            .append(", latency ").append(response.getLatencyMs())
-                            .append("ms <= ").append(maxLatencyMs).append("ms)");
-                } else {
-                    msg.append("Passed (HTTP ").append(response.getStatusCode()).append(")");
+                msg.append("Passed (HTTP ").append(response.getStatusCode());
+                if (step.isVerifyWithGet()) {
+                    msg.append(", verified via GET");
                 }
+                if (maxLatencyMs != null && maxLatencyMs > 0) {
+                    msg.append(", latency ").append(response.getLatencyMs())
+                            .append("ms <= ").append(maxLatencyMs).append("ms");
+                }
+                msg.append(")");
             }
 
             return new TestResult(step.getName(), dtName != null ? dtName : "api", action,

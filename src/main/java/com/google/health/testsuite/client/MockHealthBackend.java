@@ -18,6 +18,8 @@ import java.util.*;
 public class MockHealthBackend {
 
     private final ObjectMapper jsonMapper = new ObjectMapper();
+    private final Map<String, JsonNode> persistedProfileOverrides = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, JsonNode> persistedSettingsOverrides = new java.util.concurrent.ConcurrentHashMap<>();
 
     public ApiResponse handleRequest(String httpMethod, String path, Map<String, String> queryParams,
                                       String requestBody, DataTypeDefinition def, String healthUserId) {
@@ -51,12 +53,25 @@ public class MockHealthBackend {
                 profile.put("healthUserId", "gh-user-" + UUID.randomUUID().toString().substring(0, 8));
                 profile.put("displayName", "Test Health User");
                 profile.put("locale", "en-US");
+                profile.put("age", 34);
+                profile.put("userConfiguredWalkingStrideLengthMm", 720);
+                profile.put("userConfiguredRunningStrideLengthMm", 1100);
+                profile.put("autoWalkingStrideLengthMm", 715);
+                profile.put("autoRunningStrideLengthMm", 1090);
                 if ("PATCH".equalsIgnoreCase(httpMethod) && requestBody != null && !requestBody.trim().isEmpty()) {
                     try {
                         JsonNode patchNode = jsonMapper.readTree(requestBody);
-                        if (patchNode.has("displayName")) profile.put("displayName", patchNode.path("displayName").asText());
-                        if (patchNode.has("locale")) profile.put("locale", patchNode.path("locale").asText());
+                        if (patchNode.isObject()) {
+                            patchNode.fields().forEachRemaining(entry -> {
+                                if (!"name".equals(entry.getKey())) {
+                                    persistedProfileOverrides.put(entry.getKey(), entry.getValue().deepCopy());
+                                }
+                            });
+                        }
                     } catch (Exception ignored) {}
+                }
+                for (Map.Entry<String, JsonNode> entry : persistedProfileOverrides.entrySet()) {
+                    profile.set(entry.getKey(), entry.getValue().deepCopy());
                 }
                 responseBody = profile.toPrettyString();
 
@@ -71,21 +86,32 @@ public class MockHealthBackend {
             } else if (path.contains("/settings")) {
                 ObjectNode settings = jsonMapper.createObjectNode();
                 settings.put("name", "users/" + effectiveUser + "/settings");
-                settings.put("distanceUnit", "KILOMETERS");
-                settings.put("weightUnit", "KILOGRAMS");
-                settings.put("heightUnit", "CENTIMETERS");
-                settings.put("temperatureUnit", "CELSIUS");
+                settings.put("distanceUnit", "DISTANCE_UNIT_KILOMETERS");
+                settings.put("glucoseUnit", "GLUCOSE_UNIT_MG_DL");
+                settings.put("heightUnit", "HEIGHT_UNIT_CENTIMETERS");
+                settings.put("swimUnit", "SWIM_UNIT_METERS");
+                settings.put("temperatureUnit", "TEMPERATURE_UNIT_CELSIUS");
+                settings.put("timeZone", "America/New_York");
                 settings.put("timezone", "America/New_York");
+                settings.put("waterUnit", "WATER_UNIT_ML");
+                settings.put("weightUnit", "WEIGHT_UNIT_KILOGRAMS");
                 if ("PATCH".equalsIgnoreCase(httpMethod) && requestBody != null && !requestBody.trim().isEmpty()) {
                     try {
                         JsonNode patchNode = jsonMapper.readTree(requestBody);
-                        if (patchNode.has("timezone")) settings.put("timezone", patchNode.path("timezone").asText());
-                        if (patchNode.has("timeZone")) settings.put("timezone", patchNode.path("timeZone").asText());
-                        if (patchNode.has("temperatureUnit")) settings.put("temperatureUnit", patchNode.path("temperatureUnit").asText());
-                        if (patchNode.has("distanceUnit")) settings.put("distanceUnit", patchNode.path("distanceUnit").asText());
-                        if (patchNode.has("weightUnit")) settings.put("weightUnit", patchNode.path("weightUnit").asText());
-                        if (patchNode.has("heightUnit")) settings.put("heightUnit", patchNode.path("heightUnit").asText());
+                        if (patchNode.isObject()) {
+                            patchNode.fields().forEachRemaining(entry -> {
+                                if (!"name".equals(entry.getKey())) {
+                                    persistedSettingsOverrides.put(entry.getKey(), entry.getValue().deepCopy());
+                                    if ("timeZone".equals(entry.getKey())) {
+                                        persistedSettingsOverrides.put("timezone", entry.getValue().deepCopy());
+                                    }
+                                }
+                            });
+                        }
                     } catch (Exception ignored) {}
+                }
+                for (Map.Entry<String, JsonNode> entry : persistedSettingsOverrides.entrySet()) {
+                    settings.set(entry.getKey(), entry.getValue().deepCopy());
                 }
                 responseBody = settings.toPrettyString();
 

@@ -101,6 +101,36 @@ public class ScriptRunnerTest {
     }
 
     @Test
+    void testRunStandardUpdateProfileScript() throws Exception {
+        File scriptFile = new File("scripts/standard_tests_updateProfile.yaml");
+        assertTrue(scriptFile.exists(), "standard_tests_updateProfile.yaml script must exist");
+
+        int exitCode = runner.runScript(scriptFile);
+        assertEquals(0, exitCode, "standard_tests_updateProfile.yaml should pass with exit code 0 in mock mode");
+
+        var results = runner.executeScript(scriptFile);
+        assertEquals(6, results.size(), "3 updateProfile steps with userId: both should expand to 6 steps");
+        assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
+                "All updateProfile + getProfile verification tests should pass");
+        assertTrue(results.get(0).getMessage().contains("verified via GET"));
+    }
+
+    @Test
+    void testRunStandardUpdateSettingsScript() throws Exception {
+        File scriptFile = new File("scripts/standard_tests_updateSettings.yaml");
+        assertTrue(scriptFile.exists(), "standard_tests_updateSettings.yaml script must exist");
+
+        int exitCode = runner.runScript(scriptFile);
+        assertEquals(0, exitCode, "standard_tests_updateSettings.yaml should pass with exit code 0 in mock mode");
+
+        var results = runner.executeScript(scriptFile);
+        assertEquals(48, results.size(), "24 updateSettings steps with userId: both should expand to 48 steps");
+        assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
+                "All updateSettings + getSettings verification tests should pass");
+        assertTrue(results.get(0).getMessage().contains("verified via GET"));
+    }
+
+    @Test
     void testRunStandardLatencyTestsScript() throws Exception {
         File scriptFile = new File("scripts/latency_tests.yaml");
         assertTrue(scriptFile.exists(), "latency_tests.yaml script must exist");
@@ -109,7 +139,7 @@ public class ScriptRunnerTest {
         assertEquals(0, exitCode, "latency_tests.yaml should pass with exit code 0 in mock mode");
 
         var results = runner.executeScript(scriptFile);
-        assertEquals(1892, results.size(), "946 standard test steps with userId: both should expand to 1892 steps");
+        assertEquals(1884, results.size(), "942 standard test steps with userId: both should expand to 1884 steps");
         assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
                 "All latency tests should pass when latency <= 1000ms");
     }

@@ -609,6 +609,17 @@ public final class AppVersion {
 
 ## 📋 Version History & Changelog
 
+### Version 1.1.4 (November 4, 2026) - Release 1.1.4
+
+#### 🌟 Update Profile & Update Settings Standard Test Suites (`verifyWithGet: true`)
+- **Update & Verify Standard Test Scripts (`verifyWithGet: true`)**:
+  - Added [`scripts/standard_tests_updateProfile.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_updateProfile.yaml) testing `users.updateProfile` (`PATCH /v4/users/{userId}/profile`) with `updateMask` and verifying persistence via `users.getProfile`.
+  - Added [`scripts/standard_tests_updateSettings.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_updateSettings.yaml) testing `users.updateSettings` (`PATCH /v4/users/{userId}/settings`) across all unit enumerations (`distanceUnit`, `glucoseUnit`, `heightUnit`, `swimUnit`, `temperatureUnit`, `waterUnit`, `weightUnit`) and combined updates, verifying persistence via `users.getSettings`.
+  - Enhanced [`TestStep.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/model/TestStep.java), [`HealthApiClient.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/client/HealthApiClient.java), [`SuiteExecutionEngine.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/runner/SuiteExecutionEngine.java), and [`MockHealthBackend.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/client/MockHealthBackend.java) to forward `queryParams` (`updateMask`) on profile/settings `PATCH` calls and automatically verify updated fields via follow-up `GET` calls when `verifyWithGet: true` is enabled.
+  - Registered both scripts in [`config/test_suite_manifest.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/config/test_suite_manifest.yaml) and added unit tests in [`ScriptRunnerTest.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/test/java/com/google/health/testsuite/ScriptRunnerTest.java).
+
+---
+
 ### Version 1.1.3 (November 1, 2026) - Release 1.1.3
 
 #### 🌟 Latency Test Suite & Custom Negative Test Enhancements

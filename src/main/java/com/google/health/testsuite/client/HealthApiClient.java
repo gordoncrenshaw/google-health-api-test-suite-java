@@ -496,9 +496,13 @@ public class HealthApiClient {
      * Syntax: PATCH /v4/users/{userId}/profile
      */
     public ApiResponse updateProfile(String userId, String jsonBody) {
+        return updateProfile(userId, null, jsonBody);
+    }
+
+    public ApiResponse updateProfile(String userId, Map<String, String> queryParams, String jsonBody) {
         String effectiveUser = getEffectiveUserId(userId);
         String path = "/v4/users/" + effectiveUser + "/profile";
-        return execute("PATCH", path, null, jsonBody != null ? jsonBody : "{}", null);
+        return execute("PATCH", path, queryParams, jsonBody != null ? jsonBody : "{}", null);
     }
 
     /**
@@ -506,9 +510,13 @@ public class HealthApiClient {
      * Syntax: PATCH /v4/users/{userId}/settings
      */
     public ApiResponse updateSettings(String userId, String jsonBody) {
+        return updateSettings(userId, null, jsonBody);
+    }
+
+    public ApiResponse updateSettings(String userId, Map<String, String> queryParams, String jsonBody) {
         String effectiveUser = getEffectiveUserId(userId);
         String path = "/v4/users/" + effectiveUser + "/settings";
-        return execute("PATCH", path, null, jsonBody != null ? jsonBody : "{}", null);
+        return execute("PATCH", path, queryParams, jsonBody != null ? jsonBody : "{}", null);
     }
 
     /**

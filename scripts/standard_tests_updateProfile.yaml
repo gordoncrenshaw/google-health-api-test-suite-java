@@ -1,0 +1,59 @@
+# ==============================================================================
+# Google Health API Test Suite - Update User Profile Standard Tests
+# ==============================================================================
+# Tests the users.updateProfile endpoint (PATCH /v4/users/{userId}/profile):
+#   1. Calls PATCH /v4/users/{userId}/profile with updateMask and Profile body
+#   2. Calls GET /v4/users/{userId}/profile (via verifyWithGet: true)
+#   3. Verifies the GET response reflects the updated Profile field values
+# Reference: https://developers.google.com/health/reference/rest/v4/users/updateProfile
+# ==============================================================================
+
+name: "Google Health API Update User Profile Standard Tests"
+description: "Standard tests for updating user profile via updateProfile and verifying persistence via getProfile"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ----------------------------------------------------------------------------
+  # 1. Update Walking Stride Length (userConfiguredWalkingStrideLengthMm)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Update User Profile (userConfiguredWalkingStrideLengthMm)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredWalkingStrideLengthMm"
+    body: |
+      {
+        "userConfiguredWalkingStrideLengthMm": 750
+      }
+    assertStatus: [200]
+
+  # ----------------------------------------------------------------------------
+  # 2. Update Running Stride Length (userConfiguredRunningStrideLengthMm)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Update User Profile (userConfiguredRunningStrideLengthMm)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredRunningStrideLengthMm"
+    body: |
+      {
+        "userConfiguredRunningStrideLengthMm": 1150
+      }
+    assertStatus: [200]
+
+  # ----------------------------------------------------------------------------
+  # 3. Update Combined Profile Stride Lengths (walking + running)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Update User Profile (combined)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredWalkingStrideLengthMm,userConfiguredRunningStrideLengthMm"
+    body: |
+      {
+        "userConfiguredWalkingStrideLengthMm": 760,
+        "userConfiguredRunningStrideLengthMm": 1180
+      }
+    assertStatus: [200]
+

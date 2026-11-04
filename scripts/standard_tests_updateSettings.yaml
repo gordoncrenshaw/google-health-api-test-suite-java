@@ -1,0 +1,320 @@
+# ==============================================================================
+# Google Health API Test Suite - Update User Settings Standard Tests
+# ==============================================================================
+# Tests the users.updateSettings endpoint (PATCH /v4/users/{userId}/settings):
+#   1. Calls PATCH /v4/users/{userId}/settings with updateMask and Settings body
+#   2. Calls GET /v4/users/{userId}/settings (via verifyWithGet: true)
+#   3. Verifies the GET response reflects the updated Settings field values
+# Reference: https://developers.google.com/health/reference/rest/v4/users/updateSettings
+# ==============================================================================
+
+name: "Google Health API Update User Settings Standard Tests"
+description: "Standard tests for updating user settings via updateSettings and verifying persistence via getSettings"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ----------------------------------------------------------------------------
+  # 1. Update Distance Unit (distanceUnit)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Update User Settings (distanceUnit=unspecified)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "distanceUnit"
+    body: |
+      {
+        "distanceUnit": "DISTANCE_UNIT_UNSPECIFIED"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (distanceUnit=miles)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "distanceUnit"
+    body: |
+      {
+        "distanceUnit": "DISTANCE_UNIT_MILES"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (distanceUnit=kilometers)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "distanceUnit"
+    body: |
+      {
+        "distanceUnit": "DISTANCE_UNIT_KILOMETERS"
+      }
+    assertStatus: [200]
+
+  # ----------------------------------------------------------------------------
+  # 2. Update Glucose Unit (glucoseUnit)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Update User Settings (glucoseUnit=unspecified)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "glucoseUnit"
+    body: |
+      {
+        "glucoseUnit": "GLUCOSE_UNIT_UNSPECIFIED"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (glucoseUnit=mmol_L)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "glucoseUnit"
+    body: |
+      {
+        "glucoseUnit": "GLUCOSE_UNIT_MMOL_L"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (glucoseUnit=mg_dL)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "glucoseUnit"
+    body: |
+      {
+        "glucoseUnit": "GLUCOSE_UNIT_MG_DL"
+      }
+    assertStatus: [200]
+
+  # ----------------------------------------------------------------------------
+  # 3. Update Height Unit (heightUnit)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Update User Settings (heightUnit=unspecified)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "heightUnit"
+    body: |
+      {
+        "heightUnit": "HEIGHT_UNIT_UNSPECIFIED"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (heightUnit=inches)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "heightUnit"
+    body: |
+      {
+        "heightUnit": "HEIGHT_UNIT_INCHES"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (heightUnit=centimeters)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "heightUnit"
+    body: |
+      {
+        "heightUnit": "HEIGHT_UNIT_CENTIMETERS"
+      }
+    assertStatus: [200]
+
+  # ----------------------------------------------------------------------------
+  # 4. Update Swim Unit (swimUnit)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Update User Settings (swimUnit=unspecified)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "swimUnit"
+    body: |
+      {
+        "swimUnit": "SWIM_UNIT_UNSPECIFIED"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (swimUnit=meters)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "swimUnit"
+    body: |
+      {
+        "swimUnit": "SWIM_UNIT_METERS"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (swimUnit=yards)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "swimUnit"
+    body: |
+      {
+        "swimUnit": "SWIM_UNIT_YARDS"
+      }
+    assertStatus: [200]
+
+  # ----------------------------------------------------------------------------
+  # 5. Update Temperature Unit (temperatureUnit)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Update User Settings (temperatureUnit=unspecified)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "temperatureUnit"
+    body: |
+      {
+        "temperatureUnit": "TEMPERATURE_UNIT_UNSPECIFIED"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (temperatureUnit=celsius)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "temperatureUnit"
+    body: |
+      {
+        "temperatureUnit": "TEMPERATURE_UNIT_CELSIUS"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (temperatureUnit=fahrenheit)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "temperatureUnit"
+    body: |
+      {
+        "temperatureUnit": "TEMPERATURE_UNIT_FAHRENHEIT"
+      }
+    assertStatus: [200]
+
+  # ----------------------------------------------------------------------------
+  # 7. Update Water Unit (waterUnit)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Update User Settings (waterUnit=unspecified)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "waterUnit"
+    body: |
+      {
+        "waterUnit": "WATER_UNIT_UNSPECIFIED"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (waterUnit=ml)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "waterUnit"
+    body: |
+      {
+        "waterUnit": "WATER_UNIT_ML"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (waterUnit=fl_oz)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "waterUnit"
+    body: |
+      {
+        "waterUnit": "WATER_UNIT_FL_OZ"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (waterUnit=cup)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "waterUnit"
+    body: |
+      {
+        "waterUnit": "WATER_UNIT_CUP"
+      }
+    assertStatus: [200]
+
+  # ----------------------------------------------------------------------------
+  # 8. Update Weight Unit (weightUnit)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Update User Settings (weightUnit=unspecified)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "weightUnit"
+    body: |
+      {
+        "weightUnit": "WEIGHT_UNIT_UNSPECIFIED"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (weightUnit=pounds)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "weightUnit"
+    body: |
+      {
+        "weightUnit": "WEIGHT_UNIT_POUNDS"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (weightUnit=stone)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "weightUnit"
+    body: |
+      {
+        "weightUnit": "WEIGHT_UNIT_STONE"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (weightUnit=kilograms)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "weightUnit"
+    body: |
+      {
+        "weightUnit": "WEIGHT_UNIT_KILOGRAMS"
+      }
+    assertStatus: [200]
+
+  # ----------------------------------------------------------------------------
+  # 9. Update Combined Settings Fields
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Update User Settings (combined)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "distanceUnit,glucoseUnit,heightUnit,swimUnit,temperatureUnit,waterUnit,weightUnit"
+    body: |
+      {
+        "distanceUnit": "DISTANCE_UNIT_KILOMETERS",
+        "glucoseUnit": "GLUCOSE_UNIT_MG_DL",
+        "heightUnit": "HEIGHT_UNIT_CENTIMETERS",
+        "swimUnit": "SWIM_UNIT_METERS",
+        "temperatureUnit": "TEMPERATURE_UNIT_FAHRENHEIT",
+        "waterUnit": "WATER_UNIT_FL_OZ",
+        "weightUnit": "WEIGHT_UNIT_POUNDS"
+      }
+    assertStatus: [200]
+
+  - name: "Standard: Update User Settings (tests)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "heightUnit"
+    body: |
+      {
+        "heightUnit": "HEIGHT_UNIT_CENTIMETERS"
+      }
+    assertStatus: [200]
