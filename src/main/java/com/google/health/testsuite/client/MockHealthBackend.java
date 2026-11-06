@@ -20,6 +20,8 @@ public class MockHealthBackend {
     private final ObjectMapper jsonMapper = new ObjectMapper();
     private final Map<String, JsonNode> persistedProfileOverrides = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, JsonNode> persistedSettingsOverrides = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, JsonNode> persistedDataPoints = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.concurrent.atomic.AtomicLong dpCounter = new java.util.concurrent.atomic.AtomicLong(100000L);
 
     public ApiResponse handleRequest(String httpMethod, String path, Map<String, String> queryParams,
                                       String requestBody, DataTypeDefinition def, String healthUserId) {
@@ -143,6 +145,22 @@ public class MockHealthBackend {
                 }
 
             } else if (path.contains(":batchDelete")) {
+                if (requestBody != null && !requestBody.trim().isEmpty()) {
+                    try {
+                        JsonNode delNode = jsonMapper.readTree(requestBody);
+                        JsonNode namesArr = delNode.get("names");
+                        if (namesArr != null && namesArr.isArray()) {
+                            for (JsonNode n : namesArr) {
+                                String full = n.asText();
+                                persistedDataPoints.remove(full);
+                                int idx = full.lastIndexOf("/dataPoints/");
+                                if (idx >= 0) {
+                                    persistedDataPoints.remove(full.substring(idx + "/dataPoints/".length()));
+                                }
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
                 ObjectNode op = jsonMapper.createObjectNode();
                 op.put("name", "operations/batch-delete-" + System.currentTimeMillis());
                 op.put("done", true);
@@ -176,8 +194,28 @@ public class MockHealthBackend {
 
             } else if ("PATCH".equalsIgnoreCase(httpMethod)) {
                 // Patch DataPoint
+                String dtName = def != null ? def.getName() : "steps";
+                String dpId = "dp-" + dpCounter.incrementAndGet();
+                int idx = path.lastIndexOf("/dataPoints/");
+                if (idx >= 0) {
+                    dpId = path.substring(idx + "/dataPoints/".length());
+                }
+                String fullName = "users/" + effectiveUser + "/dataTypes/" + dtName + "/dataPoints/" + dpId;
                 if (requestBody != null && !requestBody.trim().isEmpty()) {
-                    responseBody = requestBody;
+                    try {
+                        JsonNode parsed = jsonMapper.readTree(requestBody);
+                        if (parsed.isObject()) {
+                            ObjectNode dpNode = (ObjectNode) parsed.deepCopy();
+                            dpNode.put("name", fullName);
+                            persistedDataPoints.put(dpId, dpNode.deepCopy());
+                            persistedDataPoints.put(fullName, dpNode.deepCopy());
+                            responseBody = dpNode.toPrettyString();
+                        } else {
+                            responseBody = requestBody;
+                        }
+                    } catch (Exception e) {
+                        responseBody = requestBody;
+                    }
                 } else {
                     responseBody = generateSampleDataPointJson(def, effectiveUser);
                 }
@@ -186,10 +224,40 @@ public class MockHealthBackend {
 
             } else if ("POST".equalsIgnoreCase(httpMethod)) {
                 // Create DataPoint
+                String dtName = def != null ? def.getName() : "steps";
+                String dpId = String.valueOf(System.currentTimeMillis() + dpCounter.incrementAndGet());
+                String fullName = "users/" + effectiveUser + "/dataTypes/" + dtName + "/dataPoints/" + dpId;
                 if (requestBody != null && !requestBody.trim().isEmpty()) {
-                    responseBody = requestBody;
+                    try {
+                        JsonNode parsed = jsonMapper.readTree(requestBody);
+                        if (parsed.isObject()) {
+                            ObjectNode dpNode = (ObjectNode) parsed.deepCopy();
+                            if (dpNode.has("name") && !dpNode.get("name").asText().isBlank()) {
+                                fullName = dpNode.get("name").asText();
+                                int idx = fullName.lastIndexOf("/dataPoints/");
+                                if (idx >= 0) {
+                                    dpId = fullName.substring(idx + "/dataPoints/".length());
+                                }
+                            } else {
+                                dpNode.put("name", fullName);
+                            }
+                            persistedDataPoints.put(dpId, dpNode.deepCopy());
+                            persistedDataPoints.put(fullName, dpNode.deepCopy());
+                            responseBody = dpNode.toPrettyString();
+                        } else {
+                            responseBody = requestBody;
+                        }
+                    } catch (Exception e) {
+                        responseBody = requestBody;
+                    }
                 } else {
-                    responseBody = generateSampleDataPointJson(def, effectiveUser);
+                    JsonNode sampleNode = generateSampleDataPointNode(def, effectiveUser, 0);
+                    if (sampleNode.isObject()) {
+                        ((ObjectNode) sampleNode).put("name", fullName);
+                        persistedDataPoints.put(dpId, sampleNode.deepCopy());
+                        persistedDataPoints.put(fullName, sampleNode.deepCopy());
+                    }
+                    responseBody = sampleNode.toPrettyString();
                 }
                 statusCode = 201;
                 statusMessage = "Created";
@@ -198,7 +266,13 @@ public class MockHealthBackend {
                 // List or Get DataPoints
                 if (path.matches(".*/dataPoints/[^/]+$")) {
                     // Single DataPoint
-                    responseBody = generateSampleDataPointJson(def, effectiveUser);
+                    String dpId = path.substring(path.lastIndexOf("/dataPoints/") + "/dataPoints/".length());
+                    JsonNode stored = persistedDataPoints.get(dpId);
+                    if (stored != null) {
+                        responseBody = stored.toPrettyString();
+                    } else {
+                        responseBody = generateSampleDataPointJson(def, effectiveUser);
+                    }
                 } else {
                     // List DataPoints
                     ObjectNode listResp = jsonMapper.createObjectNode();

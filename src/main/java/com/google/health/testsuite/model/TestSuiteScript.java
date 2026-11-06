@@ -102,6 +102,36 @@ public class TestSuiteScript {
         List<TestStep> expanded = new ArrayList<>();
         String scriptUser = getEffectiveUserId();
 
+        boolean hasStatefulSequence = "both".equalsIgnoreCase(scriptUser) && steps.stream().anyMatch(s ->
+                (s.getDataPointId() != null && (s.getDataPointId().contains("uniqueName") || s.getDataPointId().contains("dataPointId")))
+                || (s.getBody() != null && (s.getBody().contains("uniqueName") || s.getBody().contains("dataPointId"))));
+
+        if (hasStatefulSequence) {
+            for (String targetUser : List.of("me", "healthUserId")) {
+                for (TestStep step : steps) {
+                    String stepUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty())
+                            ? step.getUserId().trim()
+                            : scriptUser;
+                    Long effectiveMaxLatency = step.getMaxLatencyMs() != null
+                            ? step.getMaxLatencyMs()
+                            : this.maxLatencyMs;
+                    if ("both".equalsIgnoreCase(stepUser)) {
+                        TestStep copyStep = step.copy();
+                        copyStep.setUserId(targetUser);
+                        copyStep.setMaxLatencyMs(effectiveMaxLatency);
+                        copyStep.setName(appendUserSuffix(step.getName(), targetUser));
+                        expanded.add(copyStep);
+                    } else if ("me".equalsIgnoreCase(targetUser)) {
+                        TestStep s = step.copy();
+                        s.setUserId(stepUser);
+                        s.setMaxLatencyMs(effectiveMaxLatency);
+                        expanded.add(s);
+                    }
+                }
+            }
+            return expanded;
+        }
+
         for (TestStep step : steps) {
             String stepUser = (step.getUserId() != null && !step.getUserId().trim().isEmpty())
                     ? step.getUserId().trim()

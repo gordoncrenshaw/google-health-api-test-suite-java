@@ -1,0 +1,97 @@
+# ==============================================================================
+# Google Health API Test Suite - Sleep Write & Update Standard Tests
+# ==============================================================================
+# Tests the full write/update/delete lifecycle for the sleep data type:
+#   1. Calls create (POST /v4/users/{userId}/dataTypes/sleep/dataPoints) and stores ${uniqueName}
+#   2. Calls get (GET /v4/users/{userId}/dataTypes/sleep/dataPoints/{dataPointId}) to verify insertion
+#   3. Calls patch (PATCH /v4/users/{userId}/dataTypes/sleep/dataPoints/{dataPointId}) to update the value
+#   4. Calls get (GET /v4/users/{userId}/dataTypes/sleep/dataPoints/{dataPointId}) to verify the update
+#   5. Calls batchDelete (POST /v4/users/{userId}/dataTypes/sleep/dataPoints:batchDelete) to delete the entry
+# ==============================================================================
+
+name: "Google Health API Sleep Write & Update Standard Tests"
+description: "Standard tests for creating, reading, updating, and deleting sleep data points"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ----------------------------------------------------------------------------
+  # 1. Create a sleep entry and store the unique resource name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Sleep Create"
+    action: "create"
+    dataType: "sleep"
+    body: |
+      {
+        "sleep": {
+          "interval": {
+            "startTime": "2026-10-15T02:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T09:00:00Z",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 2. Retrieve the created sleep entry using the unique name and verify value
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Sleep Get (Verify Create)"
+    action: "get"
+    dataType: "sleep"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "2026-10-15T09:00:00Z"
+
+  # ----------------------------------------------------------------------------
+  # 3. Update (patch) the sleep entry using the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Sleep Update (Patch)"
+    action: "patch"
+    dataType: "sleep"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "sleep": {
+          "interval": {
+            "startTime": "2026-10-15T02:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T10:00:00Z",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 4. Retrieve the updated sleep entry using the unique name and verify update
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Sleep Get (Verify Update)"
+    action: "get"
+    dataType: "sleep"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "2026-10-15T10:00:00Z"
+
+  # ----------------------------------------------------------------------------
+  # 5. Delete the sleep entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Sleep BatchDelete"
+    action: "batchDelete"
+    dataType: "sleep"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+

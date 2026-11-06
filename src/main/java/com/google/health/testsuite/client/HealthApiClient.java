@@ -310,7 +310,8 @@ public class HealthApiClient {
     public ApiResponse getDataPoint(DataTypeDefinition def, String dataPointId, String userId) {
         String version = getEffectiveVersion(def);
         String effectiveUser = getEffectiveUserId(userId);
-        String path = "/" + version + "/users/" + effectiveUser + "/dataTypes/" + def.getName() + "/dataPoints/" + dataPointId;
+        String dpId = extractDataPointId(dataPointId);
+        String path = "/" + version + "/users/" + effectiveUser + "/dataTypes/" + def.getName() + "/dataPoints/" + dpId;
         return execute("GET", path, null, null, def);
     }
 
@@ -434,15 +435,19 @@ public class HealthApiClient {
      * Syntax: GET /{version}/users/{userId}/dataTypes/{dataType}/dataPoints/{dataPointId}:exportExerciseTcx
      */
     public ApiResponse exportExerciseTcx(DataTypeDefinition def, String dataPointId) {
-        return exportExerciseTcx(def, dataPointId, null);
+        return exportExerciseTcx(def, dataPointId, null, null);
     }
 
     public ApiResponse exportExerciseTcx(DataTypeDefinition def, String dataPointId, String userId) {
+        return exportExerciseTcx(def, dataPointId, null, userId);
+    }
+
+    public ApiResponse exportExerciseTcx(DataTypeDefinition def, String dataPointId, Map<String, String> queryParams, String userId) {
         String version = getEffectiveVersion(def);
         String effectiveUser = getEffectiveUserId(userId);
-        String dpId = (dataPointId != null && !dataPointId.trim().isEmpty()) ? dataPointId.trim() : "sample-dp-1";
+        String dpId = extractDataPointId(dataPointId);
         String path = "/" + version + "/users/" + effectiveUser + "/dataTypes/" + def.getName() + "/dataPoints/" + dpId + ":exportExerciseTcx";
-        return execute("GET", path, null, null, def);
+        return execute("GET", path, queryParams, null, def);
     }
 
     /**
@@ -456,9 +461,28 @@ public class HealthApiClient {
     public ApiResponse patchDataPoint(DataTypeDefinition def, String dataPointId, String jsonBody, String userId) {
         String version = getEffectiveVersion(def);
         String effectiveUser = getEffectiveUserId(userId);
-        String dpId = (dataPointId != null && !dataPointId.trim().isEmpty()) ? dataPointId.trim() : "sample-dp-1";
+        String dpId = extractDataPointId(dataPointId);
         String path = "/" + version + "/users/" + effectiveUser + "/dataTypes/" + def.getName() + "/dataPoints/" + dpId;
         return execute("PATCH", path, null, jsonBody != null ? jsonBody : "{}", def);
+    }
+
+    /**
+     * Extracts the trailing dataPointId if a full resource name (e.g.,
+     * "users/123/dataTypes/body-fat/dataPoints/456") is provided.
+     */
+    private String extractDataPointId(String dataPointId) {
+        if (dataPointId == null || dataPointId.trim().isEmpty()) {
+            return "sample-dp-1";
+        }
+        String trimmed = dataPointId.trim();
+        int idx = trimmed.lastIndexOf("/dataPoints/");
+        if (idx >= 0) {
+            return trimmed.substring(idx + "/dataPoints/".length());
+        }
+        if (trimmed.contains("/")) {
+            return trimmed.substring(trimmed.lastIndexOf('/') + 1);
+        }
+        return trimmed;
     }
 
     /**

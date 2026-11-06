@@ -1,0 +1,108 @@
+# ==============================================================================
+# Google Health API Test Suite - Nutrition Log Write & Update Standard Tests
+# ==============================================================================
+# Tests the full write/update/delete lifecycle for the nutrition-log data type:
+#   1. Calls create (POST /v4/users/{userId}/dataTypes/nutrition-log/dataPoints) and stores ${uniqueName}
+#   2. Calls get (GET /v4/users/{userId}/dataTypes/nutrition-log/dataPoints/{dataPointId}) to verify insertion
+#   3. Calls patch (PATCH /v4/users/{userId}/dataTypes/nutrition-log/dataPoints/{dataPointId}) to update the value
+#   4. Calls get (GET /v4/users/{userId}/dataTypes/nutrition-log/dataPoints/{dataPointId}) to verify the update
+#   5. Calls batchDelete (POST /v4/users/{userId}/dataTypes/nutrition-log/dataPoints:batchDelete) to delete the entry
+# ==============================================================================
+
+name: "Google Health API Nutrition Log Write & Update Standard Tests"
+description: "Standard tests for creating, reading, updating, and deleting nutrition-log data points"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ----------------------------------------------------------------------------
+  # 1. Create a nutrition-log entry and store the unique resource name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Nutrition Log Create"
+    action: "create"
+    dataType: "nutrition-log"
+    body: |
+      {
+        "nutritionLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:30:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "food": "users/me/dataTypes/food/dataPoints/825916320",
+          "mealType": "LUNCH",
+          "serving": {
+            "amount": 1,
+            "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/17"
+          }
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 2. Retrieve the created nutrition-log entry using the unique name and verify value
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Nutrition Log Get (Verify Create)"
+    action: "get"
+    dataType: "nutrition-log"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "LUNCH"
+
+  # ----------------------------------------------------------------------------
+  # 3. Update (patch) the nutrition-log entry using the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Nutrition Log Update (Patch)"
+    action: "patch"
+    dataType: "nutrition-log"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "nutritionLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:30:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "food": "users/me/dataTypes/food/dataPoints/825916320",
+          "mealType": "DINNER",
+          "serving": {
+            "amount": 2,
+            "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/17"
+          }
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 4. Retrieve the updated nutrition-log entry using the unique name and verify update
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Nutrition Log Get (Verify Update)"
+    action: "get"
+    dataType: "nutrition-log"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "DINNER"
+
+  # ----------------------------------------------------------------------------
+  # 5. Delete the nutrition-log entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Nutrition Log BatchDelete"
+    action: "batchDelete"
+    dataType: "nutrition-log"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false

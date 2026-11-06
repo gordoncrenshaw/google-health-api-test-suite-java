@@ -19,7 +19,7 @@ public final class AppVersion {
     /**
      * Release date of the current build.
      */
-    public static final String RELEASE_DATE = "2026-11-04";
+    public static final String RELEASE_DATE = "2026-11-05";
 
     /**
      * Application title.

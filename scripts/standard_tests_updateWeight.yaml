@@ -1,0 +1,95 @@
+# ==============================================================================
+# Google Health API Test Suite - Weight Write & Update Standard Tests
+# ==============================================================================
+# Tests the full write/update/delete lifecycle for the weight data type:
+#   1. Calls create (POST /v4/users/{userId}/dataTypes/weight/dataPoints) and stores ${uniqueName}
+#   2. Calls get (GET /v4/users/{userId}/dataTypes/weight/dataPoints/{dataPointId}) to verify insertion
+#   3. Calls patch (PATCH /v4/users/{userId}/dataTypes/weight/dataPoints/{dataPointId}) to update the value
+#   4. Calls get (GET /v4/users/{userId}/dataTypes/weight/dataPoints/{dataPointId}) to verify the update
+#   5. Calls batchDelete (POST /v4/users/{userId}/dataTypes/weight/dataPoints:batchDelete) to delete the entry
+# ==============================================================================
+
+name: "Google Health API Weight Write & Update Standard Tests"
+description: "Standard tests for creating, reading, updating, and deleting weight data points"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ----------------------------------------------------------------------------
+  # 1. Create a weight entry and store the unique resource name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Weight Create"
+    action: "create"
+    dataType: "weight"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "weightGrams": 72500
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 2. Retrieve the created weight entry using the unique name and verify value
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Weight Get (Verify Create)"
+    action: "get"
+    dataType: "weight"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "72500"
+
+  # ----------------------------------------------------------------------------
+  # 3. Update (patch) the weight entry using the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Weight Update (Patch)"
+    action: "patch"
+    dataType: "weight"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "weightGrams": 74000
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 4. Retrieve the updated weight entry using the unique name and verify update
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Weight Get (Verify Update)"
+    action: "get"
+    dataType: "weight"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "74000"
+
+  # ----------------------------------------------------------------------------
+  # 5. Delete the weight entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Weight BatchDelete"
+    action: "batchDelete"
+    dataType: "weight"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+

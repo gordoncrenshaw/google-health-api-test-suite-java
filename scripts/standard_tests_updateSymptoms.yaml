@@ -1,0 +1,75 @@
+# ==============================================================================
+# Google Health API Test Suite - Symptoms Write & Update Standard Tests
+# ==============================================================================
+# Tests the write/update/delete lifecycle for the symptoms data type
+# (note: symptoms does not support the get endpoint):
+#   1. Calls create (POST /v4/users/{userId}/dataTypes/symptoms/dataPoints) and stores ${uniqueName}
+#   2. Calls patch (PATCH /v4/users/{userId}/dataTypes/symptoms/dataPoints/{dataPointId}) to update the value
+#   3. Calls batchDelete (POST /v4/users/{userId}/dataTypes/symptoms/dataPoints:batchDelete) to delete the entry
+# ==============================================================================
+
+name: "Google Health API Symptoms Write & Update Standard Tests"
+description: "Standard tests for creating, updating, and deleting symptoms data points"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ----------------------------------------------------------------------------
+  # 1. Create a symptoms entry and store the unique resource name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Symptoms Create"
+    action: "create"
+    dataType: "symptoms"
+    body: |
+      {
+        "symptoms": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "symptoms": [
+            "HEADACHE"
+          ]
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 2. Update (patch) the symptoms entry using the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Symptoms Update (Patch)"
+    action: "patch"
+    dataType: "symptoms"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "symptoms": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "symptoms": [
+            "HEADACHE",
+            "CRAMPS"
+          ]
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 3. Delete the symptoms entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Symptoms BatchDelete"
+    action: "batchDelete"
+    dataType: "symptoms"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+

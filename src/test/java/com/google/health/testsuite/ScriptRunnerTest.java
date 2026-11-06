@@ -124,10 +124,91 @@ public class ScriptRunnerTest {
         assertEquals(0, exitCode, "standard_tests_updateSettings.yaml should pass with exit code 0 in mock mode");
 
         var results = runner.executeScript(scriptFile);
-        assertEquals(48, results.size(), "24 updateSettings steps with userId: both should expand to 48 steps");
+        assertEquals(50, results.size(), "25 updateSettings steps with userId: both should expand to 50 steps");
         assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
                 "All updateSettings + getSettings verification tests should pass");
         assertTrue(results.get(0).getMessage().contains("verified via GET"));
+    }
+
+    @Test
+    void testRunStandardUpdateBodyFatScript() throws Exception {
+        File scriptFile = new File("scripts/standard_tests_updatebodyFat.yaml");
+        assertTrue(scriptFile.exists(), "standard_tests_updatebodyFat.yaml script must exist");
+
+        int exitCode = runner.runScript(scriptFile);
+        assertEquals(0, exitCode, "standard_tests_updatebodyFat.yaml should pass with exit code 0 in mock mode");
+
+        var results = runner.executeScript(scriptFile);
+        assertEquals(10, results.size(), "5 body-fat lifecycle steps with userId: both should expand to 10 steps");
+        assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
+                "All body-fat create, get, patch, get, and batchDelete steps should pass");
+        assertEquals("Standard: Body Fat Create (me)", results.get(0).getTestName());
+        assertEquals("Standard: Body Fat Get (Verify Create) (me)", results.get(1).getTestName());
+        assertEquals("Standard: Body Fat Update (Patch) (me)", results.get(2).getTestName());
+        assertEquals("Standard: Body Fat Get (Verify Update) (me)", results.get(3).getTestName());
+        assertEquals("Standard: Body Fat BatchDelete (me)", results.get(4).getTestName());
+        assertEquals("Standard: Body Fat Create (healthUserId)", results.get(5).getTestName());
+        assertEquals("Standard: Body Fat Get (Verify Create) (healthUserId)", results.get(6).getTestName());
+        assertEquals("Standard: Body Fat Update (Patch) (healthUserId)", results.get(7).getTestName());
+        assertEquals("Standard: Body Fat Get (Verify Update) (healthUserId)", results.get(8).getTestName());
+        assertEquals("Standard: Body Fat BatchDelete (healthUserId)", results.get(9).getTestName());
+    }
+
+    @Test
+    void testRunStandardUpdateDataTypeScripts() throws Exception {
+        String[] updateScripts = new String[]{
+                "scripts/standard_tests_updateExercise.yaml",
+                "scripts/standard_tests_updateHeight.yaml",
+                "scripts/standard_tests_updateHydrationLog.yaml",
+                "scripts/standard_tests_updateNutritionLog.yaml",
+                "scripts/standard_tests_updateSleep.yaml",
+                "scripts/standard_tests_updateWeight.yaml"
+        };
+        for (String path : updateScripts) {
+            File scriptFile = new File(path);
+            assertTrue(scriptFile.exists(), path + " script must exist");
+            int exitCode = runner.runScript(scriptFile);
+            assertEquals(0, exitCode, path + " should pass with exit code 0 in mock mode");
+            var results = runner.executeScript(scriptFile);
+            assertEquals(10, results.size(), "5 lifecycle steps in " + path + " with userId: both should expand to 10 steps");
+            assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
+                    "All steps in " + path + " should pass");
+        }
+
+        String[] writeOnlyUpdateScripts = new String[]{
+                "scripts/standard_tests_updateMenstrualPeriod.yaml",
+                "scripts/standard_tests_updateMoods.yaml",
+                "scripts/standard_tests_updateOvulationTest.yaml",
+                "scripts/standard_tests_updateSymptoms.yaml"
+        };
+        for (String path : writeOnlyUpdateScripts) {
+            File scriptFile = new File(path);
+            assertTrue(scriptFile.exists(), path + " script must exist");
+            int exitCode = runner.runScript(scriptFile);
+            assertEquals(0, exitCode, path + " should pass with exit code 0 in mock mode");
+            var results = runner.executeScript(scriptFile);
+            assertEquals(6, results.size(), "3 lifecycle steps in " + path + " with userId: both should expand to 6 steps");
+            assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
+                    "All steps in " + path + " should pass");
+        }
+    }
+
+    @Test
+    void testRunStandardExportExerciseTcxScript() throws Exception {
+        File scriptFile = new File("scripts/standard_tests_exportExerciseTcx.yaml");
+        assertTrue(scriptFile.exists(), "standard_tests_exportExerciseTcx.yaml script must exist");
+
+        int exitCode = runner.runScript(scriptFile);
+        assertEquals(0, exitCode, "standard_tests_exportExerciseTcx.yaml should pass with exit code 0 in mock mode");
+
+        var results = runner.executeScript(scriptFile);
+        assertEquals(4, results.size(), "2 steps with userId: both should expand to 4 steps");
+        assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
+                "All exercise list + exportExerciseTcx steps should pass");
+        assertEquals("Standard: Exercise List (Retrieve Unique Name) (me)", results.get(0).getTestName());
+        assertEquals("Standard: Exercise Export TCX (me)", results.get(1).getTestName());
+        assertEquals("Standard: Exercise List (Retrieve Unique Name) (healthUserId)", results.get(2).getTestName());
+        assertEquals("Standard: Exercise Export TCX (healthUserId)", results.get(3).getTestName());
     }
 
     @Test

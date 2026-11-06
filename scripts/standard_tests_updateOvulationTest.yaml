@@ -1,0 +1,70 @@
+# ==============================================================================
+# Google Health API Test Suite - Ovulation Test Write & Update Standard Tests
+# ==============================================================================
+# Tests the write/update/delete lifecycle for the ovulation-test data type
+# (note: ovulation-test does not support the get endpoint):
+#   1. Calls create (POST /v4/users/{userId}/dataTypes/ovulation-test/dataPoints) and stores ${uniqueName}
+#   2. Calls patch (PATCH /v4/users/{userId}/dataTypes/ovulation-test/dataPoints/{dataPointId}) to update the value
+#   3. Calls batchDelete (POST /v4/users/{userId}/dataTypes/ovulation-test/dataPoints:batchDelete) to delete the entry
+# ==============================================================================
+
+name: "Google Health API Ovulation Test Write & Update Standard Tests"
+description: "Standard tests for creating, updating, and deleting ovulation-test data points"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ----------------------------------------------------------------------------
+  # 1. Create an ovulation-test entry and store the unique resource name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Ovulation Test Create"
+    action: "create"
+    dataType: "ovulation-test"
+    body: |
+      {
+        "ovulationTest": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T08:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "result": "NEGATIVE"
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 2. Update (patch) the ovulation-test entry using the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Ovulation Test Update (Patch)"
+    action: "patch"
+    dataType: "ovulation-test"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "ovulationTest": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T08:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "result": "LUTEINIZING_HORMONE_SURGE"
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 3. Delete the ovulation-test entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Ovulation Test BatchDelete"
+    action: "batchDelete"
+    dataType: "ovulation-test"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+

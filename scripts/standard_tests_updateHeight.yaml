@@ -1,0 +1,95 @@
+# ==============================================================================
+# Google Health API Test Suite - Height Write & Update Standard Tests
+# ==============================================================================
+# Tests the full write/update/delete lifecycle for the height data type:
+#   1. Calls create (POST /v4/users/{userId}/dataTypes/height/dataPoints) and stores ${uniqueName}
+#   2. Calls get (GET /v4/users/{userId}/dataTypes/height/dataPoints/{dataPointId}) to verify insertion
+#   3. Calls patch (PATCH /v4/users/{userId}/dataTypes/height/dataPoints/{dataPointId}) to update the value
+#   4. Calls get (GET /v4/users/{userId}/dataTypes/height/dataPoints/{dataPointId}) to verify the update
+#   5. Calls batchDelete (POST /v4/users/{userId}/dataTypes/height/dataPoints:batchDelete) to delete the entry
+# ==============================================================================
+
+name: "Google Health API Height Write & Update Standard Tests"
+description: "Standard tests for creating, reading, updating, and deleting height data points"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ----------------------------------------------------------------------------
+  # 1. Create a height entry and store the unique resource name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Height Create"
+    action: "create"
+    dataType: "height"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "heightMillimeters": 1750
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 2. Retrieve the created height entry using the unique name and verify value
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Height Get (Verify Create)"
+    action: "get"
+    dataType: "height"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "1750"
+
+  # ----------------------------------------------------------------------------
+  # 3. Update (patch) the height entry using the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Height Update (Patch)"
+    action: "patch"
+    dataType: "height"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "heightMillimeters": 1780
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 4. Retrieve the updated height entry using the unique name and verify update
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Height Get (Verify Update)"
+    action: "get"
+    dataType: "height"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "1780"
+
+  # ----------------------------------------------------------------------------
+  # 5. Delete the height entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Height BatchDelete"
+    action: "batchDelete"
+    dataType: "height"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+

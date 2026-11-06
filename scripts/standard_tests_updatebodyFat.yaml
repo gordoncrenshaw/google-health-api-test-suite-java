@@ -1,0 +1,95 @@
+# ==============================================================================
+# Google Health API Test Suite - Body Fat Write & Update Standard Tests
+# ==============================================================================
+# Tests the full write/update/delete lifecycle for the body-fat data type:
+#   1. Calls create (POST /v4/users/{userId}/dataTypes/body-fat/dataPoints) and stores ${uniqueName}
+#   2. Calls get (GET /v4/users/{userId}/dataTypes/body-fat/dataPoints/{dataPointId}) to verify insertion
+#   3. Calls patch (PATCH /v4/users/{userId}/dataTypes/body-fat/dataPoints/{dataPointId}) to update the value
+#   4. Calls get (GET /v4/users/{userId}/dataTypes/body-fat/dataPoints/{dataPointId}) to verify the update
+#   5. Calls batchDelete (POST /v4/users/{userId}/dataTypes/body-fat/dataPoints:batchDelete) to delete the entry
+# ==============================================================================
+
+name: "Google Health API Body Fat Write & Update Standard Tests"
+description: "Standard tests for creating, reading, updating, and deleting body-fat data points"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ----------------------------------------------------------------------------
+  # 1. Create a body-fat entry and store the unique resource name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Body Fat Create"
+    action: "create"
+    dataType: "body-fat"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "percentage": 21.5
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 2. Retrieve the created body-fat entry using the unique name and verify value
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Body Fat Get (Verify Create)"
+    action: "get"
+    dataType: "body-fat"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "21.5"
+
+  # ----------------------------------------------------------------------------
+  # 3. Update (patch) the body-fat entry using the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Body Fat Update (Patch)"
+    action: "patch"
+    dataType: "body-fat"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "percentage": 22.8
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 4. Retrieve the updated body-fat entry using the unique name and verify update
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Body Fat Get (Verify Update)"
+    action: "get"
+    dataType: "body-fat"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "22.8"
+
+  # ----------------------------------------------------------------------------
+  # 5. Delete the body-fat entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Body Fat BatchDelete"
+    action: "batchDelete"
+    dataType: "body-fat"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+

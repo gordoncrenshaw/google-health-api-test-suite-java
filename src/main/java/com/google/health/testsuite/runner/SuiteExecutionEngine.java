@@ -33,6 +33,10 @@ public class SuiteExecutionEngine {
     private final HealthApiClient apiClient;
     private final ValidationEngine validationEngine;
     private final ObjectMapper jsonMapper = new ObjectMapper();
+    private final Map<String, String> lastCreatedUniqueNameByKey = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, String> lastCreatedDataPointIdByKey = new java.util.concurrent.ConcurrentHashMap<>();
+    private volatile String lastCreatedUniqueName = null;
+    private volatile String lastCreatedDataPointId = null;
 
     public SuiteExecutionEngine(ConfigManager configManager, DataTypeRegistry dataTypeRegistry,
                                 HealthApiClient apiClient) {
@@ -169,47 +173,78 @@ public class SuiteExecutionEngine {
 
         ApiResponse response;
         try {
+            String resolvedDpId = resolvePlaceholders(step.getDataPointId(), step.getUserId(), dtName);
+            String resolvedBody = resolvePlaceholders(step.getBody(), step.getUserId(), dtName);
+            Map<String, String> resolvedQueryParams = resolveQueryParamPlaceholders(step.getQueryParams(), step.getUserId(), dtName);
+
             switch (action) {
                 case "list", "list_datapoints" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
-                    response = apiClient.listDataPoints(def, step.getQueryParams(), step.getUserId());
+                    response = apiClient.listDataPoints(def, resolvedQueryParams, step.getUserId());
+                    if (response.isSuccess()) {
+                        captureCreatedResourceName(response.getBody(), step.getUserId(), def.getName());
+                    }
                 }
                 case "get", "get_datapoint" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
-                    String dpId = step.getDataPointId() != null ? step.getDataPointId() : "default-dp";
+                    String dpId = (resolvedDpId != null && !resolvedDpId.isBlank())
+                            ? resolvedDpId
+                            : getStoredUniqueName(step.getUserId(), dtName, "default-dp");
                     response = apiClient.getDataPoint(def, dpId, step.getUserId());
                 }
                 case "create", "create_datapoint" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
-                    response = apiClient.createDataPoint(def, step.getBody(), step.getUserId());
+                    response = apiClient.createDataPoint(def, resolvedBody, step.getUserId());
+                    if (response.isSuccess()) {
+                        captureCreatedResourceName(response.getBody(), step.getUserId(), def.getName());
+                    }
                 }
                 case "rollup", "roll_up" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
-                    response = apiClient.rollUpDataPoints(def, step.getBody(), step.getUserId());
+                    response = apiClient.rollUpDataPoints(def, resolvedBody, step.getUserId());
                 }
                 case "dailyrollup", "daily_rollup" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
-                    response = apiClient.dailyRollUpDataPoints(def, step.getBody(), step.getUserId());
+                    response = apiClient.dailyRollUpDataPoints(def, resolvedBody, step.getUserId());
                 }
                 case "reconcile" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
-                    response = apiClient.reconcileDataPoints(def, step.getQueryParams(), step.getUserId());
+                    response = apiClient.reconcileDataPoints(def, resolvedQueryParams, step.getUserId());
                 }
                 case "exportexercisetcx", "export_exercise_tcx" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
-                    String dpId = step.getDataPointId() != null ? step.getDataPointId() : "sample-dp-1";
-                    response = apiClient.exportExerciseTcx(def, dpId, step.getUserId());
+                    String dpId = (resolvedDpId != null && !resolvedDpId.isBlank())
+                            ? resolvedDpId
+                            : getStoredUniqueName(step.getUserId(), dtName, "sample-dp-1");
+                    response = apiClient.exportExerciseTcx(def, dpId, resolvedQueryParams, step.getUserId());
                 }
-                case "patch", "patch_datapoint" -> {
+                case "patch", "patch_datapoint", "update", "update_datapoint" -> {
                     if (def == null) return errorResult(step, "Data type is required for action: " + action);
-                    String dpId = step.getDataPointId() != null ? step.getDataPointId() : "sample-dp-1";
-                    response = apiClient.patchDataPoint(def, dpId, step.getBody(), step.getUserId());
+                    String dpId = (resolvedDpId != null && !resolvedDpId.isBlank())
+                            ? resolvedDpId
+                            : getStoredUniqueName(step.getUserId(), dtName, "sample-dp-1");
+                    response = apiClient.patchDataPoint(def, dpId, resolvedBody, step.getUserId());
+                    if (response.isSuccess()) {
+                        captureCreatedResourceName(response.getBody(), step.getUserId(), def.getName());
+                    }
+                }
+                case "batchdelete", "batch_delete", "batchdelete_datapoints", "delete", "delete_datapoint" -> {
+                    if (def == null) return errorResult(step, "Data type is required for action: " + action);
+                    if (resolvedBody != null && !resolvedBody.isBlank()) {
+                        response = apiClient.batchDeleteDataPoints(def, resolvedBody, step.getUserId());
+                    } else if (resolvedQueryParams != null && resolvedQueryParams.containsKey("names")) {
+                        List<String> names = Arrays.asList(resolvedQueryParams.get("names").split(","));
+                        response = apiClient.batchDeleteDataPoints(def, names, step.getUserId());
+                    } else {
+                        String fallbackName = getStoredUniqueName(step.getUserId(), dtName, "string");
+                        response = apiClient.batchDeleteDataPoints(def, List.of(fallbackName), step.getUserId());
+                    }
                 }
                 case "profile", "get_profile", "getprofile" -> {
                     response = apiClient.getProfile(step.getUserId());
                 }
                 case "update_profile", "patch_profile", "updateprofile", "patchprofile" -> {
-                    response = apiClient.updateProfile(step.getUserId(), step.getQueryParams(), step.getBody());
+                    response = apiClient.updateProfile(step.getUserId(), resolvedQueryParams, resolvedBody);
                 }
                 case "irn_profile", "get_irn_profile", "irnprofile", "getirnprofile" -> {
                     response = apiClient.getIrnProfile(step.getUserId());
@@ -218,7 +253,7 @@ public class SuiteExecutionEngine {
                     response = apiClient.getSettings(step.getUserId());
                 }
                 case "update_settings", "patch_settings", "updatesettings", "patchsettings" -> {
-                    response = apiClient.updateSettings(step.getUserId(), step.getQueryParams(), step.getBody());
+                    response = apiClient.updateSettings(step.getUserId(), resolvedQueryParams, resolvedBody);
                 }
                 case "devices", "list_devices", "listdevices", "get_devices", "getdevices" -> {
                     response = apiClient.listPairedDevices(step.getUserId());
@@ -245,7 +280,10 @@ public class SuiteExecutionEngine {
             }
 
             // Evaluate Assertions
-            boolean statusPassed = step.getAssertStatus().isEmpty() || step.getAssertStatus().contains(response.getStatusCode());
+            boolean statusPassed = step.getAssertStatus().isEmpty()
+                    || step.getAssertStatus().contains(response.getStatusCode())
+                    || (action.startsWith("create") && response.getStatusCode() == 201 && step.getAssertStatus().contains(200))
+                    || (action.startsWith("create") && response.getStatusCode() == 200 && step.getAssertStatus().contains(201));
             ValidationResult valResult = ValidationResult.skipped("Range validation disabled");
             if (step.isValidateRange() && def != null) {
                 valResult = validationEngine.validate(def, response.getBody());
@@ -369,6 +407,111 @@ public class SuiteExecutionEngine {
         } catch (Exception e) {
             return errorResult(step, "Exception during step execution: " + e.getMessage());
         }
+    }
+
+    private void captureCreatedResourceName(String responseBody, String userId, String dataType) {
+        if (responseBody == null || responseBody.isBlank()) {
+            return;
+        }
+        try {
+            JsonNode root = jsonMapper.readTree(responseBody);
+            String extractedName = null;
+            if (root.has("response") && root.get("response").isObject() && root.get("response").has("name")) {
+                extractedName = root.get("response").get("name").asText(null);
+            }
+            if ((extractedName == null || extractedName.isBlank()) && root.has("name")) {
+                String candidate = root.get("name").asText(null);
+                if (candidate != null && !candidate.startsWith("operations/")) {
+                    extractedName = candidate;
+                }
+            }
+            if ((extractedName == null || extractedName.isBlank())
+                    && root.has("dataPoints")
+                    && root.get("dataPoints").isArray()
+                    && !root.get("dataPoints").isEmpty()) {
+                JsonNode firstDp = root.get("dataPoints").get(0);
+                if (firstDp != null && firstDp.isObject() && firstDp.has("name")) {
+                    extractedName = firstDp.get("name").asText(null);
+                }
+            }
+            if (extractedName != null && !extractedName.isBlank()) {
+                String dpId = extractedName;
+                int idx = extractedName.lastIndexOf("/dataPoints/");
+                if (idx >= 0) {
+                    dpId = extractedName.substring(idx + "/dataPoints/".length());
+                }
+                String key = buildStorageKey(userId, dataType);
+                lastCreatedUniqueName = extractedName;
+                lastCreatedDataPointId = dpId;
+                lastCreatedUniqueNameByKey.put(key, extractedName);
+                lastCreatedDataPointIdByKey.put(key, dpId);
+            }
+        } catch (Exception e) {
+            logger.debug("Could not extract created resource name: {}", e.getMessage());
+        }
+    }
+
+    private String buildStorageKey(String userId, String dataType) {
+        String u = (userId != null && !userId.trim().isEmpty()) ? userId.trim().toLowerCase() : "default";
+        String dt = (dataType != null && !dataType.trim().isEmpty()) ? dataType.trim().toLowerCase() : "default";
+        return u + "::" + dt;
+    }
+
+    private String getStoredUniqueName(String userId, String dataType, String fallback) {
+        String key = buildStorageKey(userId, dataType);
+        String val = lastCreatedUniqueNameByKey.get(key);
+        if (val != null && !val.isBlank()) {
+            return val;
+        }
+        if (lastCreatedUniqueName != null && !lastCreatedUniqueName.isBlank()) {
+            return lastCreatedUniqueName;
+        }
+        return fallback;
+    }
+
+    private String getStoredDataPointId(String userId, String dataType, String fallback) {
+        String key = buildStorageKey(userId, dataType);
+        String val = lastCreatedDataPointIdByKey.get(key);
+        if (val != null && !val.isBlank()) {
+            return val;
+        }
+        if (lastCreatedDataPointId != null && !lastCreatedDataPointId.isBlank()) {
+            return lastCreatedDataPointId;
+        }
+        return fallback;
+    }
+
+    private String resolvePlaceholders(String input, String userId, String dataType) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+        String uniqueName = getStoredUniqueName(userId, dataType, null);
+        String dpId = getStoredDataPointId(userId, dataType, null);
+        String result = input;
+        if (uniqueName != null) {
+            result = result.replace("${uniqueName}", uniqueName)
+                    .replace("{{uniqueName}}", uniqueName)
+                    .replace("$uniqueName", uniqueName)
+                    .replace("${name}", uniqueName)
+                    .replace("{{name}}", uniqueName);
+        }
+        if (dpId != null) {
+            result = result.replace("${dataPointId}", dpId)
+                    .replace("{{dataPointId}}", dpId)
+                    .replace("$dataPointId", dpId);
+        }
+        return result;
+    }
+
+    private Map<String, String> resolveQueryParamPlaceholders(Map<String, String> params, String userId, String dataType) {
+        if (params == null || params.isEmpty()) {
+            return params;
+        }
+        Map<String, String> resolved = new java.util.HashMap<>();
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            resolved.put(entry.getKey(), resolvePlaceholders(entry.getValue(), userId, dataType));
+        }
+        return resolved;
     }
 
     private TestResult errorResult(TestStep step, String message) {
