@@ -1,0 +1,80 @@
+# ==============================================================================
+# Google Health API Test Suite - Moods Write & Update Standard Tests
+# ==============================================================================
+# Tests the write/update/delete lifecycle for the moods data type
+# (note: moods does not support the get endpoint):
+#   1. Calls create (POST /v4/users/{userId}/dataTypes/moods/dataPoints) and stores ${uniqueName}
+#   2. Calls patch (PATCH /v4/users/{userId}/dataTypes/moods/dataPoints/{dataPointId}) to update the value
+#   3. Calls batchDelete (POST /v4/users/{userId}/dataTypes/moods/dataPoints:batchDelete) to delete the entry
+# ==============================================================================
+
+name: "Google Health API Moods Write & Update Standard Tests"
+description: "Standard tests for creating, updating, and deleting moods data points"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ----------------------------------------------------------------------------
+  # 1. Create a moods entry and store the unique resource name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Moods Create"
+    action: "create"
+    dataType: "moods"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "moods": [
+            "CALM"
+          ],
+          "valences": [
+            "PLEASANT"
+          ]
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 2. Update (patch) the moods entry using the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Moods Update (Patch)"
+    action: "patch"
+    dataType: "moods"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "moods": [
+            "HAPPY"
+          ],
+          "valences": [
+            "PLEASANT"
+          ]
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 3. Delete the moods entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Moods BatchDelete"
+    action: "batchDelete"
+    dataType: "moods"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+

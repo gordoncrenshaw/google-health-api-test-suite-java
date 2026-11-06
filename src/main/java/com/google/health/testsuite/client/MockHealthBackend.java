@@ -18,6 +18,10 @@ import java.util.*;
 public class MockHealthBackend {
 
     private final ObjectMapper jsonMapper = new ObjectMapper();
+    private final Map<String, JsonNode> persistedProfileOverrides = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, JsonNode> persistedSettingsOverrides = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, JsonNode> persistedDataPoints = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.concurrent.atomic.AtomicLong dpCounter = new java.util.concurrent.atomic.AtomicLong(100000L);
 
     public ApiResponse handleRequest(String httpMethod, String path, Map<String, String> queryParams,
                                       String requestBody, DataTypeDefinition def, String healthUserId) {
@@ -51,12 +55,25 @@ public class MockHealthBackend {
                 profile.put("healthUserId", "gh-user-" + UUID.randomUUID().toString().substring(0, 8));
                 profile.put("displayName", "Test Health User");
                 profile.put("locale", "en-US");
+                profile.put("age", 34);
+                profile.put("userConfiguredWalkingStrideLengthMm", 720);
+                profile.put("userConfiguredRunningStrideLengthMm", 1100);
+                profile.put("autoWalkingStrideLengthMm", 715);
+                profile.put("autoRunningStrideLengthMm", 1090);
                 if ("PATCH".equalsIgnoreCase(httpMethod) && requestBody != null && !requestBody.trim().isEmpty()) {
                     try {
                         JsonNode patchNode = jsonMapper.readTree(requestBody);
-                        if (patchNode.has("displayName")) profile.put("displayName", patchNode.path("displayName").asText());
-                        if (patchNode.has("locale")) profile.put("locale", patchNode.path("locale").asText());
+                        if (patchNode.isObject()) {
+                            patchNode.fields().forEachRemaining(entry -> {
+                                if (!"name".equals(entry.getKey())) {
+                                    persistedProfileOverrides.put(entry.getKey(), entry.getValue().deepCopy());
+                                }
+                            });
+                        }
                     } catch (Exception ignored) {}
+                }
+                for (Map.Entry<String, JsonNode> entry : persistedProfileOverrides.entrySet()) {
+                    profile.set(entry.getKey(), entry.getValue().deepCopy());
                 }
                 responseBody = profile.toPrettyString();
 
@@ -71,21 +88,32 @@ public class MockHealthBackend {
             } else if (path.contains("/settings")) {
                 ObjectNode settings = jsonMapper.createObjectNode();
                 settings.put("name", "users/" + effectiveUser + "/settings");
-                settings.put("distanceUnit", "KILOMETERS");
-                settings.put("weightUnit", "KILOGRAMS");
-                settings.put("heightUnit", "CENTIMETERS");
-                settings.put("temperatureUnit", "CELSIUS");
+                settings.put("distanceUnit", "DISTANCE_UNIT_KILOMETERS");
+                settings.put("glucoseUnit", "GLUCOSE_UNIT_MG_DL");
+                settings.put("heightUnit", "HEIGHT_UNIT_CENTIMETERS");
+                settings.put("swimUnit", "SWIM_UNIT_METERS");
+                settings.put("temperatureUnit", "TEMPERATURE_UNIT_CELSIUS");
+                settings.put("timeZone", "America/New_York");
                 settings.put("timezone", "America/New_York");
+                settings.put("waterUnit", "WATER_UNIT_ML");
+                settings.put("weightUnit", "WEIGHT_UNIT_KILOGRAMS");
                 if ("PATCH".equalsIgnoreCase(httpMethod) && requestBody != null && !requestBody.trim().isEmpty()) {
                     try {
                         JsonNode patchNode = jsonMapper.readTree(requestBody);
-                        if (patchNode.has("timezone")) settings.put("timezone", patchNode.path("timezone").asText());
-                        if (patchNode.has("timeZone")) settings.put("timezone", patchNode.path("timeZone").asText());
-                        if (patchNode.has("temperatureUnit")) settings.put("temperatureUnit", patchNode.path("temperatureUnit").asText());
-                        if (patchNode.has("distanceUnit")) settings.put("distanceUnit", patchNode.path("distanceUnit").asText());
-                        if (patchNode.has("weightUnit")) settings.put("weightUnit", patchNode.path("weightUnit").asText());
-                        if (patchNode.has("heightUnit")) settings.put("heightUnit", patchNode.path("heightUnit").asText());
+                        if (patchNode.isObject()) {
+                            patchNode.fields().forEachRemaining(entry -> {
+                                if (!"name".equals(entry.getKey())) {
+                                    persistedSettingsOverrides.put(entry.getKey(), entry.getValue().deepCopy());
+                                    if ("timeZone".equals(entry.getKey())) {
+                                        persistedSettingsOverrides.put("timezone", entry.getValue().deepCopy());
+                                    }
+                                }
+                            });
+                        }
                     } catch (Exception ignored) {}
+                }
+                for (Map.Entry<String, JsonNode> entry : persistedSettingsOverrides.entrySet()) {
+                    settings.set(entry.getKey(), entry.getValue().deepCopy());
                 }
                 responseBody = settings.toPrettyString();
 
@@ -117,6 +145,22 @@ public class MockHealthBackend {
                 }
 
             } else if (path.contains(":batchDelete")) {
+                if (requestBody != null && !requestBody.trim().isEmpty()) {
+                    try {
+                        JsonNode delNode = jsonMapper.readTree(requestBody);
+                        JsonNode namesArr = delNode.get("names");
+                        if (namesArr != null && namesArr.isArray()) {
+                            for (JsonNode n : namesArr) {
+                                String full = n.asText();
+                                persistedDataPoints.remove(full);
+                                int idx = full.lastIndexOf("/dataPoints/");
+                                if (idx >= 0) {
+                                    persistedDataPoints.remove(full.substring(idx + "/dataPoints/".length()));
+                                }
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
                 ObjectNode op = jsonMapper.createObjectNode();
                 op.put("name", "operations/batch-delete-" + System.currentTimeMillis());
                 op.put("done", true);
@@ -150,8 +194,28 @@ public class MockHealthBackend {
 
             } else if ("PATCH".equalsIgnoreCase(httpMethod)) {
                 // Patch DataPoint
+                String dtName = def != null ? def.getName() : "steps";
+                String dpId = "dp-" + dpCounter.incrementAndGet();
+                int idx = path.lastIndexOf("/dataPoints/");
+                if (idx >= 0) {
+                    dpId = path.substring(idx + "/dataPoints/".length());
+                }
+                String fullName = "users/" + effectiveUser + "/dataTypes/" + dtName + "/dataPoints/" + dpId;
                 if (requestBody != null && !requestBody.trim().isEmpty()) {
-                    responseBody = requestBody;
+                    try {
+                        JsonNode parsed = jsonMapper.readTree(requestBody);
+                        if (parsed.isObject()) {
+                            ObjectNode dpNode = (ObjectNode) parsed.deepCopy();
+                            dpNode.put("name", fullName);
+                            persistedDataPoints.put(dpId, dpNode.deepCopy());
+                            persistedDataPoints.put(fullName, dpNode.deepCopy());
+                            responseBody = dpNode.toPrettyString();
+                        } else {
+                            responseBody = requestBody;
+                        }
+                    } catch (Exception e) {
+                        responseBody = requestBody;
+                    }
                 } else {
                     responseBody = generateSampleDataPointJson(def, effectiveUser);
                 }
@@ -160,10 +224,40 @@ public class MockHealthBackend {
 
             } else if ("POST".equalsIgnoreCase(httpMethod)) {
                 // Create DataPoint
+                String dtName = def != null ? def.getName() : "steps";
+                String dpId = String.valueOf(System.currentTimeMillis() + dpCounter.incrementAndGet());
+                String fullName = "users/" + effectiveUser + "/dataTypes/" + dtName + "/dataPoints/" + dpId;
                 if (requestBody != null && !requestBody.trim().isEmpty()) {
-                    responseBody = requestBody;
+                    try {
+                        JsonNode parsed = jsonMapper.readTree(requestBody);
+                        if (parsed.isObject()) {
+                            ObjectNode dpNode = (ObjectNode) parsed.deepCopy();
+                            if (dpNode.has("name") && !dpNode.get("name").asText().isBlank()) {
+                                fullName = dpNode.get("name").asText();
+                                int idx = fullName.lastIndexOf("/dataPoints/");
+                                if (idx >= 0) {
+                                    dpId = fullName.substring(idx + "/dataPoints/".length());
+                                }
+                            } else {
+                                dpNode.put("name", fullName);
+                            }
+                            persistedDataPoints.put(dpId, dpNode.deepCopy());
+                            persistedDataPoints.put(fullName, dpNode.deepCopy());
+                            responseBody = dpNode.toPrettyString();
+                        } else {
+                            responseBody = requestBody;
+                        }
+                    } catch (Exception e) {
+                        responseBody = requestBody;
+                    }
                 } else {
-                    responseBody = generateSampleDataPointJson(def, effectiveUser);
+                    JsonNode sampleNode = generateSampleDataPointNode(def, effectiveUser, 0);
+                    if (sampleNode.isObject()) {
+                        ((ObjectNode) sampleNode).put("name", fullName);
+                        persistedDataPoints.put(dpId, sampleNode.deepCopy());
+                        persistedDataPoints.put(fullName, sampleNode.deepCopy());
+                    }
+                    responseBody = sampleNode.toPrettyString();
                 }
                 statusCode = 201;
                 statusMessage = "Created";
@@ -172,7 +266,13 @@ public class MockHealthBackend {
                 // List or Get DataPoints
                 if (path.matches(".*/dataPoints/[^/]+$")) {
                     // Single DataPoint
-                    responseBody = generateSampleDataPointJson(def, effectiveUser);
+                    String dpId = path.substring(path.lastIndexOf("/dataPoints/") + "/dataPoints/".length());
+                    JsonNode stored = persistedDataPoints.get(dpId);
+                    if (stored != null) {
+                        responseBody = stored.toPrettyString();
+                    } else {
+                        responseBody = generateSampleDataPointJson(def, effectiveUser);
+                    }
                 } else {
                     // List DataPoints
                     ObjectNode listResp = jsonMapper.createObjectNode();

@@ -609,6 +609,35 @@ public final class AppVersion {
 
 ## 📋 Version History & Changelog
 
+### Version 1.1.4 (November 5, 2026) - Release 1.1.4
+
+#### 🌟 Write, Update & Delete Lifecycle Standard Test Suites & Exercise TCX Export
+- **Update Profile & Update Settings Standard Test Scripts (`verifyWithGet: true`)**:
+  - Added [`scripts/standard_tests_updateProfile.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_updateProfile.yaml) testing `users.updateProfile` (`PATCH /v4/users/{userId}/profile`) with `updateMask` and verifying persistence via `users.getProfile`.
+  - Added [`scripts/standard_tests_updateSettings.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_updateSettings.yaml) testing `users.updateSettings` (`PATCH /v4/users/{userId}/settings`) across all unit enumerations (`distanceUnit`, `glucoseUnit`, `heightUnit`, `swimUnit`, `temperatureUnit`, `waterUnit`, `weightUnit`) and combined updates, verifying persistence via `users.getSettings`.
+  - Enhanced [`TestStep.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/model/TestStep.java), [`HealthApiClient.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/client/HealthApiClient.java), [`SuiteExecutionEngine.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/runner/SuiteExecutionEngine.java), and [`MockHealthBackend.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/client/MockHealthBackend.java) to forward `queryParams` (`updateMask`) on profile/settings `PATCH` calls and automatically verify updated fields via follow-up `GET` calls when `verifyWithGet: true` is enabled.
+- **5-Step Write/Update/Delete Lifecycle Standard Test Scripts (`create` -> `get` -> `patch` -> `get` -> `batchDelete`)**:
+  - Added [`scripts/standard_tests_updatebodyFat.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_updatebodyFat.yaml) for `body-fat`.
+  - Added [`scripts/standard_tests_updateExercise.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_updateExercise.yaml) for `exercise`.
+  - Added [`scripts/standard_tests_updateHeight.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_updateHeight.yaml) for `height`.
+  - Added [`scripts/standard_tests_updateHydrationLog.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_updateHydrationLog.yaml) for `hydration-log`.
+  - Added [`scripts/standard_tests_updateNutritionLog.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_updateNutritionLog.yaml) for `nutrition-log` (using identified food references for `PATCH` editability).
+  - Added [`scripts/standard_tests_updateSleep.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_updateSleep.yaml) for `sleep`.
+  - Added [`scripts/standard_tests_updateWeight.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_updateWeight.yaml) for `weight`.
+- **3-Step Write-Only Lifecycle Standard Test Scripts (`create` -> `patch` -> `batchDelete`, without `get`)**:
+  - Added [`scripts/standard_tests_updateMenstrualPeriod.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_updateMenstrualPeriod.yaml) for `menstrual-period`.
+  - Added [`scripts/standard_tests_updateMoods.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_updateMoods.yaml) for `moods`.
+  - Added [`scripts/standard_tests_updateOvulationTest.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_updateOvulationTest.yaml) for `ovulation-test`.
+  - Added [`scripts/standard_tests_updateSymptoms.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_updateSymptoms.yaml) for `symptoms`.
+- **Exercise Export TCX Standard Test Script (`list` -> `exportExerciseTcx`)**:
+  - Added [`scripts/standard_tests_exportExerciseTcx.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/standard_tests_exportExerciseTcx.yaml) listing `exercise` data points, capturing `${uniqueName}`, and exporting the exercise TCX file via `GET /v4/users/{userId}/dataTypes/exercise/dataPoints/{dataPointId}:exportExerciseTcx`.
+- **Dynamic Resource Name Capture (`${uniqueName}` / `${dataPointId}`) & Stateful `userId: both` Expansion**:
+  - Updated [`SuiteExecutionEngine.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/runner/SuiteExecutionEngine.java) to automatically capture created/listed resource names (`response.name`, `name`, or `dataPoints[0].name`) and resolve `${uniqueName}` and `${dataPointId}` placeholders across `get`, `patch`, `batchDelete`, and `exportExerciseTcx`.
+  - Updated [`TestSuiteScript.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/model/TestSuiteScript.java) so stateful multi-step scripts with `userId: both` execute all lifecycle steps sequentially for `me` followed by all lifecycle steps for `healthUserId`.
+  - Registered all 14 new scripts in [`config/test_suite_manifest.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/config/test_suite_manifest.yaml) and added unit tests in [`ScriptRunnerTest.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/test/java/com/google/health/testsuite/ScriptRunnerTest.java).
+
+---
+
 ### Version 1.1.3 (November 1, 2026) - Release 1.1.3
 
 #### 🌟 Latency Test Suite & Custom Negative Test Enhancements

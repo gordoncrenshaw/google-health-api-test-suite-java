@@ -45,7 +45,21 @@ scripts:
   - scripts/custom_tests-weight.yaml
   - scripts/latency_tests.yaml
   - scripts/standard_tests_auth.yaml
+  - scripts/standard_tests_exportExerciseTcx.yaml
   - scripts/standard_tests_pairedDevices.yaml
+  - scripts/standard_tests_updatebodyFat.yaml
+  - scripts/standard_tests_updateExercise.yaml
+  - scripts/standard_tests_updateHeight.yaml
+  - scripts/standard_tests_updateHydrationLog.yaml
+  - scripts/standard_tests_updateMenstrualPeriod.yaml
+  - scripts/standard_tests_updateMoods.yaml
+  - scripts/standard_tests_updateNutritionLog.yaml
+  - scripts/standard_tests_updateOvulationTest.yaml
+  - scripts/standard_tests_updateProfile.yaml
+  - scripts/standard_tests_updateSettings.yaml
+  - scripts/standard_tests_updateSleep.yaml
+  - scripts/standard_tests_updateSymptoms.yaml
+  - scripts/standard_tests_updateWeight.yaml
   - scripts/standard_tests_user.yaml
   - scripts/standard_tests-activeEnergyBurned.yaml
   - scripts/standard_tests-activeMinutes.yaml

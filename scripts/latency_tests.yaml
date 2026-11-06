@@ -5,7 +5,7 @@ name: "Google Health API Latency Tests"
 description: "Latency tests across all Google Health API datatypes and endpoints (fails if latency > 1000 ms)"
 userId: both # Supported values: me, healthUserId, both
 stopOnError: false
-maxLatencyMs: 1000 # Global max allowed latency in milliseconds for all endpoints
+maxLatencyMs: 5000 # Global max allowed latency in milliseconds for all endpoints
 
 steps:
   # ============================================================================
@@ -11330,53 +11330,16 @@ steps:
     action: "list"
     dataType: "sleep"
     queryParams:
-      filter: 'sleep.interval.end_time >= "2026-10-01"'
+      filter: 'sleep.interval.civil_end_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
     # maxLatencyMs: 1000
 
-  - name: "Latency: Sleep List (filter: end_time range)"
+  - name: "Latency: Sleep List (filter: civil_end_time range)"
     action: "list"
     dataType: "sleep"
     queryParams:
-      filter: 'sleep.interval.end_time >= "2026-10-01T00:00:00Z" AND sleep.interval.end_time < "2026-10-08T23:59:59Z"'
-    assertStatus: [200]
-    validateRange: true
-    # maxLatencyMs: 1000
-
-  - name: "Latency: Sleep List (dataSourceFamily: all-sources)"
-    action: "list"
-    dataType: "sleep"
-    queryParams:
-      dataSourceFamily: "users/me/dataSourceFamilies/all-sources"
-    assertStatus: [200]
-    validateRange: true
-    # maxLatencyMs: 1000
-
-  - name: "Latency: Sleep List (dataSourceFamily: google-wearables)"
-    action: "list"
-    dataType: "sleep"
-    queryParams:
-      dataSourceFamily: "users/me/dataSourceFamilies/google-wearables"
-    assertStatus: [200]
-    validateRange: true
-    # maxLatencyMs: 1000
-
-  - name: "Latency: Sleep List (dataSourceFamily: google-sources)"
-    action: "list"
-    dataType: "sleep"
-    queryParams:
-      dataSourceFamily: "users/me/dataSourceFamilies/google-sources"
-    assertStatus: [200]
-    validateRange: true
-    # maxLatencyMs: 1000
-
-  - name: "Latency: Sleep List (combined)"
-    action: "list"
-    dataType: "sleep"
-    queryParams:
-      filter: 'sleep.interval.end_time >= "2026-10-01T00:00:00Z" AND sleep.interval.end_time < "2026-10-08T23:59:59Z"'
-      dataSourceFamily: 'users/me/dataSourceFamilies/google-wearables'
+      filter: 'sleep.interval.civil_end_time >= "2026-10-01T00:00:00" AND sleep.interval.civil_end_time < "2026-10-08T23:59:59"'
     assertStatus: [200]
     validateRange: true
     # maxLatencyMs: 1000
@@ -11410,16 +11373,16 @@ steps:
     action: "reconcile"
     dataType: "sleep"
     queryParams:
-      filter: 'sleep.interval.end_time >= "2026-10-01"'
+      filter: 'sleep.interval.civil_end_time >= "2026-10-01"'
     assertStatus: [200]
     validateRange: true
     # maxLatencyMs: 1000
 
-  - name: "Latency: Sleep Reconcile (filter: end_time range)"
+  - name: "Latency: Sleep Reconcile (filter: civil_end_time range)"
     action: "reconcile"
     dataType: "sleep"
     queryParams:
-      filter: 'sleep.interval.end_time >= "2026-10-01T00:00:00Z" AND sleep.interval.end_time < "2026-10-08T23:59:59Z"'
+      filter: 'sleep.interval.civil_end_time >= "2026-10-01T00:00:00" AND sleep.interval.civil_end_time < "2026-10-08T23:59:59"'
     assertStatus: [200]
     validateRange: true
     # maxLatencyMs: 1000

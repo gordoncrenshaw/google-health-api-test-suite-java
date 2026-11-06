@@ -1,0 +1,33 @@
+# ==============================================================================
+# Google Health API Test Suite - Exercise Export TCX Standard Tests
+# ==============================================================================
+# Tests exporting an Exercise TCX file:
+#   1. Calls list (GET /v4/users/{userId}/dataTypes/exercise/dataPoints) and stores ${uniqueName}
+#   2. Calls exportExerciseTcx (GET /v4/users/{userId}/dataTypes/exercise/dataPoints/{dataPointId}:exportExerciseTcx)
+# ==============================================================================
+
+name: "Google Health API Exercise Export TCX Standard Tests"
+description: "Standard tests for listing exercise data points and exporting an exercise TCX file"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ----------------------------------------------------------------------------
+  # 1. List exercise entries and store the unique resource name of the first entry
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Exercise List (Retrieve Unique Name)"
+    action: "list"
+    dataType: "exercise"
+    assertStatus: [200]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 2. Export the exercise TCX file using the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Exercise Export TCX"
+    action: "exportExerciseTcx"
+    dataType: "exercise"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: false
+

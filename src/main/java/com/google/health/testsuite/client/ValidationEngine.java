@@ -55,8 +55,11 @@ public class ValidationEngine {
                     }
                 }
             } else {
-                // 2. Check single DataPoint (GetDataPoint or CreateDataPoint response)
+                // 2. Check single DataPoint (GetDataPoint, CreateDataPoint, or Operation response)
                 Double val = extractNumericValue(def, root);
+                if (val == null && root.has("response") && root.get("response").isObject()) {
+                    val = extractNumericValue(def, root.get("response"));
+                }
                 if (val != null) {
                     extractedValues.add(val);
                 }

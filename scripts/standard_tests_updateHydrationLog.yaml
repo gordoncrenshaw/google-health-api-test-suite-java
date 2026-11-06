@@ -1,0 +1,103 @@
+# ==============================================================================
+# Google Health API Test Suite - Hydration Log Write & Update Standard Tests
+# ==============================================================================
+# Tests the full write/update/delete lifecycle for the hydration-log data type:
+#   1. Calls create (POST /v4/users/{userId}/dataTypes/hydration-log/dataPoints) and stores ${uniqueName}
+#   2. Calls get (GET /v4/users/{userId}/dataTypes/hydration-log/dataPoints/{dataPointId}) to verify insertion
+#   3. Calls patch (PATCH /v4/users/{userId}/dataTypes/hydration-log/dataPoints/{dataPointId}) to update the value
+#   4. Calls get (GET /v4/users/{userId}/dataTypes/hydration-log/dataPoints/{dataPointId}) to verify the update
+#   5. Calls batchDelete (POST /v4/users/{userId}/dataTypes/hydration-log/dataPoints:batchDelete) to delete the entry
+# ==============================================================================
+
+name: "Google Health API Hydration Log Write & Update Standard Tests"
+description: "Standard tests for creating, reading, updating, and deleting hydration-log data points"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ----------------------------------------------------------------------------
+  # 1. Create a hydration-log entry and store the unique resource name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Hydration Log Create"
+    action: "create"
+    dataType: "hydration-log"
+    body: |
+      {
+        "hydrationLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:15:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "amountConsumed": {
+            "milliliters": 350
+          }
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 2. Retrieve the created hydration-log entry using the unique name and verify value
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Hydration Log Get (Verify Create)"
+    action: "get"
+    dataType: "hydration-log"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "350"
+
+  # ----------------------------------------------------------------------------
+  # 3. Update (patch) the hydration-log entry using the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Hydration Log Update (Patch)"
+    action: "patch"
+    dataType: "hydration-log"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "hydrationLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:15:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "amountConsumed": {
+            "milliliters": 500
+          }
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # 4. Retrieve the updated hydration-log entry using the unique name and verify update
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Hydration Log Get (Verify Update)"
+    action: "get"
+    dataType: "hydration-log"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "500"
+
+  # ----------------------------------------------------------------------------
+  # 5. Delete the hydration-log entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Hydration Log BatchDelete"
+    action: "batchDelete"
+    dataType: "hydration-log"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
