@@ -1,0 +1,300 @@
+# ==============================================================================
+# Google Health API Test Suite - Exercise Write, Update & Delete Negative Tests
+# ==============================================================================
+# Tests boundary limits and negative inputs for the exercise data type across
+# create, update (patch), and delete (batchDelete) endpoints using
+# verifyWithGet: true to confirm persisted response values:
+#   - Out-of-range lower bound (endTime before startTime) and upper bound (> 86400s)
+#   - Missing value (no exerciseType field), null value, and empty string ("")
+#   - BatchDelete with no value ([]), null ([null]), and empty string ([""])
+# ==============================================================================
+
+name: "Google Health API Exercise Write, Update & Delete Negative Tests"
+description: "Boundary and negative tests for creating, updating, and deleting exercise data points using verifyWithGet"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ============================================================================
+  # SECTION 1: Baseline Create & Update (Patch) Boundary and Negative Tests
+  # ============================================================================
+
+  # 1. Create a baseline exercise entry and verify via GET
+  - name: "Standard: Exercise Create (exerciseType = WALKING)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "exercise"
+    body: |
+      {
+        "exercise": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:30:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "exerciseType": "WALKING",
+          "displayName": "Morning Walk"
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  # 2. Negative Update: Below lower bound limit (endTime before startTime, duration < 0s)
+  - name: "Negative: Exercise Update Below Lower Bound (endTime < startTime)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "exercise"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "exercise": {
+          "interval": {
+            "startTime": "2026-10-15T12:30:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:00:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "exerciseType": "RUNNING",
+          "displayName": "Invalid Negative Duration"
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 3. Negative Update: Above upper bound limit (duration > 86400s)
+  - name: "Negative: Exercise Update Above Upper Bound (duration > 86400s)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "exercise"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "exercise": {
+          "interval": {
+            "startTime": "2026-10-01T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-30T12:00:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "exerciseType": "RUNNING",
+          "displayName": "Invalid Excessive Duration"
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 4. Negative Update: No value provided (exerciseType and interval omitted)
+  - name: "Negative: Exercise Update (no value)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "exercise"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "exercise": {
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 5. Negative Update: null value provided (exerciseType = null)
+  - name: "Negative: Exercise Update (exerciseType = null)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "exercise"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "exercise": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:45:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "exerciseType": null,
+          "displayName": "Afternoon Run"
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 6. Negative Update: Empty string value provided (exerciseType = "")
+  - name: "Negative: Exercise Update (exerciseType = empty string)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "exercise"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "exercise": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:45:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "exerciseType": "",
+          "displayName": "Afternoon Run"
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 7. Clean up baseline exercise entry via batchDelete
+  - name: "Standard: Exercise BatchDelete (Clean Up Baseline)"
+    action: "batchDelete"
+    dataType: "exercise"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
+  # ============================================================================
+  # SECTION 2: Create Boundary and Negative Tests
+  # ============================================================================
+
+  # 8. Negative Create: Below lower bound limit (endTime before startTime, duration < 0s)
+  - name: "Negative: Exercise Create Below Lower Bound (endTime < startTime)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "exercise"
+    body: |
+      {
+        "exercise": {
+          "interval": {
+            "startTime": "2026-10-15T12:30:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:00:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "exerciseType": "WALKING",
+          "displayName": "Invalid Negative Duration"
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 9. Negative Create: Above upper bound limit (duration > 86400s)
+  - name: "Negative: Exercise Create Above Upper Bound (duration > 86400s)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "exercise"
+    body: |
+      {
+        "exercise": {
+          "interval": {
+            "startTime": "2026-10-01T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-30T12:00:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "exerciseType": "WALKING",
+          "displayName": "Invalid Excessive Duration"
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 10. Negative Create: No value provided (exerciseType and interval omitted)
+  - name: "Negative: Exercise Create (no value)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "exercise"
+    body: |
+      {
+        "exercise": {
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 11. Negative Create: null value provided (exerciseType = null)
+  - name: "Negative: Exercise Create (exerciseType = null)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "exercise"
+    body: |
+      {
+        "exercise": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:30:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "exerciseType": null,
+          "displayName": "Morning Walk"
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 12. Negative Create: Empty string value provided (exerciseType = "")
+  - name: "Negative: Exercise Create (exerciseType = empty string)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "exercise"
+    body: |
+      {
+        "exercise": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:30:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "exerciseType": "",
+          "displayName": "Morning Walk"
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # ============================================================================
+  # SECTION 3: Negative Delete (BatchDelete) Tests
+  # ============================================================================
+
+  # 13. Negative BatchDelete: No value provided (empty names array)
+  - name: "Negative: Exercise BatchDelete (no value)"
+    action: "batchDelete"
+    dataType: "exercise"
+    body: |
+      {
+        "names": [
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+
+  # 14. Negative BatchDelete: null value provided
+  - name: "Negative: Exercise BatchDelete (null)"
+    action: "batchDelete"
+    dataType: "exercise"
+    body: |
+      {
+        "names": [
+          null
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+
+  # 15. Negative BatchDelete: Empty string provided
+  - name: "Negative: Exercise BatchDelete (empty string)"
+    action: "batchDelete"
+    dataType: "exercise"
+    body: |
+      {
+        "names": [
+          ""
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+

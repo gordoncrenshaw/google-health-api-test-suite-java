@@ -81,6 +81,66 @@ steps:
       - "2026-10-15T10:00:00Z"
 
   # ----------------------------------------------------------------------------
+  # Test lower limit (duration = 1m / 60s)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Sleep Update (lower limit duration = 1m)"
+    action: "patch"
+    dataType: "sleep"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "sleep": {
+          "interval": {
+            "startTime": "2026-10-15T02:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T02:01:00Z",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep Get (Verify Update lower limit duration = 1m)"
+    action: "get"
+    dataType: "sleep"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "2026-10-15T02:01:00Z"
+
+  # ----------------------------------------------------------------------------
+  # Test upper limit (duration = 24 hours / 86400s)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Sleep Update (upper limit duration = 24h)"
+    action: "patch"
+    dataType: "sleep"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "sleep": {
+          "interval": {
+            "startTime": "2026-10-15T00:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-16T00:00:00Z",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Sleep Get (Verify Update upper limit duration = 24h)"
+    action: "get"
+    dataType: "sleep"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "2026-10-16T00:00:00Z"
+
+  # ----------------------------------------------------------------------------
   # 5. Delete the sleep entry via batchDelete specifying the unique name
   # ----------------------------------------------------------------------------
   - name: "Standard: Sleep BatchDelete"
@@ -95,3 +155,84 @@ steps:
     assertStatus: [200]
     validateRange: false
 
+  # ----------------------------------------------------------------------------
+  # 6. Create a sleep entry at lower limit (duration = 1m)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Sleep Create (lower limit duration = 1m)"
+    action: "create"
+    dataType: "sleep"
+    body: |
+      {
+        "sleep": {
+          "interval": {
+            "startTime": "2026-10-15T02:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T02:01:00Z",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Sleep Get (Verify Create lower limit duration = 1m)"
+    action: "get"
+    dataType: "sleep"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "2026-10-15T02:01:00Z"
+
+  - name: "Standard: Sleep BatchDelete"
+    action: "batchDelete"
+    dataType: "sleep"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
+  # ----------------------------------------------------------------------------
+  # 7. Create a sleep entry at upper limit (duration = 24h)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Sleep Create (upper limit duration = 24h)"
+    action: "create"
+    dataType: "sleep"
+    body: |
+      {
+        "sleep": {
+          "interval": {
+            "startTime": "2026-10-15T00:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-16T00:00:00Z",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Sleep Get (Verify Create upper limit duration = 24h)"
+    action: "get"
+    dataType: "sleep"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "2026-10-16T00:00:00Z"
+
+  - name: "Standard: Sleep BatchDelete"
+    action: "batchDelete"
+    dataType: "sleep"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false

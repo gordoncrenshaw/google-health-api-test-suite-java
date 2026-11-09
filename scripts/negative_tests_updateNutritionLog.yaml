@@ -1,0 +1,358 @@
+# ==============================================================================
+# Google Health API Test Suite - Nutrition Log Write, Update & Delete Negative Tests
+# ==============================================================================
+# Tests boundary limits and negative inputs for the nutrition-log data type across
+# create, update (patch), and delete (batchDelete) endpoints using
+# verifyWithGet: true to confirm persisted response values:
+#   - Out-of-range lower bound (serving.amount = -1) and upper bound (100001)
+#   - Missing value (no serving.amount field), null value, and empty string ("")
+#   - BatchDelete with no value ([]), null ([null]), and empty string ([""])
+# ==============================================================================
+
+name: "Google Health API Nutrition Log Write, Update & Delete Negative Tests"
+description: "Boundary and negative tests for creating, updating, and deleting nutrition-log data points using verifyWithGet"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ============================================================================
+  # SECTION 1: Baseline Create & Update (Patch) Boundary and Negative Tests
+  # ============================================================================
+
+  # 1. Create a baseline nutrition-log entry and verify via GET
+  - name: "Standard: Nutrition Log Create (serving.amount = 1)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "nutrition-log"
+    body: |
+      {
+        "nutritionLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:30:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "food": "users/me/dataTypes/food/dataPoints/825916320",
+          "mealType": "LUNCH",
+          "serving": {
+            "amount": 1,
+            "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/17"
+          }
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  # 2. Negative Update: Below lower bound limit (-1)
+  - name: "Negative: Nutrition Log Update Below Lower Bound (serving.amount = -1)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "nutrition-log"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "nutritionLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:30:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "food": "users/me/dataTypes/food/dataPoints/825916320",
+          "mealType": "DINNER",
+          "serving": {
+            "amount": -1,
+            "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/17"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 3. Negative Update: Above upper bound limit (100001)
+  - name: "Negative: Nutrition Log Update Above Upper Bound (serving.amount = 100001)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "nutrition-log"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "nutritionLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:30:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "food": "users/me/dataTypes/food/dataPoints/825916320",
+          "mealType": "DINNER",
+          "serving": {
+            "amount": 100001,
+            "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/17"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 4. Negative Update: No value provided (serving.amount field omitted)
+  - name: "Negative: Nutrition Log Update (no value)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "nutrition-log"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "nutritionLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:30:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "food": "users/me/dataTypes/food/dataPoints/825916320",
+          "mealType": "DINNER",
+          "serving": {
+            "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/17"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 5. Negative Update: null value provided (serving.amount = null)
+  - name: "Negative: Nutrition Log Update (serving.amount = null)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "nutrition-log"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "nutritionLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:30:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "food": "users/me/dataTypes/food/dataPoints/825916320",
+          "mealType": "DINNER",
+          "serving": {
+            "amount": null,
+            "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/17"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 6. Negative Update: Empty string value provided (serving.amount = "")
+  - name: "Negative: Nutrition Log Update (serving.amount = empty string)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "nutrition-log"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "nutritionLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:30:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "food": "users/me/dataTypes/food/dataPoints/825916320",
+          "mealType": "DINNER",
+          "serving": {
+            "amount": "",
+            "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/17"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 7. Clean up baseline nutrition-log entry via batchDelete
+  - name: "Standard: Nutrition Log BatchDelete (Clean Up Baseline)"
+    action: "batchDelete"
+    dataType: "nutrition-log"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
+  # ============================================================================
+  # SECTION 2: Create Boundary and Negative Tests
+  # ============================================================================
+
+  # 8. Negative Create: Below lower bound limit (-1)
+  - name: "Negative: Nutrition Log Create Below Lower Bound (serving.amount = -1)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "nutrition-log"
+    body: |
+      {
+        "nutritionLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:30:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "food": "users/me/dataTypes/food/dataPoints/825916320",
+          "mealType": "LUNCH",
+          "serving": {
+            "amount": -1,
+            "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/17"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 9. Negative Create: Above upper bound limit (100001)
+  - name: "Negative: Nutrition Log Create Above Upper Bound (serving.amount = 100001)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "nutrition-log"
+    body: |
+      {
+        "nutritionLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:30:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "food": "users/me/dataTypes/food/dataPoints/825916320",
+          "mealType": "LUNCH",
+          "serving": {
+            "amount": 100001,
+            "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/17"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 10. Negative Create: No value provided (serving.amount field omitted)
+  - name: "Negative: Nutrition Log Create (no value)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "nutrition-log"
+    body: |
+      {
+        "nutritionLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:30:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "food": "users/me/dataTypes/food/dataPoints/825916320",
+          "mealType": "LUNCH",
+          "serving": {
+            "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/17"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 11. Negative Create: null value provided (serving.amount = null)
+  - name: "Negative: Nutrition Log Create (serving.amount = null)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "nutrition-log"
+    body: |
+      {
+        "nutritionLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:30:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "food": "users/me/dataTypes/food/dataPoints/825916320",
+          "mealType": "LUNCH",
+          "serving": {
+            "amount": null,
+            "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/17"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 12. Negative Create: Empty string value provided (serving.amount = "")
+  - name: "Negative: Nutrition Log Create (serving.amount = empty string)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "nutrition-log"
+    body: |
+      {
+        "nutritionLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:30:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "food": "users/me/dataTypes/food/dataPoints/825916320",
+          "mealType": "LUNCH",
+          "serving": {
+            "amount": "",
+            "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/17"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # ============================================================================
+  # SECTION 3: Negative Delete (BatchDelete) Tests
+  # ============================================================================
+
+  # 13. Negative BatchDelete: No value provided (empty names array)
+  - name: "Negative: Nutrition Log BatchDelete (no value)"
+    action: "batchDelete"
+    dataType: "nutrition-log"
+    body: |
+      {
+        "names": [
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+
+  # 14. Negative BatchDelete: null value provided
+  - name: "Negative: Nutrition Log BatchDelete (null)"
+    action: "batchDelete"
+    dataType: "nutrition-log"
+    body: |
+      {
+        "names": [
+          null
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+
+  # 15. Negative BatchDelete: Empty string provided
+  - name: "Negative: Nutrition Log BatchDelete (empty string)"
+    action: "batchDelete"
+    dataType: "nutrition-log"
+    body: |
+      {
+        "names": [
+          ""
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+

@@ -1,0 +1,286 @@
+# ==============================================================================
+# Google Health API Test Suite - Menstrual Period Write, Update & Delete Negative Tests
+# ==============================================================================
+# Tests boundary limits and negative inputs for the menstrual-period data type across
+# create, update (patch), and delete (batchDelete) endpoints using
+# verifyWithGet: true to confirm persisted response values:
+#   - Out-of-range lower bound (endTime before startTime) and upper bound (> 1 year)
+#   - Missing value (no interval fields), null value, and empty string ("")
+#   - BatchDelete with no value ([]), null ([null]), and empty string ([""])
+# ==============================================================================
+
+name: "Google Health API Menstrual Period Write, Update & Delete Negative Tests"
+description: "Boundary and negative tests for creating, updating, and deleting menstrual-period data points using verifyWithGet"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ============================================================================
+  # SECTION 1: Baseline Create & Update (Patch) Boundary and Negative Tests
+  # ============================================================================
+
+  # 1. Create a baseline menstrual-period entry
+  - name: "Standard: Menstrual Period Create"
+    action: "create"
+    verifyWithGet: true
+    dataType: "menstrual-period"
+    body: |
+      {
+        "menstrualPeriod": {
+          "interval": {
+            "startTime": "2026-10-01T08:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-04T20:00:00Z",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  # 2. Negative Update: Below lower bound limit (endTime before startTime)
+  - name: "Negative: Menstrual Period Update Below Lower Bound (endTime < startTime)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "menstrual-period"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "menstrualPeriod": {
+          "interval": {
+            "startTime": "2026-10-04T20:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-01T08:00:00Z",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 3. Negative Update: Above upper bound limit (excessive interval duration)
+  - name: "Negative: Menstrual Period Update Above Upper Bound (excessive duration)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "menstrual-period"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "menstrualPeriod": {
+          "interval": {
+            "startTime": "2020-01-01T08:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-05T20:00:00Z",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 4. Negative Update: No value provided (interval fields omitted)
+  - name: "Negative: Menstrual Period Update (no value)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "menstrual-period"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "menstrualPeriod": {
+          "interval": {
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 5. Negative Update: null value provided (endTime = null)
+  - name: "Negative: Menstrual Period Update (endTime = null)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "menstrual-period"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "menstrualPeriod": {
+          "interval": {
+            "startTime": "2026-10-01T08:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": null,
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 6. Negative Update: Empty string value provided (endTime = "")
+  - name: "Negative: Menstrual Period Update (endTime = empty string)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "menstrual-period"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "menstrualPeriod": {
+          "interval": {
+            "startTime": "2026-10-01T08:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 7. Clean up baseline menstrual-period entry via batchDelete
+  - name: "Standard: Menstrual Period BatchDelete (Clean Up Baseline)"
+    action: "batchDelete"
+    dataType: "menstrual-period"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
+  # ============================================================================
+  # SECTION 2: Create Boundary and Negative Tests
+  # ============================================================================
+
+  # 8. Negative Create: Below lower bound limit (endTime before startTime)
+  - name: "Negative: Menstrual Period Create Below Lower Bound (endTime < startTime)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "menstrual-period"
+    body: |
+      {
+        "menstrualPeriod": {
+          "interval": {
+            "startTime": "2026-10-04T20:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-01T08:00:00Z",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 9. Negative Create: Above upper bound limit (excessive interval duration)
+  - name: "Negative: Menstrual Period Create Above Upper Bound (excessive duration)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "menstrual-period"
+    body: |
+      {
+        "menstrualPeriod": {
+          "interval": {
+            "startTime": "2020-01-01T08:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-04T20:00:00Z",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 10. Negative Create: No value provided (interval fields omitted)
+  - name: "Negative: Menstrual Period Create (no value)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "menstrual-period"
+    body: |
+      {
+        "menstrualPeriod": {
+          "interval": {
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 11. Negative Create: null value provided (endTime = null)
+  - name: "Negative: Menstrual Period Create (endTime = null)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "menstrual-period"
+    body: |
+      {
+        "menstrualPeriod": {
+          "interval": {
+            "startTime": "2026-10-01T08:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": null,
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 12. Negative Create: Empty string value provided (endTime = "")
+  - name: "Negative: Menstrual Period Create (endTime = empty string)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "menstrual-period"
+    body: |
+      {
+        "menstrualPeriod": {
+          "interval": {
+            "startTime": "2026-10-01T08:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # ============================================================================
+  # SECTION 3: Negative Delete (BatchDelete) Tests
+  # ============================================================================
+
+  # 13. Negative BatchDelete: No value provided (empty names array)
+  - name: "Negative: Menstrual Period BatchDelete (no value)"
+    action: "batchDelete"
+    dataType: "menstrual-period"
+    body: |
+      {
+        "names": [
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+
+  # 14. Negative BatchDelete: null value provided
+  - name: "Negative: Menstrual Period BatchDelete (null)"
+    action: "batchDelete"
+    dataType: "menstrual-period"
+    body: |
+      {
+        "names": [
+          null
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+
+  # 15. Negative BatchDelete: Empty string provided
+  - name: "Negative: Menstrual Period BatchDelete (empty string)"
+    action: "batchDelete"
+    dataType: "menstrual-period"
+    body: |
+      {
+        "names": [
+          ""
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+

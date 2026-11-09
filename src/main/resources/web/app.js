@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentPreferences = null;
     let availableScopes = [];
     let selectedScopes = new Set(); // Default: all scopes deselected
+    let isEditingScopes = false;
     let editingDataTypeName = null;
 
     // Initialize UI
@@ -331,8 +332,20 @@ document.addEventListener('DOMContentLoaded', () => {
             infoDiv.className = 'scope-info';
             infoDiv.innerHTML = `
                 <span class="scope-short-name">${escapeHtml(shortName)}</span>
-                ${badgeHtml}
+                <div style="display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                    ${badgeHtml}
+                    ${isEditingScopes ? `<button type="button" class="btn-delete-scope" title="Delete scope '${escapeHtml(scope)}' from config/preferences.yaml" data-scope="${escapeHtml(scope)}">✕ Delete</button>` : ''}
+                </div>
             `;
+
+            const delBtn = infoDiv.querySelector('.btn-delete-scope');
+            if (delBtn) {
+                delBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    deleteScopeFromYaml(scope);
+                });
+            }
 
             item.appendChild(checkbox);
             item.appendChild(infoDiv);
@@ -340,6 +353,105 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         updateScopesCountAndPreview();
+    }
+
+    function toggleEditScopesMode() {
+        isEditingScopes = !isEditingScopes;
+        const toolbar = document.getElementById('scopes-edit-toolbar');
+        const editBtn = document.getElementById('btn-scopes-edit');
+        const editLabel = document.getElementById('btn-scopes-edit-label');
+        const inputEl = document.getElementById('new-scope-input');
+
+        if (toolbar) {
+            toolbar.style.display = isEditingScopes ? 'block' : 'none';
+        }
+        if (editBtn) {
+            if (isEditingScopes) {
+                editBtn.classList.remove('btn-secondary');
+                editBtn.classList.add('btn-primary');
+            } else {
+                editBtn.classList.remove('btn-primary');
+                editBtn.classList.add('btn-secondary');
+            }
+        }
+        if (editLabel) {
+            editLabel.textContent = isEditingScopes ? 'Done Editing' : 'Edit Scopes';
+        }
+        renderScopesList();
+        if (isEditingScopes && inputEl) {
+            inputEl.focus();
+        }
+    }
+
+    function showScopesEditStatus(msg, isError = false) {
+        const statusEl = document.getElementById('scopes-edit-status');
+        if (!statusEl) return;
+        statusEl.textContent = msg;
+        statusEl.className = isError ? 'text-danger font-mono' : 'text-success font-mono';
+        statusEl.style.display = 'inline';
+        setTimeout(() => {
+            statusEl.style.display = 'none';
+        }, 4000);
+    }
+
+    async function addScopeToYaml() {
+        const inputEl = document.getElementById('new-scope-input');
+        if (!inputEl) return;
+        const rawScope = inputEl.value.trim();
+        if (!rawScope) {
+            alert('Please enter a scope URL or short name (e.g., https://www.googleapis.com/auth/googlehealth.nutrition.readonly or nutrition.readonly).');
+            inputEl.focus();
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/scopes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ scope: rawScope })
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                showScopesEditStatus('✕ ' + (data.error || 'Failed to add scope'), true);
+                return;
+            }
+            availableScopes = data.scopes || [];
+            if (currentPreferences) {
+                currentPreferences.scopes = [...availableScopes];
+            }
+            inputEl.value = '';
+            renderScopesList();
+            populateDataTypeScopeDropdowns();
+            showScopesEditStatus('✓ ' + (data.message || 'Saved to preferences.yaml'));
+        } catch (e) {
+            showScopesEditStatus('✕ Error: ' + e.message, true);
+        }
+    }
+
+    async function deleteScopeFromYaml(scope) {
+        if (!scope) return;
+        try {
+            const res = await fetch('/api/scopes', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ scope: scope })
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                showScopesEditStatus('✕ ' + (data.error || 'Failed to delete scope'), true);
+                return;
+            }
+            selectedScopes.delete(scope);
+            availableScopes = data.scopes || [];
+            if (currentPreferences) {
+                currentPreferences.scopes = [...availableScopes];
+            }
+            renderScopesList();
+            populateDataTypeScopeDropdowns();
+            showScopesEditStatus('✓ ' + (data.message || 'Deleted from preferences.yaml'));
+        } catch (e) {
+            showScopesEditStatus('✕ Error: ' + e.message, true);
+        }
     }
 
     function updateScopesCountAndPreview() {
@@ -1841,7 +1953,7 @@ document.addEventListener('DOMContentLoaded', () => {
             apiBaseUrl: document.getElementById('pref-api-base-url').value,
             mockMode: document.getElementById('pref-mock-mode').checked,
             enableAllEndpoints: enableAllVal,
-            scopes: (selectedScopes && selectedScopes.size > 0) ? Array.from(selectedScopes) : (currentPreferences && currentPreferences.scopes ? currentPreferences.scopes : [])
+            scopes: (availableScopes && availableScopes.length > 0) ? availableScopes : (currentPreferences && currentPreferences.scopes ? currentPreferences.scopes : [])
         };
 
         try {
@@ -2055,6 +2167,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const btnReloadScopes = document.getElementById('btn-scopes-reload');
         if (btnReloadScopes) btnReloadScopes.addEventListener('click', loadAvailableScopes);
+
+        const btnEditScopes = document.getElementById('btn-scopes-edit');
+        if (btnEditScopes) btnEditScopes.addEventListener('click', toggleEditScopesMode);
+
+        const btnAddScope = document.getElementById('btn-scope-add');
+        if (btnAddScope) btnAddScope.addEventListener('click', addScopeToYaml);
+
+        const newScopeInput = document.getElementById('new-scope-input');
+        if (newScopeInput) {
+            newScopeInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addScopeToYaml();
+                }
+            });
+        }
 
         document.getElementById('explorer-datatype-select').addEventListener('change', onExplorerDataTypeChanged);
         document.getElementById('explorer-endpoint-select').addEventListener('change', onExplorerEndpointChanged);

@@ -638,14 +638,34 @@
                                 <svg viewBox="0 0 24 24" class="btn-icon" style="width: 14px; height: 14px;"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
                                 Reload Scopes
                             </button>
+                            <button type="button" id="btn-scopes-edit" class="btn btn-secondary btn-sm" title="Add or delete OAuth scopes in config/preferences.yaml">
+                                <svg viewBox="0 0 24 24" class="btn-icon" style="width: 14px; height: 14px;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                                <span id="btn-scopes-edit-label">Edit Scopes</span>
+                            </button>
                         </div>
                     </div>
                     <div class="card-body">
                         <p class="text-muted mb-3" style="font-size: 0.9rem;">
                             Select the specific Google Health API scopes to include in the authorization string. Scopes are loaded dynamically from <code>config/preferences.yaml</code>. 
-                            Add new scopes to that file at any time to automatically display them here. 
+                            Click <strong>Edit Scopes</strong> to add or delete scopes directly in <code>config/preferences.yaml</code>. 
                             <em>(By default, all scopes are deselected)</em>.
                         </p>
+
+                        <!-- Inline Edit Scopes Toolbar (toggled by Edit Scopes button) -->
+                        <div id="scopes-edit-toolbar" class="scopes-edit-toolbar" style="display: none; margin-bottom: 12px; padding: 12px 14px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                                <span style="font-size: 0.82rem; font-weight: 600; color: #38bdf8;">
+                                    ✏️ Edit Scopes Mode — Add a new scope below or click the delete button next to any scope to update <code>config/preferences.yaml</code>
+                                </span>
+                                <span id="scopes-edit-status" class="text-success font-mono" style="font-size: 0.8rem; display: none;">✓ Updated preferences.yaml</span>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                <input type="text" id="new-scope-input" class="form-control font-mono" style="flex: 1; min-width: 260px; height: 36px; font-size: 12.5px;" placeholder="https://www.googleapis.com/auth/googlehealth.nutrition.readonly (or e.g. nutrition.readonly)">
+                                <button type="button" id="btn-scope-add" class="btn btn-primary btn-sm" style="height: 36px; padding: 0 14px; white-space: nowrap;">
+                                    + Add Scope
+                                </button>
+                            </div>
+                        </div>
 
                         <div id="scopes-list-container" class="scopes-checkbox-grid">
                             <div class="text-muted font-mono" style="padding: 16px;">Loading available scopes from config/preferences.yaml...</div>

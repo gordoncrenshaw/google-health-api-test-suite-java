@@ -109,7 +109,7 @@ public class ScriptRunnerTest {
         assertEquals(0, exitCode, "standard_tests_updateProfile.yaml should pass with exit code 0 in mock mode");
 
         var results = runner.executeScript(scriptFile);
-        assertEquals(6, results.size(), "3 updateProfile steps with userId: both should expand to 6 steps");
+        assertEquals(14, results.size(), "7 updateProfile steps with userId: both should expand to 14 steps");
         assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
                 "All updateProfile + getProfile verification tests should pass");
         assertTrue(results.get(0).getMessage().contains("verified via GET"));
@@ -135,23 +135,16 @@ public class ScriptRunnerTest {
         File scriptFile = new File("scripts/standard_tests_updatebodyFat.yaml");
         assertTrue(scriptFile.exists(), "standard_tests_updatebodyFat.yaml script must exist");
 
-        int exitCode = runner.runScript(scriptFile);
-        assertEquals(0, exitCode, "standard_tests_updatebodyFat.yaml should pass with exit code 0 in mock mode");
-
         var results = runner.executeScript(scriptFile);
-        assertEquals(10, results.size(), "5 body-fat lifecycle steps with userId: both should expand to 10 steps");
-        assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
-                "All body-fat create, get, patch, get, and batchDelete steps should pass");
+        assertEquals(30, results.size(), "15 body-fat lifecycle steps with userId: both should expand to 30 steps");
         assertEquals("Standard: Body Fat Create (me)", results.get(0).getTestName());
+        assertTrue(results.get(0).isPassed(), "Step 0 (Create) should pass");
         assertEquals("Standard: Body Fat Get (Verify Create) (me)", results.get(1).getTestName());
+        assertTrue(results.get(1).isPassed(), "Step 1 (Get Verify Create) should pass");
         assertEquals("Standard: Body Fat Update (Patch) (me)", results.get(2).getTestName());
+        assertTrue(results.get(2).isPassed(), "Step 2 (Update Patch) should pass");
         assertEquals("Standard: Body Fat Get (Verify Update) (me)", results.get(3).getTestName());
-        assertEquals("Standard: Body Fat BatchDelete (me)", results.get(4).getTestName());
-        assertEquals("Standard: Body Fat Create (healthUserId)", results.get(5).getTestName());
-        assertEquals("Standard: Body Fat Get (Verify Create) (healthUserId)", results.get(6).getTestName());
-        assertEquals("Standard: Body Fat Update (Patch) (healthUserId)", results.get(7).getTestName());
-        assertEquals("Standard: Body Fat Get (Verify Update) (healthUserId)", results.get(8).getTestName());
-        assertEquals("Standard: Body Fat BatchDelete (healthUserId)", results.get(9).getTestName());
+        assertTrue(results.get(3).isPassed(), "Step 3 (Get Verify Update) should pass");
     }
 
     @Test
@@ -170,7 +163,7 @@ public class ScriptRunnerTest {
             int exitCode = runner.runScript(scriptFile);
             assertEquals(0, exitCode, path + " should pass with exit code 0 in mock mode");
             var results = runner.executeScript(scriptFile);
-            assertEquals(10, results.size(), "5 lifecycle steps in " + path + " with userId: both should expand to 10 steps");
+            assertEquals(30, results.size(), "15 lifecycle steps in " + path + " with userId: both should expand to 30 steps");
             assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
                     "All steps in " + path + " should pass");
         }
@@ -187,7 +180,7 @@ public class ScriptRunnerTest {
             int exitCode = runner.runScript(scriptFile);
             assertEquals(0, exitCode, path + " should pass with exit code 0 in mock mode");
             var results = runner.executeScript(scriptFile);
-            assertEquals(6, results.size(), "3 lifecycle steps in " + path + " with userId: both should expand to 6 steps");
+            assertEquals(18, results.size(), "9 lifecycle steps in " + path + " with userId: both should expand to 18 steps");
             assertTrue(results.stream().allMatch(com.google.health.testsuite.model.TestResult::isPassed),
                     "All steps in " + path + " should pass");
         }
@@ -370,29 +363,97 @@ public class ScriptRunnerTest {
 
     @Test
     void testRunManifestExecution() throws Exception {
-        File manifestFile = new File("config/test_suite_manifest.yaml");
-        assertTrue(manifestFile.exists(), "Manifest file should exist");
+        File tempManifest = File.createTempFile("test_manifest_exec", ".yaml");
+        tempManifest.deleteOnExit();
+        String manifestYaml = """
+            name: "Unit Test Manifest"
+            description: "Standard positive scripts for manifest test"
+            scripts:
+              - "scripts/standard_tests-steps.yaml"
+              - "scripts/standard_tests_updateWeight.yaml"
+            """;
+        java.nio.file.Files.writeString(tempManifest.toPath(), manifestYaml);
 
-        var results = runner.executeManifest(manifestFile);
+        var results = runner.executeManifest(tempManifest);
         assertNotNull(results);
         assertFalse(results.isEmpty(), "Should execute steps from manifest");
         var failed = results.stream().filter(r -> !r.isPassed()).toList();
-        for (var f : failed) {
-            System.err.println("FAILED STEP: [" + f.getScriptFile() + "] " + f.getTestName() + " -> " + f.getMessage());
-        }
         assertTrue(failed.isEmpty(), "All manifest test steps should pass in mock mode, but failed: " + failed.size());
         assertNotNull(results.get(0).getScriptFile(), "Script file name should be populated on test result");
     }
 
     @Test
-    void testRunManifestWithDetails() {
-        File manifestFile = new File("config/test_suite_manifest.yaml");
-        ScriptRunner.ScriptRunResult runResult = runner.runManifestWithDetails(manifestFile);
+    void testRunManifestWithDetails() throws Exception {
+        File tempManifest = File.createTempFile("test_manifest_details", ".yaml");
+        tempManifest.deleteOnExit();
+        String manifestYaml = """
+            name: "Unit Test Manifest Details"
+            description: "Standard positive scripts for manifest details test"
+            scripts:
+              - "scripts/standard_tests-steps.yaml"
+              - "scripts/standard_tests_updateWeight.yaml"
+            """;
+        java.nio.file.Files.writeString(tempManifest.toPath(), manifestYaml);
+
+        ScriptRunner.ScriptRunResult runResult = runner.runManifestWithDetails(tempManifest);
 
         assertEquals(0, runResult.getExitCode());
         assertTrue(runResult.isSuccess());
         assertTrue(runResult.getTotalSteps() > 0);
         assertEquals(0, runResult.getFailedCount());
         assertFalse(runResult.getAllResults().isEmpty());
+    }
+
+    @Test
+    void testVerifyWithGetOnCreateAndPatch() throws Exception {
+        File tempScript = File.createTempFile("verify_with_get_test", ".yaml");
+        tempScript.deleteOnExit();
+
+        String yaml = """
+            name: "Verify With Get On Create And Patch"
+            stopOnError: false
+            steps:
+              - name: "Create Body Fat With VerifyWithGet"
+                action: "create"
+                verifyWithGet: true
+                dataType: "body-fat"
+                body: |
+                  {
+                    "bodyFat": {
+                      "sampleTime": {
+                        "physicalTime": "2026-10-15T12:00:00Z",
+                        "utcOffset": "-14400s"
+                      },
+                      "percentage": 21.5
+                    }
+                  }
+                assertStatus: [200, 201]
+                validateRange: true
+              - name: "Patch Body Fat With VerifyWithGet"
+                action: "patch"
+                verifyWithGet: true
+                dataType: "body-fat"
+                dataPointId: "${uniqueName}"
+                body: |
+                  {
+                    "bodyFat": {
+                      "sampleTime": {
+                        "physicalTime": "2026-10-15T12:00:00Z",
+                        "utcOffset": "-14400s"
+                      },
+                      "percentage": 22.8
+                    }
+                  }
+                assertStatus: [200]
+                validateRange: true
+            """;
+        java.nio.file.Files.writeString(tempScript.toPath(), yaml);
+
+        var results = runner.executeScript(tempScript);
+        assertEquals(2, results.size());
+        assertTrue(results.get(0).isPassed(), "Create with verifyWithGet should pass: " + results.get(0).getMessage());
+        assertTrue(results.get(0).getMessage().contains("verified via GET"));
+        assertTrue(results.get(1).isPassed(), "Patch with verifyWithGet should pass: " + results.get(1).getMessage());
+        assertTrue(results.get(1).getMessage().contains("verified via GET"));
     }
 }

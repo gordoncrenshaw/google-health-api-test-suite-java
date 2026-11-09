@@ -1,0 +1,334 @@
+# ==============================================================================
+# Google Health API Test Suite - Moods Write, Update & Delete Negative Tests
+# ==============================================================================
+# Tests boundary limits and negative inputs for the moods data type across
+# create, update (patch), and delete (batchDelete) endpoints using
+# verifyWithGet: true to confirm persisted response values:
+#   - Out-of-range lower bound (invalid utcOffset < -64800s) and upper bound (> 64800s)
+#   - Missing value (empty moods array), null value, and empty string ("")
+#   - BatchDelete with no value ([]), null ([null]), and empty string ([""])
+# ==============================================================================
+
+name: "Google Health API Moods Write, Update & Delete Negative Tests"
+description: "Boundary and negative tests for creating, updating, and deleting moods data points using verifyWithGet"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ============================================================================
+  # SECTION 1: Baseline Create & Update (Patch) Boundary and Negative Tests
+  # ============================================================================
+
+  # 1. Create a baseline moods entry
+  - name: "Standard: Moods Create (CALM / PLEASANT)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "moods"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "moods": [
+            "CALM"
+          ],
+          "valences": [
+            "PLEASANT"
+          ]
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  # 2. Negative Update: Below lower bound limit (utcOffset < -64800s)
+  - name: "Negative: Moods Update Below Lower Bound (utcOffset = -99999s)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "moods"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-99999s"
+          },
+          "moods": [
+            "HAPPY"
+          ],
+          "valences": [
+            "PLEASANT"
+          ]
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 3. Negative Update: Above upper bound limit (utcOffset > 64800s)
+  - name: "Negative: Moods Update Above Upper Bound (utcOffset = 99999s)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "moods"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "99999s"
+          },
+          "moods": [
+            "HAPPY"
+          ],
+          "valences": [
+            "PLEASANT"
+          ]
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 4. Negative Update: No value provided (moods and valences omitted)
+  - name: "Negative: Moods Update (no value)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "moods"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "moods": [
+          ],
+          "valences": [
+          ]
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 5. Negative Update: null value provided (moods = [null])
+  - name: "Negative: Moods Update (moods = null)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "moods"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "moods": [
+            null
+          ],
+          "valences": [
+            "PLEASANT"
+          ]
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 6. Negative Update: Empty string value provided (moods = [""])
+  - name: "Negative: Moods Update (moods = empty string)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "moods"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "moods": [
+            ""
+          ],
+          "valences": [
+            "PLEASANT"
+          ]
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 7. Clean up baseline moods entry via batchDelete
+  - name: "Standard: Moods BatchDelete (Clean Up Baseline)"
+    action: "batchDelete"
+    dataType: "moods"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
+  # ============================================================================
+  # SECTION 2: Create Boundary and Negative Tests
+  # ============================================================================
+
+  # 8. Negative Create: Below lower bound limit (utcOffset < -64800s)
+  - name: "Negative: Moods Create Below Lower Bound (utcOffset = -99999s)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "moods"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-99999s"
+          },
+          "moods": [
+            "CALM"
+          ],
+          "valences": [
+            "PLEASANT"
+          ]
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 9. Negative Create: Above upper bound limit (utcOffset > 64800s)
+  - name: "Negative: Moods Create Above Upper Bound (utcOffset = 99999s)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "moods"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "99999s"
+          },
+          "moods": [
+            "CALM"
+          ],
+          "valences": [
+            "PLEASANT"
+          ]
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 10. Negative Create: No value provided (moods and valences omitted)
+  - name: "Negative: Moods Create (no value)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "moods"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "moods": [
+          ],
+          "valences": [
+          ]
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 11. Negative Create: null value provided (moods = [null])
+  - name: "Negative: Moods Create (moods = null)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "moods"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "moods": [
+            null
+          ],
+          "valences": [
+            "PLEASANT"
+          ]
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 12. Negative Create: Empty string value provided (moods = [""])
+  - name: "Negative: Moods Create (moods = empty string)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "moods"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "moods": [
+            ""
+          ],
+          "valences": [
+            "PLEASANT"
+          ]
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # ============================================================================
+  # SECTION 3: Negative Delete (BatchDelete) Tests
+  # ============================================================================
+
+  # 13. Negative BatchDelete: No value provided (empty names array)
+  - name: "Negative: Moods BatchDelete (no value)"
+    action: "batchDelete"
+    dataType: "moods"
+    body: |
+      {
+        "names": [
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+
+  # 14. Negative BatchDelete: null value provided
+  - name: "Negative: Moods BatchDelete (null)"
+    action: "batchDelete"
+    dataType: "moods"
+    body: |
+      {
+        "names": [
+          null
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+
+  # 15. Negative BatchDelete: Empty string provided
+  - name: "Negative: Moods BatchDelete (empty string)"
+    action: "batchDelete"
+    dataType: "moods"
+    body: |
+      {
+        "names": [
+          ""
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+

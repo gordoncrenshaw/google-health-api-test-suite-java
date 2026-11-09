@@ -64,6 +64,56 @@ steps:
     validateRange: true
 
   # ----------------------------------------------------------------------------
+  # Test lower limit (utcOffset = -64800s)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Moods Update (lower limit utcOffset = -64800s)"
+    action: "patch"
+    dataType: "moods"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-64800s"
+          },
+          "moods": [
+            "CALM"
+          ],
+          "valences": [
+            "VERY_UNPLEASANT"
+          ]
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # Test upper limit (utcOffset = 64800s)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Moods Update (upper limit utcOffset = 64800s)"
+    action: "patch"
+    dataType: "moods"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "64800s"
+          },
+          "moods": [
+            "EXCITED"
+          ],
+          "valences": [
+            "VERY_PLEASANT"
+          ]
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
   # 3. Delete the moods entry via batchDelete specifying the unique name
   # ----------------------------------------------------------------------------
   - name: "Standard: Moods BatchDelete"
@@ -78,3 +128,74 @@ steps:
     assertStatus: [200]
     validateRange: false
 
+  # ----------------------------------------------------------------------------
+  # 4. Create a moods entry at lower limit (utcOffset = -64800s)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Moods Create (lower limit utcOffset = -64800s)"
+    action: "create"
+    dataType: "moods"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-64800s"
+          },
+          "moods": [
+            "CALM"
+          ],
+          "valences": [
+            "VERY_UNPLEASANT"
+          ]
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Moods BatchDelete"
+    action: "batchDelete"
+    dataType: "moods"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
+  # ----------------------------------------------------------------------------
+  # 5. Create a moods entry at upper limit (utcOffset = 64800s)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Moods Create (upper limit utcOffset = 64800s)"
+    action: "create"
+    dataType: "moods"
+    body: |
+      {
+        "moods": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "64800s"
+          },
+          "moods": [
+            "EXCITED"
+          ],
+          "valences": [
+            "VERY_PLEASANT"
+          ]
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Moods BatchDelete"
+    action: "batchDelete"
+    dataType: "moods"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false

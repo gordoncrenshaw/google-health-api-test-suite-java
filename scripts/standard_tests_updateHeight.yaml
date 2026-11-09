@@ -79,6 +79,64 @@ steps:
       - "1780"
 
   # ----------------------------------------------------------------------------
+  # Test lower limit (0)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Height Update (heightMillimeters = 0)"
+    action: "patch"
+    dataType: "height"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "heightMillimeters": 0
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height Get (Verify Update heightMillimeters = 0)"
+    action: "get"
+    dataType: "height"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "0"
+
+  # ----------------------------------------------------------------------------
+  # Test upper limit (3000)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Height Update (heightMillimeters = 3000)"
+    action: "patch"
+    dataType: "height"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "heightMillimeters": 3000
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Height Get (Verify Update heightMillimeters = 3000)"
+    action: "get"
+    dataType: "height"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "3000"
+
+  # ----------------------------------------------------------------------------
   # 5. Delete the height entry via batchDelete specifying the unique name
   # ----------------------------------------------------------------------------
   - name: "Standard: Height BatchDelete"
@@ -93,3 +151,88 @@ steps:
     assertStatus: [200]
     validateRange: false
 
+  # ----------------------------------------------------------------------------
+  # 6. Create a height entry at lower limit (0)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Height Create (heightMillimeters = 0)"
+    action: "create"
+    dataType: "height"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "heightMillimeters": 0
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Height Get (Verify Create heightMillimeters = 0)"
+    action: "get"
+    dataType: "height"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "0"
+
+  # ----------------------------------------------------------------------------
+  # Delete the height entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Height BatchDelete"
+    action: "batchDelete"
+    dataType: "height"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
+  # ----------------------------------------------------------------------------
+  # 7. Create a height entry at upper limit (3000)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Height Create (heightMillimeters = 3000)"
+    action: "create"
+    dataType: "height"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "heightMillimeters": 3000
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Height Get (Verify Create heightMillimeters = 3000)"
+    action: "get"
+    dataType: "height"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "3000"
+
+  # ----------------------------------------------------------------------------
+  # Delete the height entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Height BatchDelete"
+    action: "batchDelete"
+    dataType: "height"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false

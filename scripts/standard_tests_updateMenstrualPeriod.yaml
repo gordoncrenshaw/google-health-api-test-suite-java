@@ -56,6 +56,48 @@ steps:
     validateRange: true
 
   # ----------------------------------------------------------------------------
+  # Test lower limit (duration = 1m)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Menstrual Period Update (lower limit duration = 1m)"
+    action: "patch"
+    dataType: "menstrual-period"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "menstrualPeriod": {
+          "interval": {
+            "startTime": "2026-10-01T08:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-01T08:01:00Z",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # Test upper limit (duration = 14 days)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Menstrual Period Update (upper limit duration = 14d)"
+    action: "patch"
+    dataType: "menstrual-period"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "menstrualPeriod": {
+          "interval": {
+            "startTime": "2026-10-01T08:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T08:00:00Z",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
   # 3. Delete the menstrual-period entry via batchDelete specifying the unique name
   # ----------------------------------------------------------------------------
   - name: "Standard: Menstrual Period BatchDelete"
@@ -70,3 +112,66 @@ steps:
     assertStatus: [200]
     validateRange: false
 
+  # ----------------------------------------------------------------------------
+  # 4. Create a menstrual-period entry at lower limit (duration = 1m)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Menstrual Period Create (lower limit duration = 1m)"
+    action: "create"
+    dataType: "menstrual-period"
+    body: |
+      {
+        "menstrualPeriod": {
+          "interval": {
+            "startTime": "2026-10-01T08:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-01T08:01:00Z",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Menstrual Period BatchDelete"
+    action: "batchDelete"
+    dataType: "menstrual-period"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
+  # ----------------------------------------------------------------------------
+  # 5. Create a menstrual-period entry at upper limit (duration = 14d)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Menstrual Period Create (upper limit duration = 14d)"
+    action: "create"
+    dataType: "menstrual-period"
+    body: |
+      {
+        "menstrualPeriod": {
+          "interval": {
+            "startTime": "2026-10-01T08:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T08:00:00Z",
+            "endUtcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Menstrual Period BatchDelete"
+    action: "batchDelete"
+    dataType: "menstrual-period"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false

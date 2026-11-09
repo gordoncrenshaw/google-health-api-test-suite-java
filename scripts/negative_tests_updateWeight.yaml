@@ -1,0 +1,281 @@
+# ==============================================================================
+# Google Health API Test Suite - Weight Write, Update & Delete Negative Tests
+# ==============================================================================
+# Tests boundary limits and negative inputs for the weight data type across
+# create, update (patch), and delete (batchDelete) endpoints using
+# verifyWithGet: true to confirm persisted response values:
+#   - Out-of-range lower bound (-1) and upper bound (1000001)
+#   - Missing value (no weightGrams field), null value, and empty string ("")
+#   - BatchDelete with no value ([]), null ([null]), and empty string ([""])
+# ==============================================================================
+
+name: "Google Health API Weight Write, Update & Delete Negative Tests"
+description: "Boundary and negative tests for creating, updating, and deleting weight data points using verifyWithGet"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ============================================================================
+  # SECTION 1: Baseline Create & Update (Patch) Boundary and Negative Tests
+  # ============================================================================
+
+  # 1. Create a baseline weight entry and verify via GET
+  - name: "Standard: Weight Create (weightGrams = 72500)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "weight"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "weightGrams": 72500
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  # 2. Negative Update: Below lower bound limit (-1)
+  - name: "Negative: Weight Update Below Lower Bound (weightGrams = -1)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "weight"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "weightGrams": -1
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 3. Negative Update: Above upper bound limit (1000001)
+  - name: "Negative: Weight Update Above Upper Bound (weightGrams = 1000001)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "weight"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "weightGrams": 1000001
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 4. Negative Update: No value provided (weightGrams field omitted)
+  - name: "Negative: Weight Update (no value)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "weight"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 5. Negative Update: null value provided (weightGrams = null)
+  - name: "Negative: Weight Update (weightGrams = null)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "weight"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "weightGrams": null
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 6. Negative Update: Empty string value provided (weightGrams = "")
+  - name: "Negative: Weight Update (weightGrams = empty string)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "weight"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "weightGrams": ""
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 7. Clean up baseline weight entry via batchDelete
+  - name: "Standard: Weight BatchDelete (Clean Up Baseline)"
+    action: "batchDelete"
+    dataType: "weight"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
+  # ============================================================================
+  # SECTION 2: Create Boundary and Negative Tests
+  # ============================================================================
+
+  # 8. Negative Create: Below lower bound limit (-1)
+  - name: "Negative: Weight Create Below Lower Bound (weightGrams = -1)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "weight"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "weightGrams": -1
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 9. Negative Create: Above upper bound limit (1000001)
+  - name: "Negative: Weight Create Above Upper Bound (weightGrams = 1000001)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "weight"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "weightGrams": 1000001
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 10. Negative Create: No value provided (weightGrams field omitted)
+  - name: "Negative: Weight Create (no value)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "weight"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 11. Negative Create: null value provided (weightGrams = null)
+  - name: "Negative: Weight Create (weightGrams = null)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "weight"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "weightGrams": null
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 12. Negative Create: Empty string value provided (weightGrams = "")
+  - name: "Negative: Weight Create (weightGrams = empty string)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "weight"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "weightGrams": ""
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # ============================================================================
+  # SECTION 3: Negative Delete (BatchDelete) Tests
+  # ============================================================================
+
+  # 13. Negative BatchDelete: No value provided (empty names array)
+  - name: "Negative: Weight BatchDelete (no value)"
+    action: "batchDelete"
+    dataType: "weight"
+    body: |
+      {
+        "names": [
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+
+  # 14. Negative BatchDelete: null value provided
+  - name: "Negative: Weight BatchDelete (null)"
+    action: "batchDelete"
+    dataType: "weight"
+    body: |
+      {
+        "names": [
+          null
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+
+  # 15. Negative BatchDelete: Empty string provided
+  - name: "Negative: Weight BatchDelete (empty string)"
+    action: "batchDelete"
+    dataType: "weight"
+    body: |
+      {
+        "names": [
+          ""
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+
