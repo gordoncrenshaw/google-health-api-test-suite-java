@@ -609,6 +609,35 @@ public final class AppVersion {
 
 ## 📋 Version History & Changelog
 
+### Version 1.1.5 (November 8, 2026) - Release 1.1.5
+
+#### 🌟 OAuth Scope Editor UI, Negative Write/Update Test Suites & Boundary Limit Standard Tests (Closes #11, #47)
+- **OAuth Scope List Editor in Preferences & OAuth Tab (Closes #47)**:
+  - Added an **Edit Scopes** toggle button (`#btn-scopes-edit`) to the **"Google Health OAuth Scopes Selection"** card in [`index.html`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/resources/web/index.html), [`app.js`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/resources/web/app.js), and [`style.css`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/resources/web/style.css).
+  - Enables inline adding of new OAuth scope URIs (auto-prefixing `https://www.googleapis.com/auth/googlehealth.` when a short name is entered) and one-click deletion (`×`) of existing scopes.
+  - Added `POST /api/scopes`, `PUT /api/scopes`, and `DELETE /api/scopes` endpoints in [`RestApiHandler.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/server/RestApiHandler.java) and scope persistence helpers (`addScope`, `removeScope`, `updateScopes`) in [`ConfigManager.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/config/ConfigManager.java) to immediately persist changes to `config/preferences.yaml`.
+- **Negative Write, Update & Delete Test Suites Across All Writable Data Types, Profile & Settings (Closes #11)**:
+  - Added 13 comprehensive negative test scripts (`scripts/negative_tests_update*.yaml`) testing out-of-bounds lower/upper values, missing required fields (`{}`), `null` values, empty string (`""`) values, and invalid resource names across `create`, `patch` (`update`), and `batchDelete`:
+    - [`scripts/negative_tests_updateBodyFat.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/negative_tests_updateBodyFat.yaml) (`body-fat`)
+    - [`scripts/negative_tests_updateExercise.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/negative_tests_updateExercise.yaml) (`exercise`)
+    - [`scripts/negative_tests_updateHeight.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/negative_tests_updateHeight.yaml) (`height`)
+    - [`scripts/negative_tests_updateHydrationLog.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/negative_tests_updateHydrationLog.yaml) (`hydration-log`)
+    - [`scripts/negative_tests_updateNutritionLog.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/negative_tests_updateNutritionLog.yaml) (`nutrition-log`)
+    - [`scripts/negative_tests_updateSleep.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/negative_tests_updateSleep.yaml) (`sleep`)
+    - [`scripts/negative_tests_updateWeight.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/negative_tests_updateWeight.yaml) (`weight`)
+    - [`scripts/negative_tests_updateMenstrualPeriod.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/negative_tests_updateMenstrualPeriod.yaml) (`menstrual-period`)
+    - [`scripts/negative_tests_updateMoods.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/negative_tests_updateMoods.yaml) (`moods`)
+    - [`scripts/negative_tests_updateOvulationTest.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/negative_tests_updateOvulationTest.yaml) (`ovulation-test`)
+    - [`scripts/negative_tests_updateSymptoms.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/negative_tests_updateSymptoms.yaml) (`symptoms`)
+    - [`scripts/negative_tests_updateProfile.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/negative_tests_updateProfile.yaml) (`updateProfile`)
+    - [`scripts/negative_tests_updateSettings.yaml`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/scripts/negative_tests_updateSettings.yaml) (`updateSettings`)
+- **`verifyWithGet: true` Support on `create` and `patch` Data Type Operations**:
+  - Enhanced [`SuiteExecutionEngine.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/runner/SuiteExecutionEngine.java) with `verifyDataPointMutationWithGet` so `create` and `patch`/`update` steps with `verifyWithGet: true` automatically execute a follow-up `GET` request (for data types supporting `get`) to confirm all mutated fields match the persisted resource.
+- **Upper & Lower Bound Limit Tests in Standard Update Scripts**:
+  - Expanded all `scripts/standard_tests_update*.yaml` test suites (`body-fat`, `exercise`, `height`, `hydration-log`, `nutrition-log`, `sleep`, `weight`, `menstrual-period`, `moods`, `ovulation-test`, `symptoms`, and `updateProfile`) with `create` and `patch` (`update`) test cases at the exact valid lower and upper boundary limits.
+
+---
+
 ### Version 1.1.4 (November 5, 2026) - Release 1.1.4
 
 #### 🌟 Write, Update & Delete Lifecycle Standard Test Suites & Exercise TCX Export

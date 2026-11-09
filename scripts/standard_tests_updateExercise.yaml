@@ -85,6 +85,70 @@ steps:
       - "RUNNING"
 
   # ----------------------------------------------------------------------------
+  # Test lower limit (duration = 0s, startTime == endTime)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Exercise Update (lower limit duration = 0s)"
+    action: "patch"
+    dataType: "exercise"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "exercise": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:00:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "exerciseType": "WALKING",
+          "displayName": "Zero Duration Walk"
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise Get (Verify Update lower limit duration = 0s)"
+    action: "get"
+    dataType: "exercise"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "Zero Duration Walk"
+
+  # ----------------------------------------------------------------------------
+  # Test upper limit (duration = 24 hours / 86400s)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Exercise Update (upper limit duration = 24h)"
+    action: "patch"
+    dataType: "exercise"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "exercise": {
+          "interval": {
+            "startTime": "2026-10-15T00:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-16T00:00:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "exerciseType": "RUNNING",
+          "displayName": "24 Hour Run"
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Exercise Get (Verify Update upper limit duration = 24h)"
+    action: "get"
+    dataType: "exercise"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "24 Hour Run"
+
+  # ----------------------------------------------------------------------------
   # 5. Delete the exercise entry via batchDelete specifying the unique name
   # ----------------------------------------------------------------------------
   - name: "Standard: Exercise BatchDelete"
@@ -99,3 +163,88 @@ steps:
     assertStatus: [200]
     validateRange: false
 
+  # ----------------------------------------------------------------------------
+  # 6. Create an exercise entry at lower limit (duration = 0s)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Exercise Create (lower limit duration = 0s)"
+    action: "create"
+    dataType: "exercise"
+    body: |
+      {
+        "exercise": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:00:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "exerciseType": "WALKING",
+          "displayName": "Zero Duration Walk"
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Exercise Get (Verify Create lower limit duration = 0s)"
+    action: "get"
+    dataType: "exercise"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "Zero Duration Walk"
+
+  - name: "Standard: Exercise BatchDelete"
+    action: "batchDelete"
+    dataType: "exercise"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
+  # ----------------------------------------------------------------------------
+  # 7. Create an exercise entry at upper limit (duration = 24h)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Exercise Create (upper limit duration = 24h)"
+    action: "create"
+    dataType: "exercise"
+    body: |
+      {
+        "exercise": {
+          "interval": {
+            "startTime": "2026-10-15T00:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-16T00:00:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "exerciseType": "RUNNING",
+          "displayName": "24 Hour Run"
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Exercise Get (Verify Create upper limit duration = 24h)"
+    action: "get"
+    dataType: "exercise"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "24 Hour Run"
+
+  - name: "Standard: Exercise BatchDelete"
+    action: "batchDelete"
+    dataType: "exercise"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false

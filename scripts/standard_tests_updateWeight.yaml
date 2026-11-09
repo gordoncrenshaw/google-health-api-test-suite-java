@@ -79,6 +79,64 @@ steps:
       - "74000"
 
   # ----------------------------------------------------------------------------
+  # Test lower limit (0)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Weight Update (weightGrams = 0)"
+    action: "patch"
+    dataType: "weight"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "weightGrams": 0
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight Get (Verify Update weightGrams = 0)"
+    action: "get"
+    dataType: "weight"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "0"
+
+  # ----------------------------------------------------------------------------
+  # Test upper limit (1000000)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Weight Update (weightGrams = 1000000)"
+    action: "patch"
+    dataType: "weight"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "weightGrams": 1000000
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Weight Get (Verify Update weightGrams = 1000000)"
+    action: "get"
+    dataType: "weight"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "1000000"
+
+  # ----------------------------------------------------------------------------
   # 5. Delete the weight entry via batchDelete specifying the unique name
   # ----------------------------------------------------------------------------
   - name: "Standard: Weight BatchDelete"
@@ -93,3 +151,88 @@ steps:
     assertStatus: [200]
     validateRange: false
 
+  # ----------------------------------------------------------------------------
+  # 6. Create a weight entry at lower limit (0)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Weight Create (weightGrams = 0)"
+    action: "create"
+    dataType: "weight"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "weightGrams": 0
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Weight Get (Verify Create weightGrams = 0)"
+    action: "get"
+    dataType: "weight"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "0"
+
+  # ----------------------------------------------------------------------------
+  # Delete the weight entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Weight BatchDelete"
+    action: "batchDelete"
+    dataType: "weight"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
+  # ----------------------------------------------------------------------------
+  # 7. Create a weight entry at upper limit (1000000)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Weight Create (weightGrams = 1000000)"
+    action: "create"
+    dataType: "weight"
+    body: |
+      {
+        "weight": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "weightGrams": 1000000
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Weight Get (Verify Create weightGrams = 1000000)"
+    action: "get"
+    dataType: "weight"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "1000000"
+
+  # ----------------------------------------------------------------------------
+  # Delete the weight entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Weight BatchDelete"
+    action: "batchDelete"
+    dataType: "weight"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false

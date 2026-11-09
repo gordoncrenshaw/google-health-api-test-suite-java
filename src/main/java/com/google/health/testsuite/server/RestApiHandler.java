@@ -101,6 +101,8 @@ public class RestApiHandler implements HttpHandler {
                 }
                 case "/api/scopes" -> {
                     if ("GET".equals(method)) handleGetScopes(exchange);
+                    else if ("POST".equals(method) || "PUT".equals(method)) handleSaveOrAddScopes(exchange);
+                    else if ("DELETE".equals(method)) handleDeleteScope(exchange);
                     else sendError(exchange, 405, "Method Not Allowed");
                 }
                 case "/api/manifest" -> {
@@ -413,6 +415,84 @@ public class RestApiHandler implements HttpHandler {
         ObjectNode resp = jsonMapper.createObjectNode();
         ArrayNode arr = resp.putArray("scopes");
         for (String s : scopes) {
+            arr.add(s);
+        }
+        sendJson(exchange, 200, resp.toPrettyString());
+    }
+
+    private void handleSaveOrAddScopes(HttpExchange exchange) throws IOException {
+        String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        if (body.isBlank()) {
+            sendError(exchange, 400, "Request body is required.");
+            return;
+        }
+        JsonNode json = jsonMapper.readTree(body);
+        List<String> updatedScopes;
+        String message;
+
+        if (json.has("scope") && !json.get("scope").asText("").trim().isEmpty()) {
+            String rawScope = json.get("scope").asText("").trim();
+            String normalized = ConfigManager.normalizeScope(rawScope);
+            updatedScopes = configManager.addAvailableScope(normalized);
+            message = "Added scope '" + normalized + "' to preferences.yaml.";
+        } else if (json.has("scopes") && json.get("scopes").isArray()) {
+            List<String> incoming = new ArrayList<>();
+            for (JsonNode n : json.get("scopes")) {
+                String s = n.asText("").trim();
+                if (!s.isEmpty()) {
+                    incoming.add(s);
+                }
+            }
+            configManager.saveAvailableScopes(incoming);
+            updatedScopes = configManager.getAvailableScopes();
+            message = "Updated scopes list (" + updatedScopes.size() + " scopes) in preferences.yaml.";
+        } else {
+            sendError(exchange, 400, "Request must include either 'scope' (string) or 'scopes' (array).");
+            return;
+        }
+
+        ObjectNode resp = jsonMapper.createObjectNode();
+        resp.put("success", true);
+        resp.put("message", message);
+        ArrayNode arr = resp.putArray("scopes");
+        for (String s : updatedScopes) {
+            arr.add(s);
+        }
+        sendJson(exchange, 200, resp.toPrettyString());
+    }
+
+    private void handleDeleteScope(HttpExchange exchange) throws IOException {
+        String scopeToDelete = null;
+        String query = exchange.getRequestURI().getQuery();
+        if (query != null) {
+            for (String param : query.split("&")) {
+                String[] pair = param.split("=", 2);
+                if ("scope".equalsIgnoreCase(pair[0]) && pair.length > 1) {
+                    scopeToDelete = java.net.URLDecoder.decode(pair[1], StandardCharsets.UTF_8);
+                }
+            }
+        }
+        if (scopeToDelete == null || scopeToDelete.trim().isEmpty()) {
+            String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            if (!body.isBlank()) {
+                JsonNode json = jsonMapper.readTree(body);
+                if (json.has("scope")) {
+                    scopeToDelete = json.get("scope").asText("").trim();
+                }
+            }
+        }
+        if (scopeToDelete == null || scopeToDelete.trim().isEmpty()) {
+            sendError(exchange, 400, "Property or query parameter 'scope' is required to delete a scope.");
+            return;
+        }
+
+        String normalized = ConfigManager.normalizeScope(scopeToDelete);
+        List<String> updatedScopes = configManager.removeAvailableScope(scopeToDelete);
+        ObjectNode resp = jsonMapper.createObjectNode();
+        resp.put("success", true);
+        resp.put("message", "Removed scope '" + normalized + "' from preferences.yaml.");
+        ArrayNode arr = resp.putArray("scopes");
+        for (String s : updatedScopes) {
             arr.add(s);
         }
         sendJson(exchange, 200, resp.toPrettyString());

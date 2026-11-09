@@ -1,0 +1,281 @@
+# ==============================================================================
+# Google Health API Test Suite - Body Fat Write, Update & Delete Negative Tests
+# ==============================================================================
+# Tests boundary limits and negative inputs for the body-fat data type across
+# create, update (patch), and delete (batchDelete) endpoints using
+# verifyWithGet: true to confirm persisted response values:
+#   - Valid lower bound (0) and upper bound (100)
+#   - Out-of-range lower bound (-0.1) and upper bound (100.1)
+#   - Missing value (no percentage field), null value, and empty string ("")
+#   - BatchDelete with no value ([]), null ([null]), and empty string ([""])
+# ==============================================================================
+
+name: "Google Health API Body Fat Write, Update & Delete Negative Tests"
+description: "Boundary and negative tests for creating, updating, and deleting body-fat data points using verifyWithGet"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ============================================================================
+  # SECTION 1: Baseline Create & Update (Patch) Boundary and Negative Tests
+  # ============================================================================
+
+  # 1. Create a baseline body-fat entry and verify via GET
+  - name: "Standard: Body Fat Create (percentage = 21.5)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "body-fat"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "percentage": 21.5
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  # 5. Negative Update: Below lower bound limit (-0.1)
+  - name: "Negative: Body Fat Update Below Lower Bound (percentage = -0.1)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "body-fat"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "percentage": -0.1
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 6. Negative Update: Above upper bound limit (100.1)
+  - name: "Negative: Body Fat Update Above Upper Bound (percentage = 100.1)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "body-fat"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "percentage": 100.1
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 7. Negative Update: No value provided (percentage field omitted)
+  - name: "Negative: Body Fat Update (no value)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "body-fat"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 8. Negative Update: null value provided (percentage = null)
+  - name: "Negative: Body Fat Update (percentage = null)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "body-fat"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "percentage": null
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 9. Negative Update: Empty string value provided (percentage = "")
+  - name: "Negative: Body Fat Update (percentage = empty string)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "body-fat"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "percentage": ""
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 10. Clean up baseline body-fat entry via batchDelete
+  - name: "Standard: Body Fat BatchDelete (Clean Up Baseline)"
+    action: "batchDelete"
+    dataType: "body-fat"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
+  # ============================================================================
+  # SECTION 2: Create Boundary and Negative Tests
+  # ============================================================================
+
+  # 15. Negative Create: Below lower bound limit (-0.1)
+  - name: "Negative: Body Fat Create Below Lower Bound (percentage = -0.1)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "body-fat"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "percentage": -0.1
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 16. Negative Create: Above upper bound limit (100.1)
+  - name: "Negative: Body Fat Create Above Upper Bound (percentage = 100.1)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "body-fat"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "percentage": 100.1
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 17. Negative Create: No value provided (percentage field omitted)
+  - name: "Negative: Body Fat Create (no value)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "body-fat"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 18. Negative Create: null value provided (percentage = null)
+  - name: "Negative: Body Fat Create (percentage = null)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "body-fat"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "percentage": null
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 19. Negative Create: Empty string value provided (percentage = "")
+  - name: "Negative: Body Fat Create (percentage = empty string)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "body-fat"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "percentage": ""
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # ============================================================================
+  # SECTION 3: Negative Delete (BatchDelete) Tests
+  # ============================================================================
+
+  # 20. Negative BatchDelete: No value provided (empty names array)
+  - name: "Negative: Body Fat BatchDelete (no value)"
+    action: "batchDelete"
+    dataType: "body-fat"
+    body: |
+      {
+        "names": [
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+
+  # 21. Negative BatchDelete: null value provided
+  - name: "Negative: Body Fat BatchDelete (null)"
+    action: "batchDelete"
+    dataType: "body-fat"
+    body: |
+      {
+        "names": [
+          null
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+
+  # 22. Negative BatchDelete: Empty string provided
+  - name: "Negative: Body Fat BatchDelete (empty string)"
+    action: "batchDelete"
+    dataType: "body-fat"
+    body: |
+      {
+        "names": [
+          ""
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false

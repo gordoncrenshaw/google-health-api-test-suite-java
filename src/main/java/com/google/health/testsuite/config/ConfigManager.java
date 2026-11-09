@@ -342,10 +342,71 @@ public final class ConfigManager {
         if (preferences == null) {
             preferences = new Preferences();
         }
-        preferences.setScopes(scopes != null ? scopes : new ArrayList<>());
+        List<String> normalized = new ArrayList<>();
+        if (scopes != null) {
+            Set<String> seen = new LinkedHashSet<>();
+            for (String s : scopes) {
+                String norm = normalizeScope(s);
+                if (!norm.isEmpty()) {
+                    seen.add(norm);
+                }
+            }
+            normalized.addAll(seen);
+        }
+        preferences.setScopes(normalized);
         savePreferences(preferences);
         logger.info("Saved {} available scopes to preferences file {}",
-                (scopes != null ? scopes.size() : 0), preferencesFile.getAbsolutePath());
+                normalized.size(), preferencesFile.getAbsolutePath());
+    }
+
+    public synchronized List<String> addAvailableScope(String rawScope) {
+        String norm = normalizeScope(rawScope);
+        if (norm.isEmpty()) {
+            return getAvailableScopes();
+        }
+        List<String> current = getAvailableScopes();
+        Set<String> updated = new LinkedHashSet<>(current);
+        updated.add(norm);
+        List<String> result = new ArrayList<>(updated);
+        saveAvailableScopes(result);
+        return result;
+    }
+
+    public synchronized List<String> removeAvailableScope(String rawScope) {
+        if (rawScope == null || rawScope.trim().isEmpty()) {
+            return getAvailableScopes();
+        }
+        String trimmed = rawScope.trim();
+        String norm = normalizeScope(trimmed);
+        List<String> current = getAvailableScopes();
+        List<String> updated = new ArrayList<>();
+        for (String s : current) {
+            if (!s.equalsIgnoreCase(trimmed) && !s.equalsIgnoreCase(norm)) {
+                updated.add(s);
+            }
+        }
+        saveAvailableScopes(updated);
+        return updated;
+    }
+
+    public static String normalizeScope(String rawScope) {
+        if (rawScope == null) {
+            return "";
+        }
+        String s = rawScope.trim();
+        if (s.isEmpty()) {
+            return "";
+        }
+        if (s.startsWith("http://") || s.startsWith("https://")) {
+            return s;
+        }
+        if (s.startsWith("googlehealth.")) {
+            return "https://www.googleapis.com/auth/" + s;
+        }
+        if (s.startsWith(".")) {
+            return "https://www.googleapis.com/auth/googlehealth" + s;
+        }
+        return "https://www.googleapis.com/auth/googlehealth." + s;
     }
 
     public static final String DEFAULT_MANIFEST_FILE_NAME = "test_suite_manifest.yaml";

@@ -1,0 +1,281 @@
+# ==============================================================================
+# Google Health API Test Suite - Height Write, Update & Delete Negative Tests
+# ==============================================================================
+# Tests boundary limits and negative inputs for the height data type across
+# create, update (patch), and delete (batchDelete) endpoints using
+# verifyWithGet: true to confirm persisted response values:
+#   - Out-of-range lower bound (-1) and upper bound (3001)
+#   - Missing value (no heightMillimeters field), null value, and empty string ("")
+#   - BatchDelete with no value ([]), null ([null]), and empty string ([""])
+# ==============================================================================
+
+name: "Google Health API Height Write, Update & Delete Negative Tests"
+description: "Boundary and negative tests for creating, updating, and deleting height data points using verifyWithGet"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ============================================================================
+  # SECTION 1: Baseline Create & Update (Patch) Boundary and Negative Tests
+  # ============================================================================
+
+  # 1. Create a baseline height entry and verify via GET
+  - name: "Standard: Height Create (heightMillimeters = 1750)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "height"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "heightMillimeters": 1750
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  # 2. Negative Update: Below lower bound limit (-1)
+  - name: "Negative: Height Update Below Lower Bound (heightMillimeters = -1)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "height"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "heightMillimeters": -1
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 3. Negative Update: Above upper bound limit (3001)
+  - name: "Negative: Height Update Above Upper Bound (heightMillimeters = 3001)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "height"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "heightMillimeters": 3001
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 4. Negative Update: No value provided (heightMillimeters field omitted)
+  - name: "Negative: Height Update (no value)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "height"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 5. Negative Update: null value provided (heightMillimeters = null)
+  - name: "Negative: Height Update (heightMillimeters = null)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "height"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "heightMillimeters": null
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 6. Negative Update: Empty string value provided (heightMillimeters = "")
+  - name: "Negative: Height Update (heightMillimeters = empty string)"
+    action: "patch"
+    verifyWithGet: true
+    dataType: "height"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "heightMillimeters": ""
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 7. Clean up baseline height entry via batchDelete
+  - name: "Standard: Height BatchDelete (Clean Up Baseline)"
+    action: "batchDelete"
+    dataType: "height"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
+  # ============================================================================
+  # SECTION 2: Create Boundary and Negative Tests
+  # ============================================================================
+
+  # 8. Negative Create: Below lower bound limit (-1)
+  - name: "Negative: Height Create Below Lower Bound (heightMillimeters = -1)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "height"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "heightMillimeters": -1
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 9. Negative Create: Above upper bound limit (3001)
+  - name: "Negative: Height Create Above Upper Bound (heightMillimeters = 3001)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "height"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "heightMillimeters": 3001
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 10. Negative Create: No value provided (heightMillimeters field omitted)
+  - name: "Negative: Height Create (no value)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "height"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          }
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 11. Negative Create: null value provided (heightMillimeters = null)
+  - name: "Negative: Height Create (heightMillimeters = null)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "height"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "heightMillimeters": null
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # 12. Negative Create: Empty string value provided (heightMillimeters = "")
+  - name: "Negative: Height Create (heightMillimeters = empty string)"
+    action: "create"
+    verifyWithGet: true
+    dataType: "height"
+    body: |
+      {
+        "height": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "heightMillimeters": ""
+        }
+      }
+    assertStatus: [400]
+    validateRange: true
+
+  # ============================================================================
+  # SECTION 3: Negative Delete (BatchDelete) Tests
+  # ============================================================================
+
+  # 13. Negative BatchDelete: No value provided (empty names array)
+  - name: "Negative: Height BatchDelete (no value)"
+    action: "batchDelete"
+    dataType: "height"
+    body: |
+      {
+        "names": [
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+
+  # 14. Negative BatchDelete: null value provided
+  - name: "Negative: Height BatchDelete (null)"
+    action: "batchDelete"
+    dataType: "height"
+    body: |
+      {
+        "names": [
+          null
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+
+  # 15. Negative BatchDelete: Empty string provided
+  - name: "Negative: Height BatchDelete (empty string)"
+    action: "batchDelete"
+    dataType: "height"
+    body: |
+      {
+        "names": [
+          ""
+        ]
+      }
+    assertStatus: [400]
+    validateRange: false
+

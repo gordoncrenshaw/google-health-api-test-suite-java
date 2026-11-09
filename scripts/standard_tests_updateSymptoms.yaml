@@ -59,6 +59,50 @@ steps:
     validateRange: true
 
   # ----------------------------------------------------------------------------
+  # Test lower limit (utcOffset = -64800s)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Symptoms Update (lower limit utcOffset = -64800s)"
+    action: "patch"
+    dataType: "symptoms"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "symptoms": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-64800s"
+          },
+          "symptoms": [
+            "FATIGUE"
+          ]
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
+  # Test upper limit (utcOffset = 64800s)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Symptoms Update (upper limit utcOffset = 64800s)"
+    action: "patch"
+    dataType: "symptoms"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "symptoms": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "64800s"
+          },
+          "symptoms": [
+            "BLOATING"
+          ]
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  # ----------------------------------------------------------------------------
   # 3. Delete the symptoms entry via batchDelete specifying the unique name
   # ----------------------------------------------------------------------------
   - name: "Standard: Symptoms BatchDelete"
@@ -73,3 +117,68 @@ steps:
     assertStatus: [200]
     validateRange: false
 
+  # ----------------------------------------------------------------------------
+  # 4. Create a symptoms entry at lower limit (utcOffset = -64800s)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Symptoms Create (lower limit utcOffset = -64800s)"
+    action: "create"
+    dataType: "symptoms"
+    body: |
+      {
+        "symptoms": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-64800s"
+          },
+          "symptoms": [
+            "FATIGUE"
+          ]
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Symptoms BatchDelete"
+    action: "batchDelete"
+    dataType: "symptoms"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
+  # ----------------------------------------------------------------------------
+  # 5. Create a symptoms entry at upper limit (utcOffset = 64800s)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Symptoms Create (upper limit utcOffset = 64800s)"
+    action: "create"
+    dataType: "symptoms"
+    body: |
+      {
+        "symptoms": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "64800s"
+          },
+          "symptoms": [
+            "BLOATING"
+          ]
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Symptoms BatchDelete"
+    action: "batchDelete"
+    dataType: "symptoms"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false

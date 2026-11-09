@@ -29,7 +29,35 @@ steps:
     assertStatus: [200]
 
   # ----------------------------------------------------------------------------
-  # 2. Update Running Stride Length (userConfiguredRunningStrideLengthMm)
+  # 2. Update Walking Stride Length at Lower Limit (1)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Update User Profile (userConfiguredWalkingStrideLengthMm = 1)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredWalkingStrideLengthMm"
+    body: |
+      {
+        "userConfiguredWalkingStrideLengthMm": 1
+      }
+    assertStatus: [200]
+
+  # ----------------------------------------------------------------------------
+  # 3. Update Walking Stride Length at Upper Limit (3000)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Update User Profile (userConfiguredWalkingStrideLengthMm = 3000)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredWalkingStrideLengthMm"
+    body: |
+      {
+        "userConfiguredWalkingStrideLengthMm": 3000
+      }
+    assertStatus: [200]
+
+  # ----------------------------------------------------------------------------
+  # 4. Update Running Stride Length (userConfiguredRunningStrideLengthMm)
   # ----------------------------------------------------------------------------
   - name: "Standard: Update User Profile (userConfiguredRunningStrideLengthMm)"
     action: "updateProfile"
@@ -43,7 +71,35 @@ steps:
     assertStatus: [200]
 
   # ----------------------------------------------------------------------------
-  # 3. Update Combined Profile Stride Lengths (walking + running)
+  # 5. Update Running Stride Length at Lower Limit (1)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Update User Profile (userConfiguredRunningStrideLengthMm = 1)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredRunningStrideLengthMm"
+    body: |
+      {
+        "userConfiguredRunningStrideLengthMm": 1
+      }
+    assertStatus: [200]
+
+  # ----------------------------------------------------------------------------
+  # 6. Update Running Stride Length at Upper Limit (3000)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Update User Profile (userConfiguredRunningStrideLengthMm = 3000)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredRunningStrideLengthMm"
+    body: |
+      {
+        "userConfiguredRunningStrideLengthMm": 3000
+      }
+    assertStatus: [200]
+
+  # ----------------------------------------------------------------------------
+  # 7. Update Combined Profile Stride Lengths (walking + running)
   # ----------------------------------------------------------------------------
   - name: "Standard: Update User Profile (combined)"
     action: "updateProfile"
@@ -56,4 +112,3 @@ steps:
         "userConfiguredRunningStrideLengthMm": 1180
       }
     assertStatus: [200]
-

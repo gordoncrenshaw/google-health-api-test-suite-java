@@ -35,6 +35,7 @@ public class SuiteExecutionEngine {
     private final ObjectMapper jsonMapper = new ObjectMapper();
     private final Map<String, String> lastCreatedUniqueNameByKey = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, String> lastCreatedDataPointIdByKey = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, String> lastValidBodyByKey = new java.util.concurrent.ConcurrentHashMap<>();
     private volatile String lastCreatedUniqueName = null;
     private volatile String lastCreatedDataPointId = null;
 
@@ -285,21 +286,51 @@ public class SuiteExecutionEngine {
                     || (action.startsWith("create") && response.getStatusCode() == 201 && step.getAssertStatus().contains(200))
                     || (action.startsWith("create") && response.getStatusCode() == 200 && step.getAssertStatus().contains(201));
             ValidationResult valResult = ValidationResult.skipped("Range validation disabled");
-            if (step.isValidateRange() && def != null) {
+            if (step.isValidateRange() && def != null && response.isSuccess()) {
                 valResult = validationEngine.validate(def, response.getBody());
             }
 
             boolean verifyGetPassed = true;
             String verifyGetError = null;
-            if (step.isVerifyWithGet() && statusPassed && response.isSuccess()) {
+            String resourceKey = buildStorageKey(step.getUserId(),
+                    def != null ? def.getName() : (action.contains("profile") ? "profile" : (action.contains("settings") ? "settings" : dtName)));
+            if (response.isSuccess() && resolvedBody != null && !resolvedBody.isBlank()
+                    && (action.startsWith("create") || action.startsWith("patch") || action.startsWith("update"))) {
+                lastValidBodyByKey.put(resourceKey, resolvedBody);
+            }
+            if (action.startsWith("batchdelete") || action.startsWith("batch_delete") || action.startsWith("delete")) {
+                if (response.isSuccess()) {
+                    lastValidBodyByKey.remove(resourceKey);
+                }
+            }
+
+            if (step.isVerifyWithGet() && statusPassed) {
                 ApiResponse getResponse = null;
                 String getEndpointName = "GET";
+                String expectedJsonForGet = response.isSuccess() ? resolvedBody : lastValidBodyByKey.get(resourceKey);
+
                 if (action.contains("profile")) {
                     getResponse = apiClient.getProfile(step.getUserId());
                     getEndpointName = "getProfile";
                 } else if (action.contains("settings")) {
                     getResponse = apiClient.getSettings(step.getUserId());
                     getEndpointName = "getSettings";
+                } else if (def != null && (enableAll || def.supportsEndpoint("get"))
+                        && (action.startsWith("create") || action.startsWith("patch") || action.startsWith("update"))) {
+                    if (response.isSuccess() || action.startsWith("patch") || action.startsWith("update")) {
+                        String verifyDpId = (resolvedDpId != null && !resolvedDpId.isBlank())
+                                ? resolvedDpId
+                                : getStoredUniqueName(step.getUserId(), dtName, null);
+                        if (verifyDpId == null || verifyDpId.isBlank()) {
+                            if (response.isSuccess()) {
+                                verifyGetPassed = false;
+                                verifyGetError = "getDataPoint verification failed: no resource name or dataPointId available after " + action;
+                            }
+                        } else {
+                            getResponse = apiClient.getDataPoint(def, verifyDpId, step.getUserId());
+                            getEndpointName = "get (" + def.getName() + ")";
+                        }
+                    }
                 }
 
                 if (getResponse != null) {
@@ -307,29 +338,14 @@ public class SuiteExecutionEngine {
                         verifyGetPassed = false;
                         verifyGetError = getEndpointName + " verification returned HTTP " + getResponse.getStatusCode()
                                 + (getResponse.getErrorMessage() != null ? " - " + getResponse.getErrorMessage() : "");
-                    } else if (step.getBody() != null && !step.getBody().isBlank()) {
+                    } else if (expectedJsonForGet != null && !expectedJsonForGet.isBlank()) {
                         try {
-                            JsonNode expectedNode = jsonMapper.readTree(step.getBody());
+                            JsonNode expectedNode = jsonMapper.readTree(expectedJsonForGet);
                             JsonNode actualNode = jsonMapper.readTree(getResponse.getBody());
-                            if (expectedNode.isObject()) {
-                                var fields = expectedNode.fields();
-                                while (fields.hasNext()) {
-                                    var entry = fields.next();
-                                    String fieldName = entry.getKey();
-                                    if ("name".equals(fieldName)) continue;
-                                    JsonNode expectedVal = entry.getValue();
-                                    JsonNode actualVal = actualNode.get(fieldName);
-                                    boolean matched = actualVal != null && (expectedVal.equals(actualVal)
-                                            || (expectedVal.isValueNode() && actualVal.isValueNode()
-                                                    && expectedVal.asText().equals(actualVal.asText())));
-                                    if (!matched) {
-                                        verifyGetPassed = false;
-                                        verifyGetError = getEndpointName + " verification failed for field '"
-                                                + fieldName + "': expected " + expectedVal + " but got "
-                                                + (actualVal != null ? actualVal : "null");
-                                        break;
-                                    }
-                                }
+                            String mismatchError = verifyJsonSubsetMatch(getEndpointName, "", expectedNode, actualNode);
+                            if (mismatchError != null) {
+                                verifyGetPassed = false;
+                                verifyGetError = mismatchError;
                             }
                         } catch (Exception jsonEx) {
                             verifyGetPassed = false;
@@ -343,9 +359,10 @@ public class SuiteExecutionEngine {
             String missingText = null;
             if (step.getAssertContains() != null) {
                 for (String expected : step.getAssertContains()) {
-                    if (!response.getBody().contains(expected)) {
+                    String needle = expected != null ? expected : "null";
+                    if (response.getBody() == null || !response.getBody().contains(needle)) {
                         containsPassed = false;
-                        missingText = expected;
+                        missingText = needle;
                         break;
                     }
                 }
@@ -512,6 +529,84 @@ public class SuiteExecutionEngine {
             resolved.put(entry.getKey(), resolvePlaceholders(entry.getValue(), userId, dataType));
         }
         return resolved;
+    }
+
+    private String verifyJsonSubsetMatch(String endpointName, String pathPrefix, JsonNode expectedNode, JsonNode actualNode) {
+        if (expectedNode == null || expectedNode.isNull()) {
+            return null;
+        }
+        if (actualNode == null || actualNode.isNull()) {
+            return endpointName + " verification failed for field '" + (pathPrefix.isEmpty() ? "root" : pathPrefix)
+                    + "': expected " + expectedNode + " but got null";
+        }
+        if (expectedNode.isObject()) {
+            if (!actualNode.isObject()) {
+                return endpointName + " verification failed for field '" + (pathPrefix.isEmpty() ? "root" : pathPrefix)
+                        + "': expected object " + expectedNode + " but got " + actualNode;
+            }
+            var fields = expectedNode.fields();
+            while (fields.hasNext()) {
+                var entry = fields.next();
+                String fieldName = entry.getKey();
+                if ("name".equals(fieldName)) continue;
+                String fullPath = pathPrefix.isEmpty() ? fieldName : pathPrefix + "." + fieldName;
+                JsonNode expectedVal = entry.getValue();
+                JsonNode actualVal = actualNode.get(fieldName);
+                if (actualVal == null) {
+                    return endpointName + " verification failed for field '" + fullPath
+                            + "': expected " + expectedVal + " but got null";
+                }
+                if (expectedVal.isObject()) {
+                    String nestedErr = verifyJsonSubsetMatch(endpointName, fullPath, expectedVal, actualVal);
+                    if (nestedErr != null) {
+                        return nestedErr;
+                    }
+                } else if (expectedVal.isArray()) {
+                    if (!actualVal.isArray() || actualVal.size() < expectedVal.size()) {
+                        return endpointName + " verification failed for field '" + fullPath
+                                + "': expected " + expectedVal + " but got " + actualVal;
+                    }
+                    for (int i = 0; i < expectedVal.size(); i++) {
+                        String elemErr = verifyJsonSubsetMatch(endpointName, fullPath + "[" + i + "]", expectedVal.get(i), actualVal.get(i));
+                        if (elemErr != null) {
+                            return elemErr;
+                        }
+                    }
+                } else if (!valuesMatch(expectedVal, actualVal)) {
+                    return endpointName + " verification failed for field '" + fullPath
+                            + "': expected " + expectedVal + " but got " + actualVal;
+                }
+            }
+            return null;
+        } else if (!valuesMatch(expectedNode, actualNode)) {
+            return endpointName + " verification failed for field '" + (pathPrefix.isEmpty() ? "root" : pathPrefix)
+                    + "': expected " + expectedNode + " but got " + actualNode;
+        }
+        return null;
+    }
+
+    private boolean valuesMatch(JsonNode expectedVal, JsonNode actualVal) {
+        if (expectedVal == null || actualVal == null) {
+            return expectedVal == actualVal;
+        }
+        if (expectedVal.equals(actualVal)) {
+            return true;
+        }
+        if (expectedVal.isNumber() && actualVal.isNumber()) {
+            return Double.compare(expectedVal.asDouble(), actualVal.asDouble()) == 0;
+        }
+        if (expectedVal.isValueNode() && actualVal.isValueNode()) {
+            if (expectedVal.asText().equals(actualVal.asText())) {
+                return true;
+            }
+            try {
+                double d1 = Double.parseDouble(expectedVal.asText());
+                double d2 = Double.parseDouble(actualVal.asText());
+                return Double.compare(d1, d2) == 0;
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return false;
     }
 
     private TestResult errorResult(TestStep step, String message) {

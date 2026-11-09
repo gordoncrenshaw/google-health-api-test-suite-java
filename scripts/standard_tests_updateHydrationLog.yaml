@@ -87,6 +87,72 @@ steps:
       - "500"
 
   # ----------------------------------------------------------------------------
+  # Test lower limit (0)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Hydration Log Update (milliliters = 0)"
+    action: "patch"
+    dataType: "hydration-log"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "hydrationLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:15:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "amountConsumed": {
+            "milliliters": 0
+          }
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Hydration Log Get (Verify Update milliliters = 0)"
+    action: "get"
+    dataType: "hydration-log"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "0"
+
+  # ----------------------------------------------------------------------------
+  # Test upper limit (100000)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Hydration Log Update (milliliters = 100000)"
+    action: "patch"
+    dataType: "hydration-log"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "hydrationLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:15:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "amountConsumed": {
+            "milliliters": 100000
+          }
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Hydration Log Get (Verify Update milliliters = 100000)"
+    action: "get"
+    dataType: "hydration-log"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "100000"
+
+  # ----------------------------------------------------------------------------
   # 5. Delete the hydration-log entry via batchDelete specifying the unique name
   # ----------------------------------------------------------------------------
   - name: "Standard: Hydration Log BatchDelete"
@@ -101,3 +167,96 @@ steps:
     assertStatus: [200]
     validateRange: false
 
+  # ----------------------------------------------------------------------------
+  # 6. Create a hydration-log entry at lower limit (0)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Hydration Log Create (milliliters = 0)"
+    action: "create"
+    dataType: "hydration-log"
+    body: |
+      {
+        "hydrationLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:15:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "amountConsumed": {
+            "milliliters": 0
+          }
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Hydration Log Get (Verify Create milliliters = 0)"
+    action: "get"
+    dataType: "hydration-log"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "0"
+
+  # ----------------------------------------------------------------------------
+  # Delete the hydration-log entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Hydration Log BatchDelete"
+    action: "batchDelete"
+    dataType: "hydration-log"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
+  # ----------------------------------------------------------------------------
+  # 7. Create a hydration-log entry at upper limit (100000)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Hydration Log Create (milliliters = 100000)"
+    action: "create"
+    dataType: "hydration-log"
+    body: |
+      {
+        "hydrationLog": {
+          "interval": {
+            "startTime": "2026-10-15T12:00:00Z",
+            "startUtcOffset": "-14400s",
+            "endTime": "2026-10-15T12:15:00Z",
+            "endUtcOffset": "-14400s"
+          },
+          "amountConsumed": {
+            "milliliters": 100000
+          }
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Hydration Log Get (Verify Create milliliters = 100000)"
+    action: "get"
+    dataType: "hydration-log"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "100000"
+
+  # ----------------------------------------------------------------------------
+  # Delete the hydration-log entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Hydration Log BatchDelete"
+    action: "batchDelete"
+    dataType: "hydration-log"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false

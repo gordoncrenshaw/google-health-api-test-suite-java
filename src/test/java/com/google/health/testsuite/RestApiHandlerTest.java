@@ -802,6 +802,57 @@ public class RestApiHandlerTest {
         HttpResponse<String> updateNonExistent = httpClient.send(updateReq, HttpResponse.BodyHandlers.ofString());
         assertEquals(404, updateNonExistent.statusCode());
     }
+
+    @Test
+    void testAddAndDeleteScopePersistsToPreferencesYaml() throws Exception {
+        String shortScope = "custom_scope.readonly";
+        String expectedFullScope = "https://www.googleapis.com/auth/googlehealth.custom_scope.readonly";
+
+        // 1. Add scope via POST /api/scopes
+        HttpRequest addReq = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/scopes"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString("{\"scope\":\"" + shortScope + "\"}"))
+                .build();
+
+        HttpResponse<String> addResp = httpClient.send(addReq, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, addResp.statusCode());
+        JsonNode addBody = jsonMapper.readTree(addResp.body());
+        assertTrue(addBody.get("success").asBoolean());
+
+        boolean foundInResponse = false;
+        for (JsonNode n : addBody.get("scopes")) {
+            if (expectedFullScope.equals(n.asText())) {
+                foundInResponse = true;
+                break;
+            }
+        }
+        assertTrue(foundInResponse, "Added scope must be returned in /api/scopes response");
+
+        // Verify persisted in preferences.yaml on disk
+        String yamlAfterAdd = Files.readString(tempPrefFile.toPath());
+        assertTrue(yamlAfterAdd.contains(expectedFullScope), "Added scope must be written to preferences.yaml");
+
+        // 2. Delete scope via DELETE /api/scopes
+        HttpRequest delReq = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/scopes"))
+                .header("Content-Type", "application/json")
+                .method("DELETE", HttpRequest.BodyPublishers.ofString("{\"scope\":\"" + expectedFullScope + "\"}"))
+                .build();
+
+        HttpResponse<String> delResp = httpClient.send(delReq, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, delResp.statusCode());
+        JsonNode delBody = jsonMapper.readTree(delResp.body());
+        assertTrue(delBody.get("success").asBoolean());
+
+        for (JsonNode n : delBody.get("scopes")) {
+            assertNotEquals(expectedFullScope, n.asText(), "Deleted scope must not be returned in /api/scopes response");
+        }
+
+        // Verify removed from preferences.yaml on disk
+        String yamlAfterDelete = Files.readString(tempPrefFile.toPath());
+        assertFalse(yamlAfterDelete.contains(expectedFullScope), "Deleted scope must be removed from preferences.yaml");
+    }
 }
 
 

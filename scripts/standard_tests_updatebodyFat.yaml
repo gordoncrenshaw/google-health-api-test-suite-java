@@ -79,6 +79,64 @@ steps:
       - "22.8"
 
   # ----------------------------------------------------------------------------
+  # Test lower limit (0)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Body Fat Update (percentage = 0)"
+    action: "patch"
+    dataType: "body-fat"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "percentage": 0
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat Get (Verify Update percentage = 0)"
+    action: "get"
+    dataType: "body-fat"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "0"
+
+  # ----------------------------------------------------------------------------
+  # Test upper limit (100)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Body Fat Update (percentage = 100)"
+    action: "patch"
+    dataType: "body-fat"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "percentage": 100
+        }
+      }
+    assertStatus: [200]
+    validateRange: true
+
+  - name: "Standard: Body Fat Get (Verify Update percentage = 100)"
+    action: "get"
+    dataType: "body-fat"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "100"
+
+  # ----------------------------------------------------------------------------
   # 5. Delete the body-fat entry via batchDelete specifying the unique name
   # ----------------------------------------------------------------------------
   - name: "Standard: Body Fat BatchDelete"
@@ -93,3 +151,90 @@ steps:
     assertStatus: [200]
     validateRange: false
 
+  # ----------------------------------------------------------------------------
+  # 6. Create a body-fat entry at lower limit (0)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Body Fat Create (percentage = 0)"
+    action: "create"
+    dataType: "body-fat"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "percentage": 0
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Body Fat Get (Verify Create percentage = 0)"
+    action: "get"
+    dataType: "body-fat"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "0"
+
+  # ----------------------------------------------------------------------------
+  # 5. Delete the body-fat entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Body Fat BatchDelete"
+    action: "batchDelete"
+    dataType: "body-fat"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false
+
+  # ----------------------------------------------------------------------------
+  # 6. Create a body-fat entry at upper limit (100)
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Body Fat Create (percentage = 100)"
+    action: "create"
+    dataType: "body-fat"
+    dataPointId: "${uniqueName}"
+    body: |
+      {
+        "bodyFat": {
+          "sampleTime": {
+            "physicalTime": "2026-10-15T12:00:00Z",
+            "utcOffset": "-14400s"
+          },
+          "percentage": 100
+        }
+      }
+    assertStatus: [200, 201]
+    validateRange: true
+
+  - name: "Standard: Body Fat Get (Verify Create percentage = 100)"
+    action: "get"
+    dataType: "body-fat"
+    dataPointId: "${uniqueName}"
+    assertStatus: [200]
+    validateRange: true
+    assertContains:
+      - "100"
+
+  # ----------------------------------------------------------------------------
+  # 5. Delete the body-fat entry via batchDelete specifying the unique name
+  # ----------------------------------------------------------------------------
+  - name: "Standard: Body Fat BatchDelete"
+    action: "batchDelete"
+    dataType: "body-fat"
+    body: |
+      {
+        "names": [
+          "${uniqueName}"
+        ]
+      }
+    assertStatus: [200]
+    validateRange: false

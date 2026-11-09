@@ -1,0 +1,156 @@
+# ==============================================================================
+# Google Health API Test Suite - Update User Profile Negative Tests
+# ==============================================================================
+# Tests boundary limits and negative inputs for the users.updateProfile endpoint
+# (PATCH /v4/users/{userId}/profile) using verifyWithGet: true to confirm
+# persisted response values:
+#   - Out-of-range lower bound (-1) and upper bound (100000) for stride lengths
+#   - Missing value (no value / empty updateMask), null value, and empty string ("")
+# Reference: https://developers.google.com/health/reference/rest/v4/users/updateProfile
+# ==============================================================================
+
+name: "Google Health API Update User Profile Negative Tests"
+description: "Boundary and negative tests for updating user profile via updateProfile and verifying via getProfile"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ============================================================================
+  # SECTION 1: Baseline Profile Update & Walking Stride Length Negative Tests
+  # ============================================================================
+
+  # 1. Baseline valid update for userConfiguredWalkingStrideLengthMm
+  - name: "Standard: Update User Profile (userConfiguredWalkingStrideLengthMm = 750)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredWalkingStrideLengthMm"
+    body: |
+      {
+        "userConfiguredWalkingStrideLengthMm": 750
+      }
+    assertStatus: [200]
+
+  # 2. Negative Update: Walking stride length below lower bound (-1)
+  - name: "Negative: Update User Profile Below Lower Bound (userConfiguredWalkingStrideLengthMm = -1)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredWalkingStrideLengthMm"
+    body: |
+      {
+        "userConfiguredWalkingStrideLengthMm": -1
+      }
+    assertStatus: [400]
+
+  # 3. Negative Update: Walking stride length above upper bound (100000)
+  - name: "Negative: Update User Profile Above Upper Bound (userConfiguredWalkingStrideLengthMm = 100000)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredWalkingStrideLengthMm"
+    body: |
+      {
+        "userConfiguredWalkingStrideLengthMm": 100000
+      }
+    assertStatus: [400]
+
+  # 4. Negative Update: Walking stride length no value (missing updateMask)
+  - name: "Negative: Update User Profile Walking Stride (no updateMask value)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: ""
+    body: |
+      {
+      }
+    assertStatus: [400]
+
+  # 5. Negative Update: Walking stride length null value
+  - name: "Negative: Update User Profile (userConfiguredWalkingStrideLengthMm = null)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredWalkingStrideLengthMm"
+    body: |
+      {
+        "userConfiguredWalkingStrideLengthMm": null
+      }
+    assertStatus: [400]
+
+  # 6. Negative Update: Walking stride length empty string ("")
+  - name: "Negative: Update User Profile (userConfiguredWalkingStrideLengthMm = empty string)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredWalkingStrideLengthMm"
+    body: |
+      {
+        "userConfiguredWalkingStrideLengthMm": ""
+      }
+    assertStatus: [400]
+
+  # ============================================================================
+  # SECTION 2: Running Stride Length Boundary and Negative Tests
+  # ============================================================================
+
+  # 7. Baseline valid update for userConfiguredRunningStrideLengthMm
+  - name: "Standard: Update User Profile (userConfiguredRunningStrideLengthMm = 1150)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredRunningStrideLengthMm"
+    body: |
+      {
+        "userConfiguredRunningStrideLengthMm": 1150
+      }
+    assertStatus: [200]
+
+  # 8. Negative Update: Running stride length below lower bound (-1)
+  - name: "Negative: Update User Profile Below Lower Bound (userConfiguredRunningStrideLengthMm = -1)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredRunningStrideLengthMm"
+    body: |
+      {
+        "userConfiguredRunningStrideLengthMm": -1
+      }
+    assertStatus: [400]
+
+  # 9. Negative Update: Running stride length above upper bound (100000)
+  - name: "Negative: Update User Profile Above Upper Bound (userConfiguredRunningStrideLengthMm = 100000)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredRunningStrideLengthMm"
+    body: |
+      {
+        "userConfiguredRunningStrideLengthMm": 100000
+      }
+    assertStatus: [400]
+
+  # 10. Negative Update: Running stride length null value
+  - name: "Negative: Update User Profile (userConfiguredRunningStrideLengthMm = null)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredRunningStrideLengthMm"
+    body: |
+      {
+        "userConfiguredRunningStrideLengthMm": null
+      }
+    assertStatus: [400]
+
+  # 11. Negative Update: Running stride length empty string ("")
+  - name: "Negative: Update User Profile (userConfiguredRunningStrideLengthMm = empty string)"
+    action: "updateProfile"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "userConfiguredRunningStrideLengthMm"
+    body: |
+      {
+        "userConfiguredRunningStrideLengthMm": ""
+      }
+    assertStatus: [400]
+

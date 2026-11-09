@@ -1,0 +1,204 @@
+# ==============================================================================
+# Google Health API Test Suite - Update User Settings Negative Tests
+# ==============================================================================
+# Tests boundary limits and negative inputs for the users.updateSettings endpoint
+# (PATCH /v4/users/{userId}/settings) using verifyWithGet: true to confirm
+# persisted response values:
+#   - Out-of-bounds numeric/enum values (-1 and 999999)
+#   - Missing value (empty updateMask / no value), null value, and empty string ("")
+# Reference: https://developers.google.com/health/reference/rest/v4/users/updateSettings
+# ==============================================================================
+
+name: "Google Health API Update User Settings Negative Tests"
+description: "Boundary and negative tests for updating user settings via updateSettings and verifying via getSettings"
+userId: both # Supported values: me, healthUserId, both
+stopOnError: false
+
+steps:
+  # ============================================================================
+  # SECTION 1: Baseline Valid Update
+  # ============================================================================
+
+  # 1. Baseline valid update for settings
+  - name: "Standard: Update User Settings (Baseline Valid)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "distanceUnit,glucoseUnit,heightUnit,swimUnit,temperatureUnit,waterUnit,weightUnit"
+    body: |
+      {
+        "distanceUnit": "DISTANCE_UNIT_KILOMETERS",
+        "glucoseUnit": "GLUCOSE_UNIT_MG_DL",
+        "heightUnit": "HEIGHT_UNIT_CENTIMETERS",
+        "swimUnit": "SWIM_UNIT_METERS",
+        "temperatureUnit": "TEMPERATURE_UNIT_CELSIUS",
+        "waterUnit": "WATER_UNIT_ML",
+        "weightUnit": "WEIGHT_UNIT_KILOGRAMS"
+      }
+    assertStatus: [200]
+
+  # ============================================================================
+  # SECTION 2: Distance Unit Negative Tests
+  # ============================================================================
+
+  - name: "Negative: Update User Settings Below Lower Bound (distanceUnit = -1)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "distanceUnit"
+    body: |
+      {
+        "distanceUnit": -1
+      }
+    assertStatus: [400]
+
+  - name: "Negative: Update User Settings Above Upper Bound (distanceUnit = 999999)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "distanceUnit"
+    body: |
+      {
+        "distanceUnit": 999999
+      }
+    assertStatus: [400]
+
+  - name: "Negative: Update User Settings (no updateMask value)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: ""
+    body: |
+      {
+      }
+    assertStatus: [400]
+
+  - name: "Negative: Update User Settings (distanceUnit = null)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "distanceUnit"
+    body: |
+      {
+        "distanceUnit": null
+      }
+    assertStatus: [400]
+
+  - name: "Negative: Update User Settings (distanceUnit = empty string)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "distanceUnit"
+    body: |
+      {
+        "distanceUnit": ""
+      }
+    assertStatus: [400]
+
+  # ============================================================================
+  # SECTION 3: Glucose Unit Negative Tests
+  # ============================================================================
+
+  - name: "Negative: Update User Settings Below Lower Bound (glucoseUnit = -1)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "glucoseUnit"
+    body: |
+      {
+        "glucoseUnit": -1
+      }
+    assertStatus: [400]
+
+  - name: "Negative: Update User Settings Above Upper Bound (glucoseUnit = 999999)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "glucoseUnit"
+    body: |
+      {
+        "glucoseUnit": 999999
+      }
+    assertStatus: [400]
+
+  - name: "Negative: Update User Settings (glucoseUnit = null)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "glucoseUnit"
+    body: |
+      {
+        "glucoseUnit": null
+      }
+    assertStatus: [400]
+
+  - name: "Negative: Update User Settings (glucoseUnit = empty string)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "glucoseUnit"
+    body: |
+      {
+        "glucoseUnit": ""
+      }
+    assertStatus: [400]
+
+  # ============================================================================
+  # SECTION 4: Height, Swim, Temperature, Water & Weight Unit Negative Tests
+  # ============================================================================
+
+  - name: "Negative: Update User Settings (heightUnit = empty string)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "heightUnit"
+    body: |
+      {
+        "heightUnit": ""
+      }
+    assertStatus: [400]
+
+  - name: "Negative: Update User Settings (swimUnit = empty string)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "swimUnit"
+    body: |
+      {
+        "swimUnit": ""
+      }
+    assertStatus: [400]
+
+  - name: "Negative: Update User Settings (temperatureUnit = empty string)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "temperatureUnit"
+    body: |
+      {
+        "temperatureUnit": ""
+      }
+    assertStatus: [400]
+
+  - name: "Negative: Update User Settings (waterUnit = empty string)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "waterUnit"
+    body: |
+      {
+        "waterUnit": ""
+      }
+    assertStatus: [400]
+
+  - name: "Negative: Update User Settings (weightUnit = empty string)"
+    action: "updateSettings"
+    verifyWithGet: true
+    queryParams:
+      updateMask: "weightUnit"
+    body: |
+      {
+        "weightUnit": ""
+      }
+    assertStatus: [400]
+

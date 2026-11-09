@@ -44,6 +44,19 @@ scripts:
   - scripts/custom_tests-vo2Max.yaml
   - scripts/custom_tests-weight.yaml
   - scripts/latency_tests.yaml
+  - scripts/negative_tests_updateBodyFat.yaml
+  - scripts/negative_tests_updateExercise.yaml
+  - scripts/negative_tests_updateHeight.yaml
+  - scripts/negative_tests_updateHydrationLog.yaml
+  - scripts/negative_tests_updateMenstrualPeriod.yaml
+  - scripts/negative_tests_updateMoods.yaml
+  - scripts/negative_tests_updateNutritionLog.yaml
+  - scripts/negative_tests_updateOvulationTest.yaml
+  - scripts/negative_tests_updateProfile.yaml
+  - scripts/negative_tests_updateSettings.yaml
+  - scripts/negative_tests_updateSleep.yaml
+  - scripts/negative_tests_updateSymptoms.yaml
+  - scripts/negative_tests_updateWeight.yaml
   - scripts/standard_tests_auth.yaml
   - scripts/standard_tests_exportExerciseTcx.yaml
   - scripts/standard_tests_pairedDevices.yaml
