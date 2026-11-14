@@ -1,7 +1,6 @@
 # Google Health API Nutrition Log Standard Tests
 name: "Google Health API Nutrition Log Tests"
 description: "Standard tests for Nutrition Log datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

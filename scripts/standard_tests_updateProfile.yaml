@@ -10,7 +10,6 @@
 
 name: "Google Health API Update User Profile Standard Tests"
 description: "Standard tests for updating user profile via updateProfile and verifying persistence via getProfile"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

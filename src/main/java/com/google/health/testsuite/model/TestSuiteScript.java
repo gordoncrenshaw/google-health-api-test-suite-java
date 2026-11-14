@@ -22,6 +22,11 @@ public class TestSuiteScript {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String userId = null;
 
+    @JsonProperty("bugId")
+    @JsonAlias({"bug_id", "buganizerId", "buganizer_id", "bug"})
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private String bugId = null;
+
     @JsonProperty("stopOnError")
     private boolean stopOnError = false;
 
@@ -60,11 +65,30 @@ public class TestSuiteScript {
 
     @com.fasterxml.jackson.annotation.JsonIgnore
     public String getEffectiveUserId() {
-        return userId != null && !userId.trim().isEmpty() ? userId.trim() : "me";
+        return getEffectiveUserId("me");
+    }
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public String getEffectiveUserId(String defaultUserId) {
+        if (userId != null && !userId.trim().isEmpty()) {
+            return userId.trim();
+        }
+        if (defaultUserId != null && !defaultUserId.trim().isEmpty()) {
+            return defaultUserId.trim();
+        }
+        return "me";
     }
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getBugId() {
+        return bugId;
+    }
+
+    public void setBugId(String bugId) {
+        this.bugId = bugId;
     }
 
     public boolean isStopOnError() {
@@ -93,16 +117,23 @@ public class TestSuiteScript {
 
     /**
      * Returns the list of executable test steps, expanding any steps configured with
-     * userId "both" (either explicitly on the step or inherited from the script) into
-     * separate steps for "me" and "healthUserId", and inheriting global maxLatencyMs
-     * when not overridden on the step.
+     * userId "both" (either explicitly on the step, inherited from the script, or inherited
+     * from Preferences) into separate steps for "me" and "healthUserId", and inheriting
+     * global maxLatencyMs when not overridden on the step.
      */
     @com.fasterxml.jackson.annotation.JsonIgnore
     public List<TestStep> getExpandedSteps() {
-        List<TestStep> expanded = new ArrayList<>();
-        String scriptUser = getEffectiveUserId();
+        return getExpandedSteps("me");
+    }
 
-        boolean hasStatefulSequence = "both".equalsIgnoreCase(scriptUser) && steps.stream().anyMatch(s ->
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public List<TestStep> getExpandedSteps(String defaultUserId) {
+        List<TestStep> expanded = new ArrayList<>();
+        String scriptUser = getEffectiveUserId(defaultUserId);
+
+        boolean hasStatefulSequence = ("both".equalsIgnoreCase(scriptUser)
+                || steps.stream().anyMatch(s -> "both".equalsIgnoreCase(s.getUserId())))
+                && steps.stream().anyMatch(s ->
                 (s.getDataPointId() != null && (s.getDataPointId().contains("uniqueName") || s.getDataPointId().contains("dataPointId")))
                 || (s.getBody() != null && (s.getBody().contains("uniqueName") || s.getBody().contains("dataPointId"))));
 
@@ -115,16 +146,25 @@ public class TestSuiteScript {
                     Long effectiveMaxLatency = step.getMaxLatencyMs() != null
                             ? step.getMaxLatencyMs()
                             : this.maxLatencyMs;
+                    String effectiveBugId = (step.getBugId() != null && !step.getBugId().trim().isEmpty())
+                            ? step.getBugId().trim()
+                            : this.bugId;
                     if ("both".equalsIgnoreCase(stepUser)) {
                         TestStep copyStep = step.copy();
                         copyStep.setUserId(targetUser);
                         copyStep.setMaxLatencyMs(effectiveMaxLatency);
+                        if (effectiveBugId != null && !effectiveBugId.isBlank()) {
+                            copyStep.setBugId(effectiveBugId);
+                        }
                         copyStep.setName(appendUserSuffix(step.getName(), targetUser));
                         expanded.add(copyStep);
                     } else if ("me".equalsIgnoreCase(targetUser)) {
                         TestStep s = step.copy();
                         s.setUserId(stepUser);
                         s.setMaxLatencyMs(effectiveMaxLatency);
+                        if (effectiveBugId != null && !effectiveBugId.isBlank()) {
+                            s.setBugId(effectiveBugId);
+                        }
                         expanded.add(s);
                     }
                 }
@@ -139,23 +179,35 @@ public class TestSuiteScript {
             Long effectiveMaxLatency = step.getMaxLatencyMs() != null
                     ? step.getMaxLatencyMs()
                     : this.maxLatencyMs;
+            String effectiveBugId = (step.getBugId() != null && !step.getBugId().trim().isEmpty())
+                    ? step.getBugId().trim()
+                    : this.bugId;
 
             if ("both".equalsIgnoreCase(stepUser)) {
                 TestStep stepMe = step.copy();
                 stepMe.setUserId("me");
                 stepMe.setMaxLatencyMs(effectiveMaxLatency);
+                if (effectiveBugId != null && !effectiveBugId.isBlank()) {
+                    stepMe.setBugId(effectiveBugId);
+                }
                 stepMe.setName(appendUserSuffix(step.getName(), "me"));
                 expanded.add(stepMe);
 
                 TestStep stepHealthUser = step.copy();
                 stepHealthUser.setUserId("healthUserId");
                 stepHealthUser.setMaxLatencyMs(effectiveMaxLatency);
+                if (effectiveBugId != null && !effectiveBugId.isBlank()) {
+                    stepHealthUser.setBugId(effectiveBugId);
+                }
                 stepHealthUser.setName(appendUserSuffix(step.getName(), "healthUserId"));
                 expanded.add(stepHealthUser);
             } else {
                 TestStep s = step.copy();
                 s.setUserId(stepUser);
                 s.setMaxLatencyMs(effectiveMaxLatency);
+                if (effectiveBugId != null && !effectiveBugId.isBlank()) {
+                    s.setBugId(effectiveBugId);
+                }
                 expanded.add(s);
             }
         }

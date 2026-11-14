@@ -1,7 +1,6 @@
 # Google Health API Altitude Standard Tests
 name: "Google Health API Altitude Tests"
 description: "Standard tests for Altitude datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

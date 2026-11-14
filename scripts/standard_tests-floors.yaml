@@ -1,7 +1,6 @@
 # Google Health API Floors Standard Tests
 name: "Google Health API Floors Tests"
 description: "Standard tests for Floors datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

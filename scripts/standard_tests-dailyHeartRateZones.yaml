@@ -1,7 +1,6 @@
 # Google Health API Daily Heart Rate Zones Standard Tests
 name: "Google Health API Daily Heart Rate Zones Tests"
 description: "Standard tests for Daily Heart Rate Zones datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

@@ -10,7 +10,6 @@
 
 name: "Google Health API Update User Settings Standard Tests"
 description: "Standard tests for updating user settings via updateSettings and verifying persistence via getSettings"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

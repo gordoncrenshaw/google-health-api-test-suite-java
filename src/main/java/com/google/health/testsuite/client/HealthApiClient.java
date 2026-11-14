@@ -222,6 +222,9 @@ public class HealthApiClient {
         Preferences prefs = configManager.getPreferences();
         if (overrideUserId != null && !overrideUserId.trim().isEmpty() && !"auto".equalsIgnoreCase(overrideUserId.trim())) {
             String trimmed = overrideUserId.trim();
+            if ("both".equalsIgnoreCase(trimmed)) {
+                return "me";
+            }
             if ("healthUserId".equalsIgnoreCase(trimmed) ||
                 "health_user_id".equalsIgnoreCase(trimmed) ||
                 "healthUserID".equalsIgnoreCase(trimmed)) {
@@ -258,9 +261,10 @@ public class HealthApiClient {
             return "me";
         }
 
-        // Setting is "me" (or explicit numeric/custom user ID)
+        // Setting is "me", "both", or explicit numeric/custom user ID
         String custom = prefs.getEndpointUserId();
         if (custom != null && !custom.equalsIgnoreCase("me") &&
+                !custom.equalsIgnoreCase("both") &&
                 !custom.equalsIgnoreCase("healthUserId") &&
                 !custom.equalsIgnoreCase("health_user_id") &&
                 !custom.equalsIgnoreCase("healthUserID") &&

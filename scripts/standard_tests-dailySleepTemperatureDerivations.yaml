@@ -1,7 +1,6 @@
 # Google Health API Daily Sleep Temperature Derivations Standard Tests
 name: "Google Health API Daily Sleep Temperature Derivations Tests"
 description: "Standard tests for Daily Sleep Temperature Derivations datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

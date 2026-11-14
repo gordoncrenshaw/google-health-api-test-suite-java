@@ -1,7 +1,6 @@
 # Google Health API Exercise Standard Tests
 name: "Google Health API Exercise Tests"
 description: "Standard tests for Exercise datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

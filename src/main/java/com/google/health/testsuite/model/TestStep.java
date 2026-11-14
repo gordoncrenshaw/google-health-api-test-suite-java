@@ -31,6 +31,11 @@ public class TestStep {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
     private String userId;
 
+    @JsonProperty("bugId")
+    @JsonAlias({"bug_id", "buganizerId", "buganizer_id", "bug"})
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
+    private String bugId;
+
     @JsonProperty("ticketId")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
     private String ticketId;
@@ -179,12 +184,31 @@ public class TestStep {
         this.assertContains = assertContains != null ? assertContains : new ArrayList<>();
     }
 
+    public String getBugId() {
+        return bugId;
+    }
+
+    public void setBugId(String bugId) {
+        this.bugId = bugId;
+    }
+
     public String getTicketId() {
         return ticketId;
     }
 
     public void setTicketId(String ticketId) {
         this.ticketId = ticketId;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public String getEffectiveBugId() {
+        if (bugId != null && !bugId.trim().isEmpty()) {
+            return bugId.trim();
+        }
+        if (ticketId != null && !ticketId.trim().isEmpty()) {
+            return ticketId.trim();
+        }
+        return null;
     }
 
     public Long getMaxLatencyMs() {
@@ -210,6 +234,7 @@ public class TestStep {
         copy.setDataType(this.dataType);
         copy.setDataPointId(this.dataPointId);
         copy.setUserId(this.userId);
+        copy.setBugId(this.bugId);
         copy.setTicketId(this.ticketId);
         if (this.queryParams != null) {
             copy.setQueryParams(new HashMap<>(this.queryParams));

@@ -1,7 +1,6 @@
 # Google Health API Run VO2 Max Standard Tests
 name: "Google Health API Run VO2 Max Tests"
 description: "Standard tests for Run VO2 Max datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

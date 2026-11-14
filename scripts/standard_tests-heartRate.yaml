@@ -1,7 +1,6 @@
 # Google Health API Heart Rate Standard Tests
 name: "Google Health API Heart Rate Tests"
 description: "Standard tests for Heart Rate datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

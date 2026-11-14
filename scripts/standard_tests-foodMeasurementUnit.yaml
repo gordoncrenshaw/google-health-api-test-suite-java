@@ -1,7 +1,6 @@
 # Google Health API Food Measurement Unit Standard Tests
 name: "Google Health API Food Measurement Unit Tests"
 description: "Standard tests for Food Measurement Unit datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

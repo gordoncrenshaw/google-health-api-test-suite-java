@@ -1,7 +1,6 @@
 # Google Health API Sleep Standard Tests
 name: "Google Health API Sleep Tests"
 description: "Standard tests for Sleep datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

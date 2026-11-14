@@ -1,7 +1,6 @@
 # Google Health API Daily Resting Heart Rate Standard Tests
 name: "Google Health API Daily Resting Heart Rate Tests"
 description: "Standard tests for Daily Resting Heart Rate datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

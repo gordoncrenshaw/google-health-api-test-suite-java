@@ -96,11 +96,12 @@ public class CliMenuRunner {
         String effectiveUserId = !prefs.getHealthUserId().isEmpty() ? prefs.getHealthUserId() : auth.getHealthUserID();
 
         System.out.println(BOLD + "\n[ MAIN MENU ]" + RESET);
-        System.out.printf(" Mode: %s | HealthUserID: %s | Token: %s (%ds remaining)\n",
+        System.out.printf(" Mode: %s | HealthUserID: %s | Token: %s (%ds remaining) | Error Logging: %s\n",
                 (prefs.isMockMode() ? YELLOW + "MOCK/SIMULATION" : GREEN + "LIVE GOOGLE API") + RESET,
                 CYAN + effectiveUserId + RESET,
                 (auth.hasAccessToken() ? (auth.isExpired() ? RED + "EXPIRED" : GREEN + "VALID") : RED + "NONE") + RESET,
-                auth.getRemainingSeconds());
+                auth.getRemainingSeconds(),
+                (prefs.isRecordFailedTests() ? GREEN + "ENABLED" : YELLOW + "DISABLED") + RESET);
         System.out.println("------------------------------------------------------------------------");
         System.out.println(" 1. Preferences & Auth Menu (Dashboard, Auth, Identity, Profile & Settings)");
         System.out.println(" 2. View Authorization & Token Details");
@@ -132,9 +133,18 @@ public class CliMenuRunner {
             System.out.println(" Redirect URI:   " + prefs.getRedirectUri());
             System.out.println(" API Base URL:   " + prefs.getApiBaseUrl());
             System.out.println(" Default User:   " + prefs.getDefaultUserId());
-            System.out.println(" Endpoint User:  " + (prefs.isUseHealthUserId() ? CYAN + "healthUserId (" + (prefs.getHealthUserId().isEmpty() ? "not set - falls back to me" : prefs.getHealthUserId()) + ")" + RESET : GREEN + "me" + RESET));
+            System.out.println(" Endpoint User:  " + (
+                    "both".equalsIgnoreCase(prefs.getEndpointUserId())
+                            ? CYAN + "both (me & healthUserId: " + (prefs.getHealthUserId().isEmpty() ? "not set - falls back to me" : prefs.getHealthUserId()) + ")" + RESET
+                            : (prefs.isUseHealthUserId()
+                                    ? CYAN + "healthUserId (" + (prefs.getHealthUserId().isEmpty() ? "not set - falls back to me" : prefs.getHealthUserId()) + ")" + RESET
+                                    : GREEN + "me" + RESET)
+            ));
+            int failedFileCount = engine.getErrorReportGenerator().countFailedTestFiles();
+            System.out.println(" Max Latency:    " + prefs.getMaxLatencyMs() + " ms (Tests exceeding this threshold fail)");
             System.out.println(" Mock Mode:      " + (prefs.isMockMode() ? YELLOW + "ENABLED" : GREEN + "DISABLED (Live API)") + RESET);
             System.out.println(" All Endpoints:  " + (prefs.isEnableAllEndpoints() ? GREEN + "ENABLED (All endpoints active for each datatype)" : YELLOW + "DISABLED (Respects datatypes.yaml)") + RESET);
+            System.out.println(" Error Logging:  " + (prefs.isRecordFailedTests() ? GREEN + "ENABLED (Saves failed test reports to failed-tests/)" : YELLOW + "DISABLED") + RESET + " [" + failedFileCount + " saved file(s)]");
 
             System.out.println(BOLD + "\n[ OAuth2 Credential Status (com.google.api.client.auth.oauth2.Credential) ]" + RESET);
             System.out.println(" Health User ID: " + auth.getHealthUserID());
@@ -155,9 +165,11 @@ public class CliMenuRunner {
             System.out.println(" 10. Edit Preferences (Client ID, Secret, Health User ID, Redirect URI)");
             System.out.println(" 11. View Stored Scopes (config/preferences.yaml)");
             System.out.println(" 12. Toggle Enable All Endpoints for Each Datatype");
+            System.out.println(" 13. Toggle Record Failed Test Reports (failed-tests/)");
+            System.out.println(" 14. Delete Failed Test Files (failed-tests/)");
             System.out.println(" 0. Return to Main Menu");
             System.out.println("------------------------------------------------------------------------");
-            System.out.print(BOLD + "Select option [0-12]: " + RESET);
+            System.out.print(BOLD + "Select option [0-14]: " + RESET);
             String opt = scanner.nextLine().trim();
 
             switch (opt) {
@@ -181,6 +193,20 @@ public class CliMenuRunner {
                     prefs.setEnableAllEndpoints(newSetting);
                     configManager.savePreferences(prefs);
                     System.out.println(GREEN + BOLD + "Enable All Endpoints for each datatype is now: " + (newSetting ? "ENABLED" : "DISABLED") + RESET);
+                }
+                case "13" -> {
+                    boolean newLogSetting = !prefs.isRecordFailedTests();
+                    prefs.setRecordFailedTests(newLogSetting);
+                    configManager.savePreferences(prefs);
+                    System.out.println(GREEN + BOLD + "Record Failed Test Reports (failed-tests/) is now: " + (newLogSetting ? "ENABLED" : "DISABLED") + RESET);
+                }
+                case "14" -> {
+                    int deleted = engine.getErrorReportGenerator().deleteFailedTestFiles();
+                    if (deleted > 0) {
+                        System.out.println(GREEN + BOLD + "Deleted " + deleted + " failed test report file(s) and removed failed-tests/ folder." + RESET);
+                    } else {
+                        System.out.println(YELLOW + "No failed test files found to delete." + RESET);
+                    }
                 }
                 case "0", "back", "exit" -> inPrefs = false;
                 default -> System.out.println(RED + "Invalid option." + RESET);
@@ -316,7 +342,7 @@ public class CliMenuRunner {
         String hid = scanner.nextLine().trim();
         if (!hid.isEmpty()) prefs.setHealthUserId(hid);
 
-        System.out.print("Endpoint User ID Syntax ('me' or 'healthUserId') [" + prefs.getEndpointUserId() + "]: ");
+        System.out.print("Endpoint User ID Syntax ('me', 'healthUserId', or 'both') [" + prefs.getEndpointUserId() + "]: ");
         String euser = scanner.nextLine().trim();
         if (!euser.isEmpty()) prefs.setEndpointUserId(euser);
 
@@ -327,6 +353,18 @@ public class CliMenuRunner {
         System.out.print("API Base URL [" + prefs.getApiBaseUrl() + "]: ");
         String url = scanner.nextLine().trim();
         if (!url.isEmpty()) prefs.setApiBaseUrl(url);
+
+        System.out.print("Max Latency Threshold in ms [" + prefs.getMaxLatencyMs() + "]: ");
+        String maxLatStr = scanner.nextLine().trim();
+        if (!maxLatStr.isEmpty()) {
+            try {
+                long parsedLat = Long.parseLong(maxLatStr);
+                if (parsedLat > 0) {
+                    prefs.setMaxLatencyMs(parsedLat);
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
 
         System.out.print("Enable all endpoints for each datatype? (y/n) [" + (prefs.isEnableAllEndpoints() ? "y" : "n") + "]: ");
         String enableAllStr = scanner.nextLine().trim();
@@ -735,6 +773,9 @@ public class CliMenuRunner {
         if (r.getApiResponse() != null && !r.isPassed()) {
             System.out.println(YELLOW + "   Request URL: " + r.getApiResponse().getRequestUrl() + RESET);
             System.out.println(YELLOW + "   Response: " + truncate(r.getApiResponse().getBody(), 120) + RESET);
+            if (r.getErrorReportPath() != null) {
+                System.out.println(CYAN + "   Error Report: " + r.getErrorReportPath() + RESET);
+            }
         }
     }
 

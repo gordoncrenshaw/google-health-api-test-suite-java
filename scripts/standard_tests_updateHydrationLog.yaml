@@ -11,7 +11,6 @@
 
 name: "Google Health API Hydration Log Write & Update Standard Tests"
 description: "Standard tests for creating, reading, updating, and deleting hydration-log data points"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

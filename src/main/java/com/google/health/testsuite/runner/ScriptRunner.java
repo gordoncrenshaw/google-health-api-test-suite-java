@@ -31,6 +31,27 @@ public class ScriptRunner {
         this.jsonMapper = new ObjectMapper();
     }
 
+    private String getPreferredUserId() {
+        if (engine != null && engine.getConfigManager() != null && engine.getConfigManager().getPreferences() != null) {
+            return engine.getConfigManager().getPreferences().getEndpointUserId();
+        }
+        return "me";
+    }
+
+    private boolean isLogFailedSuiteEnabled() {
+        if (engine != null && engine.getConfigManager() != null && engine.getConfigManager().getPreferences() != null) {
+            return engine.getConfigManager().getPreferences().isLogFailedTestsSuite();
+        }
+        return true;
+    }
+
+    private boolean isLogFailedScriptEnabled() {
+        if (engine != null && engine.getConfigManager() != null && engine.getConfigManager().getPreferences() != null) {
+            return engine.getConfigManager().getPreferences().isLogFailedTestsScript();
+        }
+        return true;
+    }
+
     @FunctionalInterface
     public interface TestStepListener {
         void onStepExecuted(int index, int total, TestStep step, TestResult result);
@@ -40,13 +61,20 @@ public class ScriptRunner {
      * Executes the given script file and returns the list of TestResult items.
      */
     public List<TestResult> executeScript(File scriptFile) throws IOException {
-        return executeScript(scriptFile, null);
+        return executeScript(scriptFile, null, null);
     }
 
     /**
      * Executes the given script file with a real-time listener for each step.
      */
     public List<TestResult> executeScript(File scriptFile, TestStepListener listener) throws IOException {
+        return executeScript(scriptFile, listener, null);
+    }
+
+    /**
+     * Executes the given script file with a real-time listener and optional failed-test logging override.
+     */
+    public List<TestResult> executeScript(File scriptFile, TestStepListener listener, Boolean recordFailedOverride) throws IOException {
         if (!scriptFile.exists()) {
             throw new IOException("Script file does not exist: " + scriptFile.getAbsolutePath());
         }
@@ -58,14 +86,15 @@ public class ScriptRunner {
             script = yamlMapper.readValue(scriptFile, TestSuiteScript.class);
         }
 
-        List<TestStep> steps = script.getExpandedSteps();
+        List<TestStep> steps = script.getExpandedSteps(getPreferredUserId());
         int total = steps.size();
         logger.info("Executing test script: {} ({} steps)", script.getName(), total);
         List<TestResult> results = new ArrayList<>();
+        boolean logFailed = recordFailedOverride != null ? recordFailedOverride : isLogFailedScriptEnabled();
 
         for (int i = 0; i < total; i++) {
             TestStep step = steps.get(i);
-            TestResult result = engine.executeStep(step);
+            TestResult result = engine.executeStep(step, scriptFile.getName(), logFailed);
             result.setScriptFile(scriptFile.getName());
             results.add(result);
 
@@ -140,6 +169,7 @@ public class ScriptRunner {
         List<File> validScriptFiles = new ArrayList<>();
         int totalStepsAcrossAll = 0;
 
+        String defaultUserId = getPreferredUserId();
         for (File f : scriptFiles) {
             try {
                 TestSuiteScript s = f.getName().endsWith(".json")
@@ -147,7 +177,7 @@ public class ScriptRunner {
                         : yamlMapper.readValue(f, TestSuiteScript.class);
                 loadedScripts.add(s);
                 validScriptFiles.add(f);
-                totalStepsAcrossAll += s.getExpandedSteps().size();
+                totalStepsAcrossAll += s.getExpandedSteps(defaultUserId).size();
             } catch (Exception e) {
                 logger.error("Failed to parse script file {}: {}", f.getName(), e.getMessage());
             }
@@ -158,16 +188,17 @@ public class ScriptRunner {
 
         List<TestResult> allResults = new ArrayList<>();
         int globalIndex = 0;
+        boolean logFailedSuite = isLogFailedSuiteEnabled();
 
         for (int sIdx = 0; sIdx < loadedScripts.size(); sIdx++) {
             TestSuiteScript script = loadedScripts.get(sIdx);
             File sFile = validScriptFiles.get(sIdx);
-            List<TestStep> steps = script.getExpandedSteps();
+            List<TestStep> steps = script.getExpandedSteps(defaultUserId);
 
             for (int i = 0; i < steps.size(); i++) {
                 TestStep step = steps.get(i);
                 globalIndex++;
-                TestResult result = engine.executeStep(step);
+                TestResult result = engine.executeStep(step, sFile.getName(), logFailedSuite);
                 result.setScriptFile(sFile.getName());
                 allResults.add(result);
 
@@ -273,6 +304,13 @@ public class ScriptRunner {
      * and returns a detailed ScriptRunResult containing failed test names and results.
      */
     public ScriptRunResult runScriptWithDetails(File scriptFile) {
+        return runScriptWithDetails(scriptFile, null);
+    }
+
+    /**
+     * Executes the given script file with an optional failed-test logging override.
+     */
+    public ScriptRunResult runScriptWithDetails(File scriptFile, Boolean recordFailedOverride) {
         if (!scriptFile.exists()) {
             System.err.println("Error: Script file does not exist: " + scriptFile.getAbsolutePath());
             return new ScriptRunResult(1, 0, 0, 1, 0, java.util.Collections.emptyList(),
@@ -299,7 +337,7 @@ public class ScriptRunner {
         if (script.getDescription() != null && !script.getDescription().isEmpty()) {
             System.out.println(" Description: " + script.getDescription());
         }
-        List<TestStep> steps = script.getExpandedSteps();
+        List<TestStep> steps = script.getExpandedSteps(getPreferredUserId());
         System.out.println(" Script File: " + scriptFile.getAbsolutePath());
         System.out.println(" Steps:       " + steps.size());
         System.out.println("================================================================================");
@@ -311,12 +349,13 @@ public class ScriptRunner {
 
         int passedCount = 0;
         int failedCount = 0;
+        boolean logFailed = recordFailedOverride != null ? recordFailedOverride : isLogFailedScriptEnabled();
 
         for (int i = 0; i < steps.size(); i++) {
             TestStep step = steps.get(i);
             System.out.printf("[%2d/%2d] Running: %-35s ... ", (i + 1), steps.size(), step.getName());
 
-            TestResult result = engine.executeStep(step);
+            TestResult result = engine.executeStep(step, scriptFile.getName(), logFailed);
             result.setScriptFile(scriptFile.getName());
             results.add(result);
 
@@ -328,8 +367,14 @@ public class ScriptRunner {
                 failedTests.add(result);
                 failedTestNames.add(result.getTestName());
                 System.out.printf("\u001B[31mFAIL\u001B[0m (HTTP %d, %dms) - %s\n", result.getStatusCode(), result.getLatencyMs(), result.getMessage());
+                if (result.getBugId() != null && !result.getBugId().isBlank()) {
+                    System.out.println("       Bug ID: " + result.getBugId());
+                }
                 if (result.getApiResponse() != null) {
                     System.out.println("       URL: " + result.getApiResponse().getRequestUrl());
+                }
+                if (result.getErrorReportPath() != null) {
+                    System.out.println("       Error Report: " + result.getErrorReportPath());
                 }
             }
 
@@ -347,8 +392,9 @@ public class ScriptRunner {
         if (failedCount > 0) {
             System.out.println("\n\u001B[31mFAILED TESTS (" + failedCount + "):\u001B[0m");
             for (TestResult r : failedTests) {
-                System.out.printf("  - \u001B[31m%s\u001B[0m (HTTP %d): %s\n",
-                        r.getTestName(), r.getStatusCode(), r.getMessage());
+                String bugInfo = (r.getBugId() != null && !r.getBugId().isBlank()) ? " [Bug ID: " + r.getBugId() + "]" : "";
+                System.out.printf("  - \u001B[31m%s\u001B[0m%s (HTTP %d): %s\n",
+                        r.getTestName(), bugInfo, r.getStatusCode(), r.getMessage());
             }
         }
         System.out.println("================================================================================");
@@ -406,6 +452,7 @@ public class ScriptRunner {
             }
         }
 
+        String defaultUserId = getPreferredUserId();
         List<TestSuiteScript> loadedScripts = new ArrayList<>();
         List<File> validScriptFiles = new ArrayList<>();
         int totalSteps = 0;
@@ -416,7 +463,7 @@ public class ScriptRunner {
                         : yamlMapper.readValue(f, TestSuiteScript.class);
                 loadedScripts.add(s);
                 validScriptFiles.add(f);
-                totalSteps += s.getExpandedSteps().size();
+                totalSteps += s.getExpandedSteps(defaultUserId).size();
             } catch (Exception e) {
                 System.err.println("Error parsing script " + f.getName() + ": " + e.getMessage());
             }
@@ -430,11 +477,12 @@ public class ScriptRunner {
         int passedCount = 0;
         int failedCount = 0;
         int globalIndex = 0;
+        boolean logFailedSuite = isLogFailedSuiteEnabled();
 
         for (int sIdx = 0; sIdx < loadedScripts.size(); sIdx++) {
             TestSuiteScript script = loadedScripts.get(sIdx);
             File sFile = validScriptFiles.get(sIdx);
-            List<TestStep> steps = script.getExpandedSteps();
+            List<TestStep> steps = script.getExpandedSteps(defaultUserId);
 
             System.out.println("\n--- [" + (sIdx + 1) + "/" + loadedScripts.size() + "] Script: " + sFile.getName() + " (" + steps.size() + " steps) ---");
 
@@ -443,7 +491,7 @@ public class ScriptRunner {
                 globalIndex++;
                 System.out.printf("[%2d/%2d] Running: %-35s ... ", globalIndex, totalSteps, step.getName());
 
-                TestResult result = engine.executeStep(step);
+                TestResult result = engine.executeStep(step, sFile.getName(), logFailedSuite);
                 result.setScriptFile(sFile.getName());
                 allResults.add(result);
 
@@ -455,8 +503,14 @@ public class ScriptRunner {
                     failedTests.add(result);
                     failedTestNames.add(result.getTestName());
                     System.out.printf("\u001B[31mFAIL\u001B[0m (HTTP %d, %dms) - %s\n", result.getStatusCode(), result.getLatencyMs(), result.getMessage());
+                    if (result.getBugId() != null && !result.getBugId().isBlank()) {
+                        System.out.println("       Bug ID: " + result.getBugId());
+                    }
                     if (result.getApiResponse() != null) {
                         System.out.println("       URL: " + result.getApiResponse().getRequestUrl());
+                    }
+                    if (result.getErrorReportPath() != null) {
+                        System.out.println("       Error Report: " + result.getErrorReportPath());
                     }
                 }
 
@@ -475,9 +529,10 @@ public class ScriptRunner {
         if (failedCount > 0) {
             System.out.println("\n\u001B[31mFAILED TESTS (" + failedCount + "):\u001B[0m");
             for (TestResult r : failedTests) {
-                System.out.printf("  - \u001B[31m[%s] %s\u001B[0m (HTTP %d): %s\n",
+                String bugInfo = (r.getBugId() != null && !r.getBugId().isBlank()) ? " [Bug ID: " + r.getBugId() + "]" : "";
+                System.out.printf("  - \u001B[31m[%s] %s\u001B[0m%s (HTTP %d): %s\n",
                         r.getScriptFile() != null ? r.getScriptFile() : "unknown",
-                        r.getTestName(), r.getStatusCode(), r.getMessage());
+                        r.getTestName(), bugInfo, r.getStatusCode(), r.getMessage());
             }
         }
         System.out.println("================================================================================");

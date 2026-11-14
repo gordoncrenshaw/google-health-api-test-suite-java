@@ -1,7 +1,6 @@
 # Google Health API Blood Glucose Standard Tests
 name: "Google Health API Blood Glucose Tests"
 description: "Standard tests for Blood Glucose datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

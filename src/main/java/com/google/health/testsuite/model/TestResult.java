@@ -18,6 +18,10 @@ public class TestResult {
     private final ApiResponse apiResponse;
     private final String timestamp;
     private String scriptFile;
+    private String bugId;
+    private String errorReportPath;
+    private ApiResponse verificationResponse;
+    private Long maxLatencyMs;
 
     public TestResult(String testName, String dataType, String endpoint, boolean passed,
                       int statusCode, long latencyMs, String message,
@@ -98,9 +102,42 @@ public class TestResult {
         this.scriptFile = scriptFile;
     }
 
+    public String getBugId() {
+        return bugId;
+    }
+
+    public void setBugId(String bugId) {
+        this.bugId = bugId;
+    }
+
+    public String getErrorReportPath() {
+        return errorReportPath;
+    }
+
+    public void setErrorReportPath(String errorReportPath) {
+        this.errorReportPath = errorReportPath;
+    }
+
+    public ApiResponse getVerificationResponse() {
+        return verificationResponse;
+    }
+
+    public void setVerificationResponse(ApiResponse verificationResponse) {
+        this.verificationResponse = verificationResponse;
+    }
+
+    public Long getMaxLatencyMs() {
+        return maxLatencyMs;
+    }
+
+    public void setMaxLatencyMs(Long maxLatencyMs) {
+        this.maxLatencyMs = maxLatencyMs;
+    }
+
     @Override
     public String toString() {
-        return "[" + (passed ? "PASS" : "FAIL") + "] " + testName + " (" + dataType + " " + endpoint + ") " +
+        String bugPart = (bugId != null && !bugId.isBlank()) ? " [bugId: " + bugId + "]" : "";
+        return "[" + (passed ? "PASS" : "FAIL") + "] " + testName + " (" + dataType + " " + endpoint + ")" + bugPart + " " +
                 "HTTP " + statusCode + " in " + latencyMs + "ms - " + message;
     }
 }

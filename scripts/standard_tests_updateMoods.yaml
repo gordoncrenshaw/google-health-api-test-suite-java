@@ -10,7 +10,6 @@
 
 name: "Google Health API Moods Write & Update Standard Tests"
 description: "Standard tests for creating, updating, and deleting moods data points"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

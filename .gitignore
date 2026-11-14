@@ -13,6 +13,9 @@ dependency-reduced-pom.xml
 target/
 *.class
 
+# Ignore generated error reports
+failed-tests/
+
 # Ignore IDE files
 .idea/
 *.iml

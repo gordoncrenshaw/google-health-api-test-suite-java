@@ -510,15 +510,112 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function populateExplorerDataTypes(types) {
-        const select = document.getElementById('explorer-datatype-select');
-        const prevVal = select.value;
-        select.innerHTML = '';
-        const sortedTypes = (types || []).slice().sort((a, b) => {
+    const EXPLORER_EXTRA_DATA_TYPES = [
+        {
+            name: 'profile',
+            displayName: 'Profile',
+            endpointVersion: 'v4',
+            scopeRequired: 'https://www.googleapis.com/auth/googlehealth.profile_and_settings.readonly',
+            writeScopeRequired: 'https://www.googleapis.com/auth/googlehealth.profile_and_settings.writeonly',
+            endpointsSupported: {
+                getProfile: true,
+                updateProfile: true
+            },
+            webhooksSupported: false,
+            minValue: null,
+            maxValue: null
+        },
+        {
+            name: 'settings',
+            displayName: 'Settings',
+            endpointVersion: 'v4',
+            scopeRequired: 'https://www.googleapis.com/auth/googlehealth.profile_and_settings.readonly',
+            writeScopeRequired: 'https://www.googleapis.com/auth/googlehealth.profile_and_settings.writeonly',
+            endpointsSupported: {
+                getSettings: true,
+                updateSettings: true
+            },
+            webhooksSupported: false,
+            minValue: null,
+            maxValue: null
+        },
+        {
+            name: 'devices',
+            displayName: 'Devices',
+            endpointVersion: 'v4',
+            scopeRequired: 'https://www.googleapis.com/auth/googlehealth.profile_and_settings.readonly',
+            writeScopeRequired: 'https://www.googleapis.com/auth/googlehealth.profile_and_settings.writeonly',
+            endpointsSupported: {
+                pairedDevices: true
+            },
+            webhooksSupported: false,
+            minValue: null,
+            maxValue: null
+        },
+        {
+            name: 'identity',
+            displayName: 'Identity',
+            endpointVersion: 'v4',
+            scopeRequired: 'https://www.googleapis.com/auth/googlehealth.profile_and_settings.readonly',
+            writeScopeRequired: 'https://www.googleapis.com/auth/googlehealth.profile_and_settings.writeonly',
+            endpointsSupported: {
+                getIdentity: true
+            },
+            webhooksSupported: false,
+            minValue: null,
+            maxValue: null
+        }
+    ];
+
+    function getExplorerDataTypesList(baseTypes = dataTypes) {
+        const merged = (baseTypes || []).map(dt => {
+            if ((dt.name || '').toLowerCase() === 'irregular-rhythm-notification') {
+                const eps = Array.isArray(dt.endpointsSupported)
+                    ? [...dt.endpointsSupported, 'getIrnProfile']
+                    : { ...(dt.endpointsSupported || {}), getIrnProfile: true };
+                return { ...dt, endpointsSupported: eps };
+            }
+            return dt;
+        });
+        const existingNames = new Set(merged.map(d => (d.name || '').toLowerCase()));
+        EXPLORER_EXTRA_DATA_TYPES.forEach(extra => {
+            if (!existingNames.has(extra.name.toLowerCase())) {
+                merged.push(extra);
+            }
+        });
+        return merged.sort((a, b) => {
             const nameA = (a.displayName || a.name || '').toLowerCase();
             const nameB = (b.displayName || b.name || '').toLowerCase();
             return nameA.localeCompare(nameB);
         });
+    }
+
+    function findExplorerDataType(name) {
+        if (!name) return null;
+        const lower = name.toLowerCase();
+        return getExplorerDataTypesList().find(d => (d.name || '').toLowerCase() === lower) || null;
+    }
+
+    const USER_ACCOUNT_ACTIONS = new Set([
+        'paireddevices', 'paired_devices', 'devices', 'listdevices', 'list_devices', 'get_devices', 'getdevices',
+        'identity', 'getidentity', 'get_identity',
+        'irn_profile', 'irnprofile', 'getirnprofile', 'get_irn_profile',
+        'profile', 'getprofile', 'get_profile',
+        'update_profile', 'updateprofile', 'patch_profile', 'patchprofile',
+        'settings', 'getsettings', 'get_settings',
+        'update_settings', 'updatesettings', 'patch_settings', 'patchsettings'
+    ]);
+
+    function isUserAccountAction(action) {
+        return USER_ACCOUNT_ACTIONS.has((action || '').toLowerCase().trim());
+    }
+
+    function populateExplorerDataTypes(types) {
+        const select = document.getElementById('explorer-datatype-select');
+        const prevVal = select.value;
+        select.innerHTML = '';
+
+        const sortedTypes = getExplorerDataTypesList(types);
         sortedTypes.forEach(dt => {
             const opt = document.createElement('option');
             opt.value = dt.name;
@@ -528,6 +625,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (prevVal && Array.from(select.options).some(o => o.value === prevVal)) {
             select.value = prevVal;
+        } else if (sortedTypes.length > 0) {
+            const stepsDt = sortedTypes.find(d => d.name === 'steps');
+            select.value = stepsDt ? stepsDt.name : sortedTypes[0].name;
         }
 
         if (sortedTypes.length > 0) {
@@ -547,26 +647,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getRequiredScopeForOperation(dt, endpoint) {
-        if (!dt) return 'None';
         const epLower = (endpoint || '').toLowerCase();
-        if (epLower === 'batchdelete' || epLower === 'create' || epLower === 'patch') {
+        if (isUserAccountAction(epLower)) {
+            if (epLower.includes('update') || epLower.includes('patch')) {
+                return 'https://www.googleapis.com/auth/googlehealth.profile_and_settings.writeonly';
+            }
+            return 'https://www.googleapis.com/auth/googlehealth.profile_and_settings.readonly';
+        }
+        if (!dt) return 'None';
+        if (epLower === 'batchdelete' || epLower === 'create' || epLower === 'patch' || epLower === 'updateprofile' || epLower === 'updatesettings') {
             return getDataTypeWriteScope(dt);
         }
         return dt.scopeRequired || 'None';
     }
 
+    function isEndpointSupportedForDataType(dt, endpointValue) {
+        if (!dt || !dt.endpointsSupported) return false;
+        const valLower = (endpointValue || '').toLowerCase();
+        if (Array.isArray(dt.endpointsSupported)) {
+            return dt.endpointsSupported.some(ep => ep.toLowerCase() === valLower);
+        }
+        if (typeof dt.endpointsSupported === 'object') {
+            for (const [k, v] of Object.entries(dt.endpointsSupported)) {
+                if (k.toLowerCase() === valLower && (v === true || v === 'true')) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     function onExplorerDataTypeChanged() {
         const selName = document.getElementById('explorer-datatype-select').value;
-        const dt = dataTypes.find(d => d.name === selName);
-        if (!dt) return;
+        const dt = findExplorerDataType(selName);
+        const endpointSelect = document.getElementById('explorer-endpoint-select');
+        const currentEp = endpointSelect ? endpointSelect.value : 'list';
 
         const versionEl = document.getElementById('dt-info-version');
         if (versionEl) {
-            versionEl.textContent = dt.endpointVersion || 'v4';
+            versionEl.textContent = dt ? (dt.endpointVersion || 'v4') : 'v4';
         }
 
-        const endpointSelect = document.getElementById('explorer-endpoint-select');
-        const currentEp = endpointSelect ? endpointSelect.value : 'list';
         const scopeEl = document.getElementById('dt-info-scope');
         if (scopeEl) {
             scopeEl.textContent = getRequiredScopeForOperation(dt, currentEp);
@@ -574,24 +695,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const filterEl = document.getElementById('dt-info-filter');
         if (filterEl) {
-            filterEl.textContent = dt.filterParameterName || '-';
+            filterEl.textContent = (dt && dt.filterParameterName) ? dt.filterParameterName : '-';
         }
 
         const filterHint = document.getElementById('explorer-filter-field-label');
         if (filterHint) {
-            filterHint.textContent = dt.filterParameterName ? `(${dt.filterParameterName})` : '';
+            filterHint.textContent = (dt && dt.filterParameterName) ? `(${dt.filterParameterName})` : '';
         }
 
         const filterInput = document.getElementById('explorer-filter-param');
         if (filterInput) {
-            filterInput.placeholder = dt.filterParameterName 
+            filterInput.placeholder = (dt && dt.filterParameterName)
                 ? `e.g. ${dt.filterParameterName} > "2026-01-01T00:00:00Z"` 
                 : 'e.g. filter expression';
         }
 
         const webhooksBadge = document.getElementById('dt-info-webhooks');
         if (webhooksBadge) {
-            if (dt.webhooksSupported) {
+            if (dt && dt.webhooksSupported) {
                 webhooksBadge.textContent = 'SUPPORTED';
                 webhooksBadge.className = 'pill-badge pill-success';
             } else {
@@ -600,7 +721,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        const rangeStr = (dt.minValue !== null || dt.maxValue !== null)
+        const rangeStr = (dt && (dt.minValue !== null || dt.maxValue !== null))
             ? `[${dt.minValue !== null ? dt.minValue : '0'}, ${dt.maxValue !== null ? dt.maxValue : '∞'}] ${dt.unit || ''}`.trim()
             : 'Unconstrained';
         const rangeEl = document.getElementById('dt-info-range');
@@ -609,27 +730,15 @@ document.addEventListener('DOMContentLoaded', () => {
             rangeEl.className = 'font-mono text-success';
         }
 
-        // Sort endpoints alphabetically and filter supported endpoints
-        const sortedOptions = Array.from(endpointSelect.options).sort((a, b) => a.value.localeCompare(b.value));
-        endpointSelect.innerHTML = '';
-        sortedOptions.forEach(opt => endpointSelect.appendChild(opt));
-
         const allowAll = !!(currentPreferences && currentPreferences.enableAllEndpoints);
 
         Array.from(endpointSelect.options).forEach(opt => {
-            let isSupported = allowAll;
-            if (!isSupported && dt.endpointsSupported) {
-                if (Array.isArray(dt.endpointsSupported)) {
-                    isSupported = dt.endpointsSupported.some(ep => ep.toLowerCase() === opt.value.toLowerCase());
-                } else if (typeof dt.endpointsSupported === 'object') {
-                    for (const [k, v] of Object.entries(dt.endpointsSupported)) {
-                        if (k.toLowerCase() === opt.value.toLowerCase() && (v === true || v === 'true')) {
-                            isSupported = true;
-                            break;
-                        }
-                    }
-                }
+            if (!dt) {
+                opt.disabled = false;
+                opt.textContent = opt.value;
+                return;
             }
+            const isSupported = allowAll || isEndpointSupportedForDataType(dt, opt.value);
             opt.disabled = !isSupported;
             opt.textContent = isSupported ? opt.value : `${opt.value} (not supported)`;
         });
@@ -649,45 +758,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const payloadInput = document.getElementById('explorer-payload-input');
         const selName = document.getElementById('explorer-datatype-select').value;
         const epLower = (ep || '').toLowerCase();
-        const dt = dataTypes.find(d => d.name === selName);
+        const dt = findExplorerDataType(selName);
 
-        // 1. Query parameters visibility
-        // batchDelete does not support pageSize, filter, or pageToken query parameters - these fields are removed
+        // Keep all test fields visible so any field can be entered for a test
         const qpContainer = document.getElementById('explorer-query-params-container');
         const qpGrid = document.getElementById('explorer-query-params-grid');
         const qpNoMsg = document.getElementById('explorer-no-query-params');
-        const qpCount = document.getElementById('explorer-query-params-count');
+        if (qpContainer) qpContainer.style.display = 'block';
+        if (qpGrid) qpGrid.style.display = 'grid';
+        if (qpNoMsg) qpNoMsg.style.display = 'none';
+        if (payloadContainer) payloadContainer.style.display = 'block';
 
-        if (epLower === 'batchdelete') {
-            if (qpContainer) qpContainer.style.display = 'none';
-        } else if (epLower === 'list' || epLower === 'reconcile') {
-            if (qpContainer) qpContainer.style.display = 'block';
-            if (qpGrid) qpGrid.style.display = 'grid';
-            if (qpNoMsg) qpNoMsg.style.display = 'none';
-            if (qpCount) {
-                qpCount.textContent = '3 parameters';
-                qpCount.className = 'pill-badge pill-cyan';
-                qpCount.style.display = 'inline-block';
-            }
-        } else {
-            if (qpContainer) qpContainer.style.display = 'none';
-        }
-
-        // 2. Filter parameter visibility / display (batchDelete does not support filter params)
         const filterEl = document.getElementById('dt-info-filter');
         if (filterEl) {
-            if (epLower === 'batchdelete') {
+            if (epLower === 'batchdelete' || isUserAccountAction(epLower)) {
                 filterEl.textContent = 'N/A';
             } else {
                 filterEl.textContent = (dt && dt.filterParameterName) ? dt.filterParameterName : 'none';
             }
         }
 
-        // 3. Valid range display (batchDelete does not have "Valid range" - hide the valid range box)
         const validRangeBox = document.getElementById('explorer-valid-range-box');
         const rangeEl = document.getElementById('dt-info-range');
-        if (epLower === 'batchdelete') {
-            if (validRangeBox) validRangeBox.style.display = 'none';
+        if (epLower === 'batchdelete' || isUserAccountAction(epLower)) {
+            if (validRangeBox) validRangeBox.style.display = 'flex';
             if (rangeEl) {
                 rangeEl.textContent = 'N/A';
                 rangeEl.className = 'font-mono text-muted';
@@ -703,20 +797,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 4. Scope required display (batchDelete supports the writeonly scope associated with the datatype listed in "Select data type")
         const scopeEl = document.getElementById('dt-info-scope');
         if (scopeEl) {
             scopeEl.textContent = getRequiredScopeForOperation(dt, epLower);
         }
 
-        if (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'patch' || epLower === 'batchdelete') {
-            payloadContainer.style.display = 'block';
-            if (!payloadInput.value.trim() || payloadInput.dataset.forEp !== epLower) {
-                payloadInput.value = generateSamplePayload(selName, epLower);
+        const needsSampleBody = (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'patch' || epLower === 'batchdelete' || epLower === 'update_profile' || epLower === 'updateprofile' || epLower === 'update_settings' || epLower === 'updatesettings');
+        if (needsSampleBody && payloadInput) {
+            if (!payloadInput.value.trim() || payloadInput.dataset.autoPopulated === 'true') {
+                payloadInput.value = generateSamplePayload(selName || 'steps', epLower);
                 payloadInput.dataset.forEp = epLower;
+                payloadInput.dataset.autoPopulated = 'true';
             }
-        } else {
-            payloadContainer.style.display = 'none';
+        } else if (payloadInput && payloadInput.dataset.autoPopulated === 'true') {
+            payloadInput.value = '';
+            payloadInput.dataset.forEp = epLower;
         }
 
         updateExplorerCurlPreview();
@@ -726,6 +821,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const epLower = endpoint.toLowerCase();
         if (epLower === 'batchdelete') {
             return `{\n  "names": [\n    string\n  ]\n}`;
+        }
+        if (epLower === 'update_profile' || epLower === 'updateprofile' || epLower === 'patch_profile') {
+            return JSON.stringify({
+                userConfiguredWalkingStrideLengthMm: 750
+            }, null, 2);
+        }
+        if (epLower === 'update_settings' || epLower === 'updatesettings' || epLower === 'patch_settings') {
+            return JSON.stringify({
+                distanceUnit: "DISTANCE_UNIT_MILES"
+            }, null, 2);
         }
         if (epLower === 'patch') {
             return JSON.stringify({
@@ -775,22 +880,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getPreferredEndpointUserSyntax() {
         const epUserSelect = document.getElementById('pref-endpoint-user-id');
-        return (epUserSelect && epUserSelect.value === 'healthUserId') ? 'healthUserId' : 'me';
-    }
-
-    function getPreferredUserSegment() {
-        const syntax = getPreferredEndpointUserSyntax();
-        if (syntax === 'healthUserId') {
-            const healthUserEl = document.getElementById('pref-health-user-id');
-            const healthId = (healthUserEl && healthUserEl.value.trim()) ? healthUserEl.value.trim() : (authStatus?.healthUserID || 'healthUserId');
-            return healthId;
+        if (!epUserSelect) return 'me';
+        if (epUserSelect.value === 'healthUserId' || epUserSelect.value === 'both') {
+            return epUserSelect.value;
         }
         return 'me';
     }
 
+    function resolveUserSegmentFromInput(rawUserId) {
+        const trimmed = (rawUserId || '').trim();
+        const syntax = trimmed || getPreferredEndpointUserSyntax();
+        if (syntax.toLowerCase() === 'healthuserid' || syntax.toLowerCase() === 'health_user_id') {
+            const healthUserEl = document.getElementById('pref-health-user-id');
+            const healthId = (healthUserEl && healthUserEl.value.trim()) ? healthUserEl.value.trim() : (authStatus?.healthUserID || 'healthUserId');
+            return healthId;
+        }
+        if (syntax.toLowerCase() === 'both') {
+            return 'me';
+        }
+        return syntax;
+    }
+
+    function getPreferredUserSegment() {
+        const explorerUserEl = document.getElementById('explorer-target-segment');
+        return resolveUserSegmentFromInput(explorerUserEl ? explorerUserEl.value : '');
+    }
+
     function syncEndpointUserSyntax(value, saveToBackend = false) {
-        const syntax = (value === 'healthUserId' ? 'healthUserId' : 'me');
+        const syntax = (value === 'healthUserId' || value === 'both') ? value : 'me';
         const epUserSelect = document.getElementById('pref-endpoint-user-id');
+        const explorerUserEl = document.getElementById('explorer-target-segment');
         const syntaxPill = document.getElementById('endpoint-syntax-pill');
         const syntaxBadge = document.getElementById('explorer-syntax-badge');
         const previewEl = document.getElementById('pref-effective-user-preview');
@@ -798,8 +917,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const healthId = (healthUserEl && healthUserEl.value.trim()) ? healthUserEl.value.trim() : (authStatus?.healthUserID || '');
 
         if (epUserSelect && epUserSelect.value !== syntax) epUserSelect.value = syntax;
+        if (explorerUserEl && (!explorerUserEl.dataset.userEdited || explorerUserEl.value === 'me' || explorerUserEl.value === 'healthUserId' || explorerUserEl.value === 'both')) {
+            explorerUserEl.value = syntax;
+        }
 
-        const effectiveSegment = (syntax === 'healthUserId' ? (healthId || 'healthUserId') : 'me');
+        const effectiveSegment = syntax === 'both'
+            ? `me & ${healthId || 'healthUserId'}`
+            : (syntax === 'healthUserId' ? (healthId || 'healthUserId') : 'me');
 
         if (syntaxPill) {
             syntaxPill.textContent = `Syntax: /users/${effectiveSegment}`;
@@ -818,66 +942,104 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ endpointUserId: syntax, defaultUserId: syntax })
+            }).then(() => {
+                loadManifest();
+                loadScriptsList();
             }).catch(e => console.warn('Failed to persist endpoint syntax preference:', e));
         }
     }
 
+    function collectExplorerQueryParams() {
+        const params = {};
+        const pageSizeVal = (document.getElementById('explorer-page-size')?.value || '').trim();
+        const filterVal = (document.getElementById('explorer-filter-param')?.value || '').trim();
+        const pageTokenVal = (document.getElementById('explorer-page-token')?.value || '').trim();
+        const updateMaskVal = (document.getElementById('explorer-update-mask')?.value || '').trim();
+        const namesVal = (document.getElementById('explorer-names-param')?.value || '').trim();
+        const customQpVal = (document.getElementById('explorer-custom-query-params')?.value || '').trim();
+
+        if (pageSizeVal !== '') params.pageSize = pageSizeVal;
+        if (filterVal !== '') params.filter = filterVal;
+        if (pageTokenVal !== '') params.pageToken = pageTokenVal;
+        if (updateMaskVal !== '') params.updateMask = updateMaskVal;
+        if (namesVal !== '') params.names = namesVal;
+
+        if (customQpVal !== '') {
+            customQpVal.split(/[&,;]+/).forEach(pair => {
+                const idx = pair.indexOf('=');
+                if (idx > 0) {
+                    const k = pair.substring(0, idx).trim();
+                    const v = pair.substring(idx + 1).trim();
+                    if (k) params[k] = v;
+                }
+            });
+        }
+        return params;
+    }
+
     function updateExplorerCurlPreview() {
         const dtSelect = document.getElementById('explorer-datatype-select');
-        if (!dtSelect || !dtSelect.value) return;
-        const dtName = dtSelect.value;
-        const ep = document.getElementById('explorer-endpoint-select').value;
+        const epSelect = document.getElementById('explorer-endpoint-select');
+        if (!epSelect) return;
+        const dtName = (dtSelect ? dtSelect.value : '') || 'steps';
+        const ep = epSelect.value;
         const epLower = (ep || '').toLowerCase();
 
         let method = 'GET';
         if (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'batchdelete') {
             method = 'POST';
-        } else if (epLower === 'patch') {
+        } else if (epLower === 'patch' || epLower === 'update_profile' || epLower === 'updateprofile' || epLower === 'update_settings' || epLower === 'updatesettings') {
             method = 'PATCH';
         } else {
             method = 'GET';
         }
 
-        const dt = dataTypes.find(d => d.name === dtName);
+        const dt = findExplorerDataType(dtName);
         const version = (dt && dt.endpointVersion) ? dt.endpointVersion : 'v4';
 
         const userSegment = getPreferredUserSegment();
+        const dpIdInput = (document.getElementById('explorer-datapoint-id')?.value || '').trim();
+        const dpSegment = dpIdInput || 'sample-dp-1';
 
-        let path = `/${version}/users/${userSegment}/dataTypes/${dtName}/dataPoints`;
-        if (epLower === 'rollup') path += ':rollUp';
-        else if (epLower === 'dailyrollup') path += ':dailyRollUp';
-        else if (epLower === 'batchdelete') path += ':batchDelete';
-        else if (epLower === 'exportexercisetcx') path += '/sample-dp-1:exportExerciseTcx';
-        else if (epLower === 'get') path += '/sample-dp-1';
-        else if (epLower === 'patch') path += '/sample-dp-1';
-        else if (epLower === 'list' || epLower === 'reconcile') {
-            if (epLower === 'reconcile') path += ':reconcile';
-            const queryParams = [];
-            const pageSizeVal = (document.getElementById('explorer-page-size')?.value || '').trim();
-            const filterVal = (document.getElementById('explorer-filter-param')?.value || '').trim();
-            const pageTokenVal = (document.getElementById('explorer-page-token')?.value || '').trim();
+        let path;
+        if (epLower === 'paireddevices' || epLower === 'paired_devices' || epLower === 'devices' || epLower === 'listdevices' || epLower === 'list_devices') {
+            path = `/v4/users/${userSegment}/pairedDevices`;
+        } else if (epLower === 'identity' || epLower === 'getidentity' || epLower === 'get_identity') {
+            path = `/v4/users/${userSegment}/identity`;
+        } else if (epLower === 'irn_profile' || epLower === 'irnprofile' || epLower === 'getirnprofile') {
+            path = `/v4/users/${userSegment}/irnProfile`;
+        } else if (epLower === 'profile' || epLower === 'getprofile' || epLower === 'update_profile' || epLower === 'updateprofile') {
+            path = `/v4/users/${userSegment}/profile`;
+        } else if (epLower === 'settings' || epLower === 'getsettings' || epLower === 'update_settings' || epLower === 'updatesettings') {
+            path = `/v4/users/${userSegment}/settings`;
+        } else {
+            path = `/${version}/users/${userSegment}/dataTypes/${dtName}/dataPoints`;
+            if (epLower === 'rollup') path += ':rollUp';
+            else if (epLower === 'dailyrollup') path += ':dailyRollUp';
+            else if (epLower === 'batchdelete') path += ':batchDelete';
+            else if (epLower === 'exportexercisetcx') path += `/${dpSegment}:exportExerciseTcx`;
+            else if (epLower === 'get') path += `/${dpSegment}`;
+            else if (epLower === 'patch') path += `/${dpSegment}`;
+            else if (epLower === 'reconcile') path += ':reconcile';
+        }
 
-            if (pageSizeVal !== '') {
-                queryParams.push(`pageSize=${encodeURIComponent(pageSizeVal)}`);
-            }
-            if (filterVal !== '') {
-                queryParams.push(`filter=${encodeURIComponent(filterVal)}`);
-            }
-            if (pageTokenVal !== '') {
-                queryParams.push(`pageToken=${encodeURIComponent(pageTokenVal)}`);
-            }
-
-            if (queryParams.length > 0) {
-                path += `?${queryParams.join('&')}`;
-            }
+        const qpObj = collectExplorerQueryParams();
+        // If not list/reconcile and pageSize is still default '25', omit pageSize from non-list endpoints unless explicitly applicable
+        if (epLower !== 'list' && epLower !== 'reconcile' && qpObj.pageSize === '25') {
+            delete qpObj.pageSize;
+        }
+        const queryEntries = Object.entries(qpObj).filter(([_, v]) => v !== '');
+        if (queryEntries.length > 0) {
+            const qs = queryEntries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+            path += `?${qs}`;
         }
 
         const token = (authStatus && authStatus.accessToken) ? authStatus.accessToken : 'ya29.YOUR_ACCESS_TOKEN';
         let curl = `curl -X ${method} "https://health.googleapis.com${path}" \\\n  -H "Authorization: Bearer ${token}" \\\n  -H "Accept: application/json"`;
 
-        if (method === 'POST' || method === 'PATCH') {
-            const payloadInput = document.getElementById('explorer-payload-input');
-            let body = (payloadInput && payloadInput.value.trim()) ? payloadInput.value.trim() : null;
+        const payloadInput = document.getElementById('explorer-payload-input');
+        let body = (payloadInput && payloadInput.value.trim()) ? payloadInput.value.trim() : null;
+        if (method === 'POST' || method === 'PATCH' || body) {
             if (!body) {
                 if (epLower === 'batchdelete') {
                     body = `{\n  "names": [\n    string\n  ]\n}`;
@@ -892,46 +1054,76 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('explorer-request-url').textContent = `URL: https://health.googleapis.com${decodeURI(path)}`;
     }
 
+    function parseCommaSeparatedIntegers(str) {
+        if (!str || !str.trim()) return [200];
+        const parts = str.replace(/[\[\]]/g, '').split(',');
+        const nums = [];
+        for (const p of parts) {
+            const n = parseInt(p.trim(), 10);
+            if (!isNaN(n)) nums.push(n);
+        }
+        return nums.length > 0 ? nums : [200];
+    }
+
+    function parseCommaSeparatedStrings(str) {
+        if (!str || !str.trim()) return [];
+        return str.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    }
+
     async function sendExplorerRequest() {
         const dtName = document.getElementById('explorer-datatype-select').value;
         const ep = document.getElementById('explorer-endpoint-select').value;
         const payload = document.getElementById('explorer-payload-input').value;
-        const syntax = getPreferredEndpointUserSyntax();
         const epLower = (ep || '').toLowerCase();
+
+        const testName = (document.getElementById('explorer-test-name')?.value || '').trim();
+        const userIdVal = (document.getElementById('explorer-target-segment')?.value || '').trim() || getPreferredEndpointUserSyntax();
+        const bugIdVal = (document.getElementById('explorer-bug-id')?.value || '').trim();
+        const dpIdVal = (document.getElementById('explorer-datapoint-id')?.value || '').trim();
+
+        const assertStatusList = parseCommaSeparatedIntegers(document.getElementById('explorer-assert-status')?.value || '200');
+        const assertContainsList = parseCommaSeparatedStrings(document.getElementById('explorer-assert-contains')?.value || '');
+        const maxLatencyRaw = (document.getElementById('explorer-max-latency')?.value || '').trim();
+        const maxLatencyVal = maxLatencyRaw !== '' && !isNaN(parseInt(maxLatencyRaw, 10)) ? parseInt(maxLatencyRaw, 10) : null;
+        const validateRangeVal = document.getElementById('explorer-validate-range') ? document.getElementById('explorer-validate-range').checked : true;
+        const verifyWithGetVal = document.getElementById('explorer-verify-with-get') ? document.getElementById('explorer-verify-with-get').checked : false;
 
         const btn = document.getElementById('btn-send-request');
         btn.disabled = true;
         btn.textContent = 'Sending...';
 
         try {
-            const hasBody = (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'patch' || epLower === 'batchdelete');
-            let bodyToSend = payload;
-            if (epLower === 'batchdelete' && (!payload || !payload.trim())) {
+            const hasBodyByDefault = (epLower === 'create' || epLower === 'rollup' || epLower === 'dailyrollup' || epLower === 'patch' || epLower === 'batchdelete' || epLower === 'update_profile' || epLower === 'updateprofile' || epLower === 'update_settings' || epLower === 'updatesettings');
+            let bodyToSend = (payload && payload.trim()) ? payload.trim() : null;
+            if (epLower === 'batchdelete' && !bodyToSend) {
                 bodyToSend = `{\n  "names": [\n    string\n  ]\n}`;
             }
             if (bodyToSend && epLower === 'batchdelete') {
                 bodyToSend = bodyToSend.replace(/\[\s*string\s*\]/g, '[\n    "string"\n  ]');
             }
 
-            const params = {};
-            if (epLower === 'list' || epLower === 'reconcile') {
-                const pageSizeVal = (document.getElementById('explorer-page-size')?.value || '').trim();
-                const filterVal = (document.getElementById('explorer-filter-param')?.value || '').trim();
-                const pageTokenVal = (document.getElementById('explorer-page-token')?.value || '').trim();
-
-                if (pageSizeVal !== '') params.pageSize = pageSizeVal;
-                if (filterVal !== '') params.filter = filterVal;
-                if (pageTokenVal !== '') params.pageToken = pageTokenVal;
-            } else if (epLower === 'get' || epLower === 'patch' || epLower === 'exportexercisetcx') {
-                params.dataPointId = 'sample-dp-1';
+            const params = collectExplorerQueryParams();
+            if (epLower !== 'list' && epLower !== 'reconcile' && params.pageSize === '25') {
+                delete params.pageSize;
             }
 
             const reqBody = {
-                dataType: dtName,
+                name: testName || null,
+                dataType: isUserAccountAction(epLower) && !dtName ? null : (dtName || null),
+                action: ep,
                 endpoint: ep,
-                endpointUserId: syntax,
+                userId: userIdVal,
+                endpointUserId: userIdVal,
+                bugId: bugIdVal || null,
+                dataPointId: dpIdVal || ((epLower === 'get' || epLower === 'patch' || epLower === 'exportexercisetcx') ? 'sample-dp-1' : null),
                 params: params,
-                body: hasBody ? bodyToSend : null
+                queryParams: params,
+                body: (hasBodyByDefault || bodyToSend) ? bodyToSend : null,
+                assertStatus: assertStatusList,
+                assertContains: assertContainsList,
+                maxLatencyMs: maxLatencyVal,
+                validateRange: validateRangeVal,
+                verifyWithGet: verifyWithGetVal
             };
 
             const res = await fetch('/api/test/single', {
@@ -951,22 +1143,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderExplorerResponse(result) {
+        const testResultBadge = document.getElementById('explorer-test-result-badge');
         const statusBadge = document.getElementById('explorer-response-status');
         const latencyBadge = document.getElementById('explorer-response-latency');
         const valBadge = document.getElementById('explorer-validation-badge');
+        const assertionSummary = document.getElementById('explorer-assertion-summary');
         const bodyViewer = document.getElementById('explorer-response-body');
 
+        if (testResultBadge) {
+            testResultBadge.textContent = result.passed ? 'Test: PASS' : 'Test: FAIL';
+            testResultBadge.className = result.passed ? 'pill-badge pill-success' : 'pill-badge pill-danger';
+        }
+
+        if (assertionSummary) {
+            if (result.message) {
+                assertionSummary.style.display = 'flex';
+                assertionSummary.textContent = result.message;
+                assertionSummary.style.color = result.passed ? '#4ade80' : '#f87171';
+            } else {
+                assertionSummary.style.display = 'none';
+            }
+        }
+
         statusBadge.textContent = `HTTP ${result.statusCode}`;
-        statusBadge.className = result.statusCode >= 200 && result.statusCode < 300 ? 'pill-badge pill-success' : 'pill-badge pill-danger';
+        statusBadge.className = result.passed ? 'pill-badge pill-success' : (result.statusCode >= 200 && result.statusCode < 300 ? 'pill-badge pill-success' : 'pill-badge pill-danger');
 
         latencyBadge.textContent = `${result.latencyMs} ms`;
         latencyBadge.className = 'pill-badge pill-neutral';
 
         const epLower = (result.endpoint || '').toLowerCase();
-        if (epLower === 'batchdelete') {
+        if (epLower === 'batchdelete' || isUserAccountAction(epLower)) {
             valBadge.textContent = 'Valid Range: N/A';
             valBadge.className = 'pill-badge pill-neutral';
-            valBadge.title = 'batchDelete does not have range constraints';
+            valBadge.title = 'Operation does not have numerical range constraints';
         } else if (result.validationResult) {
             if (result.validationResult.valid) {
                 valBadge.textContent = 'Range Validated: PASS';
@@ -1338,6 +1547,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? 'Latency Exceeded'
                 : (httpCode >= 200 && httpCode < 300 ? 'Assertion Failed' : `HTTP ${escapeHtml(String(httpCode))} Error`);
 
+            const reportBtnHtml = r.errorReportPath
+                ? `<button type="button" class="btn btn-secondary btn-sm view-error-report-btn font-mono" data-report-path="${escapeHtml(r.errorReportPath)}" title="View saved Markdown error report: ${escapeHtml(r.errorReportPath)}" style="padding: 1px 7px; font-size: 10.5px; margin-left: 6px; border-color: rgba(56, 189, 248, 0.45); color: #38bdf8;">📄 Report</button>`
+                : '';
+
             detailHtml = `
                 <div class="suite-error-cell" title="${escapeHtml(endpointError)}">
                     <span class="suite-error-code font-mono">
@@ -1345,6 +1558,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${errorLabel}
                     </span>
                     <span class="suite-error-msg font-mono">${escapeHtml(endpointError)}</span>
+                    ${reportBtnHtml}
                 </div>
             `;
         }
@@ -1368,6 +1582,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <td title="${r.passed ? escapeHtml(r.validationResult?.message || r.message || '') : escapeHtml(r.message || '')}">${detailHtml}</td>
             <td><span class="text-muted font-mono" style="font-size: 11px;">${new Date().toLocaleTimeString()}</span></td>
         `;
+        const reportBtn = tr.querySelector('.view-error-report-btn');
+        if (reportBtn) {
+            reportBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openErrorReportModal(reportBtn.getAttribute('data-report-path'));
+            });
+        }
         return tr;
     }
 
@@ -1707,8 +1928,16 @@ document.addEventListener('DOMContentLoaded', () => {
                                 countTotal.textContent = totalTests;
                             }
 
-                            if (r.passed) passed++;
-                            else failed++;
+                            if (r.passed) {
+                                passed++;
+                            } else {
+                                failed++;
+                                if (r.errorReportPath) {
+                                    const badge = document.getElementById('failed-tests-count-badge');
+                                    const cur = badge ? parseInt(badge.textContent || '0', 10) : 0;
+                                    updateFailedTestFilesBadge(cur + 1);
+                                }
+                            }
                             totalLatency += (r.latencyMs || 0);
 
                             countPassed.textContent = passed;
@@ -1756,6 +1985,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Failed to execute test suite: ' + e.message);
         } finally {
             btn.disabled = false;
+            refreshFailedTestFilesCount();
         }
     }
 
@@ -1863,6 +2093,7 @@ document.addEventListener('DOMContentLoaded', () => {
             viewer.textContent = 'Execution failed: ' + e.message;
         } finally {
             btn.disabled = false;
+            refreshFailedTestFilesCount();
         }
     }
 
@@ -1896,7 +2127,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('pref-redirect-uri').value = prefs.redirect_uri || prefs.redirectUri || 'http://localhost:8888/callback';
             document.getElementById('pref-api-base-url').value = prefs.apiBaseUrl || '';
             document.getElementById('pref-default-user').value = prefs.defaultUserId || '';
-            const syntax = (prefs.endpointUserId === 'healthUserId' ? 'healthUserId' : 'me');
+            const syntax = (prefs.endpointUserId === 'healthUserId' || prefs.endpointUserId === 'both') ? prefs.endpointUserId : 'me';
             syncEndpointUserSyntax(syntax, false);
             document.getElementById('pref-mock-mode').checked = !!prefs.mockMode;
             const enableAllEl = document.getElementById('pref-enable-all-endpoints');
@@ -1910,11 +2141,34 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             applySuiteVisibleRows(visibleRowsVal);
 
+            const maxLatencyEl = document.getElementById('pref-max-latency-ms');
+            const maxLatencyVal = (prefs.maxLatencyMs !== undefined && prefs.maxLatencyMs > 0) ? prefs.maxLatencyMs : 5000;
+            if (maxLatencyEl) {
+                maxLatencyEl.value = maxLatencyVal;
+            }
+
             const filterFailedOnlyEl = document.getElementById('pref-suite-filter-failed-only');
             const suiteFilterCheckbox = document.getElementById('suite-filter-failed-only');
             const filterFailedVal = prefs.suiteFilterFailedOnly !== undefined ? !!prefs.suiteFilterFailedOnly : false;
             if (filterFailedOnlyEl) filterFailedOnlyEl.checked = filterFailedVal;
             if (suiteFilterCheckbox) suiteFilterCheckbox.checked = filterFailedVal;
+
+            const fallbackLogFailed = prefs.recordFailedTests !== undefined ? !!prefs.recordFailedTests : true;
+            const logSuiteVal = prefs.logFailedTestsSuite !== undefined ? !!prefs.logFailedTestsSuite : fallbackLogFailed;
+            const logScriptVal = prefs.logFailedTestsScript !== undefined ? !!prefs.logFailedTestsScript : fallbackLogFailed;
+
+            const logSuiteEl = document.getElementById('pref-log-failed-suite');
+            const logScriptEl = document.getElementById('pref-log-failed-script');
+
+            if (logSuiteEl) logSuiteEl.checked = logSuiteVal;
+            if (logScriptEl) logScriptEl.checked = logScriptVal;
+
+            if (prefs.failedTestFilesCount !== undefined) {
+                updateFailedTestFilesBadge(prefs.failedTestFilesCount);
+            } else {
+                refreshFailedTestFilesCount();
+            }
+
             applySuiteFilter();
             updateExplorerCurlPreview();
             if (dataTypes && dataTypes.length > 0) {
@@ -1937,8 +2191,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const enableAllVal = enableAllEl ? enableAllEl.checked : false;
         const visibleRowsEl = document.getElementById('pref-suite-visible-rows');
         const visibleRowsVal = visibleRowsEl ? parseInt(visibleRowsEl.value, 10) || 12 : 12;
+        const maxLatencyEl = document.getElementById('pref-max-latency-ms');
+        const maxLatencyVal = maxLatencyEl ? parseInt(maxLatencyEl.value, 10) || 5000 : 5000;
         const filterFailedOnlyEl = document.getElementById('pref-suite-filter-failed-only');
         const filterFailedOnlyVal = filterFailedOnlyEl ? filterFailedOnlyEl.checked : (document.getElementById('suite-filter-failed-only')?.checked || false);
+        const logSuiteEl = document.getElementById('pref-log-failed-suite');
+        const logScriptEl = document.getElementById('pref-log-failed-script');
+        const logSuiteVal = logSuiteEl ? logSuiteEl.checked : true;
+        const logScriptVal = logScriptEl ? logScriptEl.checked : true;
+        const recordFailedVal = logSuiteVal || logScriptVal;
 
         const prefs = {
             clientId: document.getElementById('pref-client-id').value,
@@ -1947,7 +2208,11 @@ document.addEventListener('DOMContentLoaded', () => {
             endpointUserId: syntax,
             defaultUserId: syntax,
             suiteVisibleRows: visibleRowsVal,
+            maxLatencyMs: maxLatencyVal,
             suiteFilterFailedOnly: filterFailedOnlyVal,
+            recordFailedTests: recordFailedVal,
+            logFailedTestsSuite: logSuiteVal,
+            logFailedTestsScript: logScriptVal,
             redirect_uri: document.getElementById('pref-redirect-uri').value,
             redirectUri: document.getElementById('pref-redirect-uri').value,
             apiBaseUrl: document.getElementById('pref-api-base-url').value,
@@ -1969,7 +2234,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (currentPreferences) {
                     currentPreferences.enableAllEndpoints = enableAllVal;
                     currentPreferences.suiteVisibleRows = visibleRowsVal;
+                    currentPreferences.maxLatencyMs = maxLatencyVal;
                     currentPreferences.suiteFilterFailedOnly = filterFailedOnlyVal;
+                    currentPreferences.recordFailedTests = recordFailedVal;
+                    currentPreferences.logFailedTestsSuite = logSuiteVal;
+                    currentPreferences.logFailedTestsScript = logScriptVal;
                 }
                 applySuiteVisibleRows(visibleRowsVal);
                 const suiteFilterCheckbox = document.getElementById('suite-filter-failed-only');
@@ -1980,11 +2249,78 @@ document.addEventListener('DOMContentLoaded', () => {
                 syncEndpointUserSyntax(syntax, false);
                 await loadAuthStatus();
                 await loadDataTypes();
+                await loadManifest();
+                await loadScriptsList();
                 onExplorerDataTypeChanged();
                 updateExplorerCurlPreview();
             }
         } catch (e) {
             alert('Failed to save preferences: ' + e.message);
+        }
+    }
+
+    function updateFailedTestFilesBadge(count) {
+        const num = Number(count) || 0;
+        const badgeIds = ['failed-tests-count-badge', 'script-failed-tests-count-badge'];
+        badgeIds.forEach(id => {
+            const badge = document.getElementById(id);
+            if (!badge) return;
+            badge.textContent = String(num);
+            badge.className = num > 0
+                ? 'pill-badge pill-danger font-mono'
+                : 'pill-badge pill-neutral font-mono';
+        });
+    }
+
+    async function refreshFailedTestFilesCount() {
+        try {
+            const res = await fetch('/api/failed-tests');
+            if (res.ok) {
+                const data = await res.json();
+                updateFailedTestFilesBadge(data.count || 0);
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    async function deleteFailedTestFiles() {
+        const badge = document.getElementById('failed-tests-count-badge');
+        const currentCount = badge ? parseInt(badge.textContent || '0', 10) : 0;
+        if (currentCount > 0 && !confirm(`Delete all ${currentCount} failed test report file(s) and remove the failed-tests/ folder?`)) {
+            return;
+        }
+        try {
+            const res = await fetch('/api/failed-tests', { method: 'DELETE' });
+            const data = await res.json();
+            updateFailedTestFilesBadge(0);
+            alert(data.message || 'Deleted failed test files.');
+        } catch (e) {
+            alert('Error deleting failed test files: ' + e.message);
+        }
+    }
+
+    async function openErrorReportModal(reportPath) {
+        if (!reportPath) return;
+        const modal = document.getElementById('modal-error-report');
+        const pathEl = document.getElementById('error-report-modal-path');
+        const contentEl = document.getElementById('error-report-modal-content');
+        if (!modal || !contentEl) return;
+
+        if (pathEl) pathEl.textContent = reportPath;
+        contentEl.textContent = 'Loading error report...';
+        modal.style.display = 'flex';
+
+        try {
+            const res = await fetch(`/api/failed-tests?path=${encodeURIComponent(reportPath)}`);
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                contentEl.textContent = `Could not load report: ${data.error || res.status}`;
+                return;
+            }
+            contentEl.textContent = data.content || '';
+        } catch (e) {
+            contentEl.textContent = 'Failed to fetch error report: ' + e.message;
         }
     }
 
@@ -2191,9 +2527,45 @@ document.addEventListener('DOMContentLoaded', () => {
         if (filterInput) filterInput.addEventListener('input', updateExplorerCurlPreview);
         const pageTokenInput = document.getElementById('explorer-page-token');
         if (pageTokenInput) pageTokenInput.addEventListener('input', updateExplorerCurlPreview);
+        const updateMaskInput = document.getElementById('explorer-update-mask');
+        if (updateMaskInput) updateMaskInput.addEventListener('input', updateExplorerCurlPreview);
+        const namesParamInput = document.getElementById('explorer-names-param');
+        if (namesParamInput) namesParamInput.addEventListener('input', updateExplorerCurlPreview);
+        const customQpInput = document.getElementById('explorer-custom-query-params');
+        if (customQpInput) customQpInput.addEventListener('input', updateExplorerCurlPreview);
+        const explorerDpIdInput = document.getElementById('explorer-datapoint-id');
+        if (explorerDpIdInput) explorerDpIdInput.addEventListener('input', updateExplorerCurlPreview);
+        const explorerUserIdInput = document.getElementById('explorer-target-segment');
+        if (explorerUserIdInput) {
+            explorerUserIdInput.addEventListener('input', () => {
+                explorerUserIdInput.dataset.userEdited = 'true';
+                updateExplorerCurlPreview();
+            });
+        }
         const explorerPayloadInput = document.getElementById('explorer-payload-input');
         if (explorerPayloadInput) {
-            explorerPayloadInput.addEventListener('input', updateExplorerCurlPreview);
+            explorerPayloadInput.addEventListener('input', () => {
+                explorerPayloadInput.dataset.autoPopulated = 'false';
+                updateExplorerCurlPreview();
+            });
+        }
+        const btnSampleBody = document.getElementById('btn-explorer-sample-body');
+        if (btnSampleBody && explorerPayloadInput) {
+            btnSampleBody.addEventListener('click', () => {
+                const dtName = document.getElementById('explorer-datatype-select')?.value || 'steps';
+                const ep = document.getElementById('explorer-endpoint-select')?.value || 'create';
+                explorerPayloadInput.value = generateSamplePayload(dtName, ep);
+                explorerPayloadInput.dataset.autoPopulated = 'true';
+                updateExplorerCurlPreview();
+            });
+        }
+        const btnClearBody = document.getElementById('btn-explorer-clear-body');
+        if (btnClearBody && explorerPayloadInput) {
+            btnClearBody.addEventListener('click', () => {
+                explorerPayloadInput.value = '';
+                explorerPayloadInput.dataset.autoPopulated = 'false';
+                updateExplorerCurlPreview();
+            });
         }
         document.getElementById('btn-send-request').addEventListener('click', sendExplorerRequest);
 
@@ -2339,6 +2711,38 @@ document.addEventListener('DOMContentLoaded', () => {
         if (settingsBtn) settingsBtn.addEventListener('click', () => executeQuickCall('getSettings', '/api/health/settings'));
         const updateSettingsBtn = document.getElementById('btn-quick-update-settings');
         if (updateSettingsBtn) updateSettingsBtn.addEventListener('click', () => openUserPatchPanel('settings'));
+
+        const btnDeleteFailedTests = document.getElementById('btn-delete-failed-tests');
+        if (btnDeleteFailedTests) {
+            btnDeleteFailedTests.addEventListener('click', deleteFailedTestFiles);
+        }
+        const btnScriptDeleteFailedTests = document.getElementById('btn-script-delete-failed-tests');
+        if (btnScriptDeleteFailedTests) {
+            btnScriptDeleteFailedTests.addEventListener('click', deleteFailedTestFiles);
+        }
+
+        const closeErrModalBtn = document.getElementById('btn-close-error-report-modal');
+        const closeErrFooterBtn = document.getElementById('btn-close-error-report-footer');
+        const errModal = document.getElementById('modal-error-report');
+        if (closeErrModalBtn && errModal) {
+            closeErrModalBtn.addEventListener('click', () => { errModal.style.display = 'none'; });
+        }
+        if (closeErrFooterBtn && errModal) {
+            closeErrFooterBtn.addEventListener('click', () => { errModal.style.display = 'none'; });
+        }
+        const copyErrBtn = document.getElementById('btn-copy-error-report');
+        if (copyErrBtn) {
+            copyErrBtn.addEventListener('click', async () => {
+                const text = document.getElementById('error-report-modal-content')?.textContent || '';
+                if (!text) return;
+                try {
+                    await navigator.clipboard.writeText(text);
+                    const orig = copyErrBtn.textContent;
+                    copyErrBtn.textContent = 'Copied!';
+                    setTimeout(() => { copyErrBtn.textContent = orig; }, 1500);
+                } catch (_) {}
+            });
+        }
 
         initUserPatchPanel();
         initAddDataTypeSetting();
@@ -2586,12 +2990,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const stepTicketInput = document.getElementById('custom-step-ticket');
         const stepDatatypeSelect = document.getElementById('custom-step-datatype');
         const stepActionSelect = document.getElementById('custom-step-action');
-        const stepUseridSelect = document.getElementById('custom-step-userid');
+        const stepUseridSelect = document.getElementById('custom-step-target-segment');
 
         const qpGroup = document.getElementById('custom-step-qp-group');
         const pageSizeInput = document.getElementById('custom-step-pagesize');
         const filterInput = document.getElementById('custom-step-filter');
         const pageTokenInput = document.getElementById('custom-step-pagetoken');
+        const updateMaskInput = document.getElementById('custom-step-updatemask');
+        const namesInput = document.getElementById('custom-step-names');
+        const customQpInput = document.getElementById('custom-step-custom-qp');
 
         const dpidGroup = document.getElementById('custom-step-dpid-group');
         const dpidInput = document.getElementById('custom-step-datapointid');
@@ -2600,12 +3007,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const bodyTextarea = document.getElementById('custom-step-body');
 
         const assertStatusInput = document.getElementById('custom-step-assert-status');
+        const assertContainsInput = document.getElementById('custom-step-assert-contains');
+        const maxLatencyInput = document.getElementById('custom-step-max-latency');
         const validateRangeCheckbox = document.getElementById('custom-step-validate-range');
+        const verifyWithGetCheckbox = document.getElementById('custom-step-verify-with-get');
         const autoManifestCheckbox = document.getElementById('custom-step-auto-manifest');
 
         const yamlPreviewEl = document.getElementById('custom-test-yaml-preview');
 
         let cachedCustomFiles = [];
+
+        function syncModalActionOptions() {
+            if (!stepDatatypeSelect || !stepActionSelect) return;
+            const dt = findExplorerDataType(stepDatatypeSelect.value);
+            const allowAll = !!(currentPreferences && currentPreferences.enableAllEndpoints);
+            Array.from(stepActionSelect.options).forEach(opt => {
+                if (!dt) {
+                    opt.disabled = false;
+                    opt.textContent = opt.value;
+                    return;
+                }
+                const isSupported = allowAll || isEndpointSupportedForDataType(dt, opt.value);
+                opt.disabled = !isSupported;
+                opt.textContent = isSupported ? opt.value : `${opt.value} (not supported)`;
+            });
+            if (stepActionSelect.selectedOptions[0]?.disabled) {
+                const firstValid = Array.from(stepActionSelect.options).find(o => !o.disabled);
+                if (firstValid) stepActionSelect.value = firstValid.value;
+            }
+        }
 
         function openModal() {
             modal.style.display = 'flex';
@@ -2613,9 +3043,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (feedbackEl) feedbackEl.style.display = 'none';
 
             // Populate data types in modal dropdown
-            if (stepDatatypeSelect && dataTypes && dataTypes.length > 0) {
+            if (stepDatatypeSelect) {
                 stepDatatypeSelect.innerHTML = '';
-                dataTypes.forEach(dt => {
+                const explorerTypes = getExplorerDataTypesList();
+                explorerTypes.forEach(dt => {
                     const opt = document.createElement('option');
                     opt.value = dt.name;
                     opt.textContent = `${dt.displayName || dt.name} (${dt.name})`;
@@ -2624,36 +3055,61 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Fetch current state from API Explorer
-            const expDt = document.getElementById('explorer-datatype-select')?.value || (dataTypes[0]?.name || 'steps');
+            const expDt = document.getElementById('explorer-datatype-select')?.value ?? (dataTypes[0]?.name || 'steps');
             const expEp = document.getElementById('explorer-endpoint-select')?.value || 'list';
-            const expPageSize = document.getElementById('explorer-page-size')?.value || '25';
+            const expStepName = (document.getElementById('explorer-test-name')?.value || '').trim();
+            const expBugId = (document.getElementById('explorer-bug-id')?.value || '').trim();
+            const expUserId = (document.getElementById('explorer-target-segment')?.value || '').trim() || getPreferredEndpointUserSyntax();
+            const expDpId = (document.getElementById('explorer-datapoint-id')?.value || '').trim();
+            const expPageSize = document.getElementById('explorer-page-size')?.value || '';
             const expFilter = document.getElementById('explorer-filter-param')?.value || '';
             const expPageToken = document.getElementById('explorer-page-token')?.value || '';
+            const expUpdateMask = document.getElementById('explorer-update-mask')?.value || '';
+            const expNames = document.getElementById('explorer-names-param')?.value || '';
+            const expCustomQp = document.getElementById('explorer-custom-query-params')?.value || '';
             const expPayload = document.getElementById('explorer-payload-input')?.value || '';
-            const expUserSyntax = getPreferredEndpointUserSyntax(); // 'me' or 'healthUserId'
+            const expAssertStatus = document.getElementById('explorer-assert-status')?.value || '200';
+            const expAssertContains = document.getElementById('explorer-assert-contains')?.value || '';
+            const expMaxLatency = document.getElementById('explorer-max-latency')?.value || '';
+            const expValidateRange = document.getElementById('explorer-validate-range') ? document.getElementById('explorer-validate-range').checked : true;
+            const expVerifyWithGet = document.getElementById('explorer-verify-with-get') ? document.getElementById('explorer-verify-with-get').checked : false;
 
             // Set modal values from explorer
             if (stepDatatypeSelect) stepDatatypeSelect.value = expDt;
-            if (stepActionSelect) stepActionSelect.value = expEp;
+            syncModalActionOptions();
+            if (stepActionSelect && !Array.from(stepActionSelect.options).find(o => o.value === expEp)?.disabled) {
+                stepActionSelect.value = expEp;
+            }
+            if (stepTicketInput) stepTicketInput.value = expBugId;
+            if (stepUseridSelect) stepUseridSelect.value = expUserId;
+            if (dpidInput) dpidInput.value = expDpId;
             if (pageSizeInput) pageSizeInput.value = expPageSize;
             if (filterInput) filterInput.value = expFilter;
             if (pageTokenInput) pageTokenInput.value = expPageToken;
+            if (updateMaskInput) updateMaskInput.value = expUpdateMask;
+            if (namesInput) namesInput.value = expNames;
+            if (customQpInput) customQpInput.value = expCustomQp;
             if (bodyTextarea) bodyTextarea.value = expPayload;
-            if (stepUseridSelect) stepUseridSelect.value = expUserSyntax;
+            if (assertStatusInput) assertStatusInput.value = expAssertStatus;
+            if (assertContainsInput) assertContainsInput.value = expAssertContains;
+            if (maxLatencyInput) maxLatencyInput.value = expMaxLatency;
+            if (validateRangeCheckbox) validateRangeCheckbox.checked = expValidateRange;
+            if (verifyWithGetCheckbox) verifyWithGetCheckbox.checked = expVerifyWithGet;
 
             // Generate clean default filename and step name
-            const cleanDt = expDt.replace(/[^a-zA-Z0-9_-]/g, '_');
+            const targetLabel = expDt || expEp;
+            const cleanDt = targetLabel.replace(/[^a-zA-Z0-9_-]/g, '_');
             const cleanEp = expEp.replace(/[^a-zA-Z0-9_-]/g, '_');
             if (filenameInput) {
-                filenameInput.value = `${cleanDt}_${cleanEp}`;
+                filenameInput.value = expDt ? `${cleanDt}_${cleanEp}` : cleanEp;
                 filenameInput.dataset.autoGenerated = 'true';
             }
 
             if (suiteNameInput) {
-                suiteNameInput.value = `Custom ${formatDisplayName(expDt)} Tests`;
+                suiteNameInput.value = `Custom ${formatDisplayName(targetLabel)} Tests`;
             }
             if (suiteDescInput) {
-                suiteDescInput.value = `Custom test suite created via API Explorer for ${expDt}`;
+                suiteDescInput.value = `Custom test suite created via API Explorer for ${targetLabel}`;
             }
 
             let detailStr = '';
@@ -2661,7 +3117,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (expPageSize && expPageSize !== '25') detailStr = ` (pageSize=${expPageSize})`;
 
             if (stepNameInput) {
-                stepNameInput.value = `Custom: ${formatDisplayName(expDt)} ${expEp}${detailStr}`;
+                stepNameInput.value = expStepName || `Custom: ${formatDisplayName(targetLabel)} ${expEp}${detailStr}`;
             }
 
             if (sourceNewRadio) sourceNewRadio.checked = true;
@@ -2731,21 +3187,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function updateFieldVisibility() {
-            const action = (stepActionSelect.value || '').toLowerCase();
-            const hasQP = (action === 'list' || action === 'reconcile');
-            const hasBody = (action === 'create' || action === 'rollup' || action === 'dailyrollup' || action === 'patch' || action === 'batchdelete');
-            const hasDpId = (action === 'get' || action === 'patch' || action === 'exportexercisetcx');
-
-            if (qpGroup) qpGroup.style.display = hasQP ? 'grid' : 'none';
-            if (bodyGroup) bodyGroup.style.display = hasBody ? 'block' : 'none';
-            if (dpidGroup) dpidGroup.style.display = hasDpId ? 'block' : 'none';
+            if (qpGroup) qpGroup.style.display = 'grid';
+            if (bodyGroup) bodyGroup.style.display = 'block';
+            if (dpidGroup) dpidGroup.style.display = 'block';
         }
 
         function formatDisplayName(dtName) {
             if (!dtName) return '';
-            const dt = dataTypes.find(d => d.name === dtName);
+            const dt = findExplorerDataType(dtName);
             if (dt && dt.displayName) return dt.displayName;
-            return dtName.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+            return dtName.split(/[-_]/).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
         }
 
         function parseStatusList(str) {
@@ -2757,6 +3208,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!isNaN(n)) nums.push(n);
             }
             return nums.length > 0 ? nums : [200];
+        }
+
+        function collectModalQueryParams(actionLower) {
+            const qParams = {};
+            const ps = (pageSizeInput?.value || '').trim();
+            const flt = (filterInput?.value || '').trim();
+            const tok = (pageTokenInput?.value || '').trim();
+            const um = (updateMaskInput?.value || '').trim();
+            const nms = (namesInput?.value || '').trim();
+            const cqp = (customQpInput?.value || '').trim();
+
+            if (ps && (actionLower === 'list' || actionLower === 'reconcile' || ps !== '25')) qParams.pageSize = ps;
+            if (flt) qParams.filter = flt;
+            if (tok) qParams.pageToken = tok;
+            if (um) qParams.updateMask = um;
+            if (nms) qParams.names = nms;
+            if (cqp) {
+                cqp.split(/[&,;]+/).forEach(pair => {
+                    const idx = pair.indexOf('=');
+                    if (idx > 0) {
+                        const k = pair.substring(0, idx).trim();
+                        const v = pair.substring(idx + 1).trim();
+                        if (k) qParams[k] = v;
+                    }
+                });
+            }
+            return qParams;
         }
 
         function escapeYamlString(str) {
@@ -2775,6 +3253,71 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        function buildStepYamlLines(indentSpaces) {
+            const ind = ' '.repeat(indentSpaces);
+            const stepName = (stepNameInput.value || '').trim() || 'Custom: Step';
+            const action = stepActionSelect.value || 'list';
+            const actionLower = action.toLowerCase();
+            const dataType = (stepDatatypeSelect.value || '').trim();
+            const stepUserId = (stepUseridSelect.value || '').trim() || 'me';
+            const ticketId = (stepTicketInput.value || '').trim();
+            const dpid = (dpidInput?.value || '').trim();
+            const bodyVal = (bodyTextarea?.value || '').trim();
+            const statuses = parseStatusList(assertStatusInput.value);
+            const containsList = parseCommaSeparatedStrings(assertContainsInput?.value || '');
+            const maxLatencyRaw = (maxLatencyInput?.value || '').trim();
+            const maxLatencyVal = maxLatencyRaw !== '' && !isNaN(parseInt(maxLatencyRaw, 10)) ? parseInt(maxLatencyRaw, 10) : null;
+            const validateRange = validateRangeCheckbox.checked;
+            const verifyWithGet = verifyWithGetCheckbox ? verifyWithGetCheckbox.checked : false;
+            const qParams = collectModalQueryParams(actionLower);
+
+            let yaml = `${ind === '    ' ? '  - ' : '- '}name: "${escapeYamlString(stepName)}"\n`;
+            yaml += `${ind}action: "${action}"\n`;
+            if (dataType && !isUserAccountAction(actionLower)) {
+                yaml += `${ind}dataType: "${dataType}"\n`;
+            } else if (dataType) {
+                yaml += `${ind}dataType: "${dataType}"\n`;
+            }
+            yaml += `${ind}userId: "${escapeYamlString(stepUserId)}"\n`;
+            if (ticketId) {
+                yaml += `${ind}bugId: "${escapeYamlString(ticketId)}"\n`;
+            }
+            if (dpid) {
+                yaml += `${ind}dataPointId: "${escapeYamlString(dpid)}"\n`;
+            } else if (actionLower === 'get' || actionLower === 'patch' || actionLower === 'exportexercisetcx') {
+                yaml += `${ind}dataPointId: "sample-dp-1"\n`;
+            }
+            const qpKeys = Object.keys(qParams);
+            if (qpKeys.length > 0) {
+                yaml += `${ind}queryParams:\n`;
+                qpKeys.forEach(k => {
+                    if (k === 'filter') {
+                        yaml += `${ind}  ${k}: '${qParams[k]}'\n`;
+                    } else {
+                        yaml += `${ind}  ${k}: "${escapeYamlString(qParams[k])}"\n`;
+                    }
+                });
+            }
+            if (bodyVal) {
+                yaml += formatBodyYaml(bodyVal, indentSpaces);
+            }
+            yaml += `${ind}assertStatus: [${statuses.join(', ')}]\n`;
+            if (containsList.length > 0) {
+                yaml += `${ind}assertContains:\n`;
+                containsList.forEach(c => {
+                    yaml += `${ind}  - "${escapeYamlString(c)}"\n`;
+                });
+            }
+            if (maxLatencyVal !== null) {
+                yaml += `${ind}maxLatencyMs: ${maxLatencyVal}\n`;
+            }
+            yaml += `${ind}validateRange: ${validateRange}\n`;
+            if (verifyWithGet) {
+                yaml += `${ind}verifyWithGet: true\n`;
+            }
+            return yaml;
+        }
+
         function updateYamlPreview() {
             const isExisting = sourceExistingRadio && sourceExistingRadio.checked;
             const rawFilename = (filenameInput.value || '').trim() || 'my_test';
@@ -2788,88 +3331,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const suiteName = (suiteNameInput.value || '').trim() || `Custom Tests: ${cleanFilename}`;
             const suiteDesc = (suiteDescInput.value || '').trim();
 
-            const stepName = (stepNameInput.value || '').trim() || 'Custom: Step';
-            const action = stepActionSelect.value || 'list';
-            const actionLower = action.toLowerCase();
-            const dataType = stepDatatypeSelect.value || 'steps';
-            const stepUserId = stepUseridSelect.value || 'me';
-            const ticketId = (stepTicketInput.value || '').trim();
-
-            const statuses = parseStatusList(assertStatusInput.value);
-            const validateRange = validateRangeCheckbox.checked;
-
-            // Generate YAML text
             let yaml = '';
             if (isExisting) {
                 const targetFile = existingSelect.value || fullFilename;
                 yaml += `# Appending step to: scripts/${targetFile}\n`;
-                yaml += `- name: "${escapeYamlString(stepName)}"\n`;
-                yaml += `  action: "${action}"\n`;
-                yaml += `  dataType: "${dataType}"\n`;
-                yaml += `  userId: "${stepUserId}" # Specific to this test step (not YAML file)\n`;
-                if (ticketId) {
-                    yaml += `  ticketId: "${escapeYamlString(ticketId)}"\n`;
-                }
-
-                if (actionLower === 'list' || actionLower === 'reconcile') {
-                    const ps = (pageSizeInput.value || '').trim();
-                    const flt = (filterInput.value || '').trim();
-                    const tok = (pageTokenInput.value || '').trim();
-                    if (ps || flt || tok) {
-                        yaml += `  queryParams:\n`;
-                        if (ps) yaml += `    pageSize: "${ps}"\n`;
-                        if (flt) yaml += `    filter: '${flt}'\n`;
-                        if (tok) yaml += `    pageToken: "${tok}"\n`;
-                    }
-                } else if (actionLower === 'get' || actionLower === 'patch' || actionLower === 'exportexercisetcx') {
-                    const dpid = (dpidInput.value || '').trim() || 'sample-dp-1';
-                    yaml += `  dataPointId: "${dpid}"\n`;
-                }
-
-                const bodyVal = (bodyTextarea.value || '').trim();
-                if ((actionLower === 'create' || actionLower === 'rollup' || actionLower === 'dailyrollup' || actionLower === 'patch' || actionLower === 'batchdelete') && bodyVal) {
-                    yaml += formatBodyYaml(bodyVal, 2);
-                }
-
-                yaml += `  assertStatus: [${statuses.join(', ')}]\n`;
-                yaml += `  validateRange: ${validateRange}\n`;
+                yaml += buildStepYamlLines(2);
             } else {
                 yaml += `name: "${escapeYamlString(suiteName)}"\n`;
                 if (suiteDesc) {
                     yaml += `description: "${escapeYamlString(suiteDesc)}"\n`;
                 }
-                // NOTE: userId is deliberately NOT at top level of the YAML file!
                 yaml += `steps:\n`;
-                yaml += `  - name: "${escapeYamlString(stepName)}"\n`;
-                yaml += `    action: "${action}"\n`;
-                yaml += `    dataType: "${dataType}"\n`;
-                yaml += `    userId: "${stepUserId}" # Specific to this test step (not YAML file)\n`;
-                if (ticketId) {
-                    yaml += `    ticketId: "${escapeYamlString(ticketId)}"\n`;
-                }
-
-                if (actionLower === 'list' || actionLower === 'reconcile') {
-                    const ps = (pageSizeInput.value || '').trim();
-                    const flt = (filterInput.value || '').trim();
-                    const tok = (pageTokenInput.value || '').trim();
-                    if (ps || flt || tok) {
-                        yaml += `    queryParams:\n`;
-                        if (ps) yaml += `      pageSize: "${ps}"\n`;
-                        if (flt) yaml += `      filter: '${flt}'\n`;
-                        if (tok) yaml += `      pageToken: "${tok}"\n`;
-                    }
-                } else if (actionLower === 'get' || actionLower === 'patch' || actionLower === 'exportexercisetcx') {
-                    const dpid = (dpidInput.value || '').trim() || 'sample-dp-1';
-                    yaml += `    dataPointId: "${dpid}"\n`;
-                }
-
-                const bodyVal = (bodyTextarea.value || '').trim();
-                if ((actionLower === 'create' || actionLower === 'rollup' || actionLower === 'dailyrollup' || actionLower === 'patch' || actionLower === 'batchdelete') && bodyVal) {
-                    yaml += formatBodyYaml(bodyVal, 4);
-                }
-
-                yaml += `    assertStatus: [${statuses.join(', ')}]\n`;
-                yaml += `    validateRange: ${validateRange}\n`;
+                yaml += buildStepYamlLines(4);
             }
 
             yamlPreviewEl.textContent = yaml;
@@ -2931,43 +3404,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const action = stepActionSelect.value || 'list';
             const actionLower = action.toLowerCase();
-            const dataType = stepDatatypeSelect.value || 'steps';
-            const stepUserId = stepUseridSelect.value || 'me';
+            const dataType = (stepDatatypeSelect.value || '').trim() || null;
+            const stepUserId = (stepUseridSelect.value || '').trim() || 'me';
             const ticketId = (stepTicketInput.value || '').trim();
             const statuses = parseStatusList(assertStatusInput.value);
+            const containsList = parseCommaSeparatedStrings(assertContainsInput?.value || '');
+            const maxLatencyRaw = (maxLatencyInput?.value || '').trim();
+            const maxLatencyVal = maxLatencyRaw !== '' && !isNaN(parseInt(maxLatencyRaw, 10)) ? parseInt(maxLatencyRaw, 10) : null;
             const validateRange = validateRangeCheckbox.checked;
+            const verifyWithGet = verifyWithGetCheckbox ? verifyWithGetCheckbox.checked : false;
 
-            const qParams = {};
-            if (actionLower === 'list' || actionLower === 'reconcile') {
-                const ps = (pageSizeInput.value || '').trim();
-                const flt = (filterInput.value || '').trim();
-                const tok = (pageTokenInput.value || '').trim();
-                if (ps) qParams.pageSize = ps;
-                if (flt) qParams.filter = flt;
-                if (tok) qParams.pageToken = tok;
+            const qParams = collectModalQueryParams(actionLower);
+
+            let dataPointId = (dpidInput?.value || '').trim() || null;
+            if (!dataPointId && (actionLower === 'get' || actionLower === 'patch' || actionLower === 'exportexercisetcx')) {
+                dataPointId = 'sample-dp-1';
             }
 
-            let dataPointId = null;
-            if (actionLower === 'get' || actionLower === 'patch' || actionLower === 'exportexercisetcx') {
-                dataPointId = (dpidInput.value || '').trim() || 'sample-dp-1';
-            }
-
-            let reqBody = null;
-            if (actionLower === 'create' || actionLower === 'rollup' || actionLower === 'dailyrollup' || actionLower === 'patch' || actionLower === 'batchdelete') {
-                reqBody = (bodyTextarea.value || '').trim() || null;
-            }
+            const reqBody = (bodyTextarea?.value || '').trim() || null;
 
             const stepObj = {
                 name: stepName,
                 action: action,
                 dataType: dataType,
-                userId: stepUserId, // SPECIFIC TO THIS TEST STEP
-                ticketId: ticketId || null,
+                userId: stepUserId,
+                bugId: ticketId || null,
                 dataPointId: dataPointId,
                 queryParams: Object.keys(qParams).length > 0 ? qParams : null,
                 body: reqBody,
                 assertStatus: statuses,
-                validateRange: validateRange
+                assertContains: containsList.length > 0 ? containsList : null,
+                maxLatencyMs: maxLatencyVal,
+                validateRange: validateRange,
+                verifyWithGet: verifyWithGet
             };
 
             pendingSaveConfig = {
@@ -3083,8 +3552,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Input change listeners for real-time preview
         const inputsToListen = [
             filenameInput, suiteNameInput, suiteDescInput, stepNameInput, stepTicketInput,
-            pageSizeInput, filterInput, pageTokenInput, dpidInput, bodyTextarea,
-            assertStatusInput
+            stepUseridSelect, pageSizeInput, filterInput, pageTokenInput, updateMaskInput,
+            namesInput, customQpInput, dpidInput, bodyTextarea,
+            assertStatusInput, assertContainsInput, maxLatencyInput
         ];
         inputsToListen.forEach(input => {
             if (input) input.addEventListener('input', updateYamlPreview);
@@ -3095,14 +3565,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         stepDatatypeSelect.addEventListener('change', () => {
+            syncModalActionOptions();
             updateFieldVisibility();
             const expDt = stepDatatypeSelect.value;
             const expEp = stepActionSelect.value;
+            const label = expDt || expEp;
             if (filenameInput.dataset.autoGenerated === 'true') {
-                filenameInput.value = `${expDt.replace(/[^a-zA-Z0-9_-]/g, '_')}_${expEp}`;
+                filenameInput.value = expDt ? `${expDt.replace(/[^a-zA-Z0-9_-]/g, '_')}_${expEp}` : expEp;
             }
-            stepNameInput.value = `Custom: ${formatDisplayName(expDt)} ${expEp}`;
-            suiteNameInput.value = `Custom ${formatDisplayName(expDt)} Tests`;
+            stepNameInput.value = `Custom: ${formatDisplayName(label)} ${expEp}`;
+            suiteNameInput.value = `Custom ${formatDisplayName(label)} Tests`;
             updateYamlPreview();
         });
 
@@ -3110,15 +3582,17 @@ document.addEventListener('DOMContentLoaded', () => {
             updateFieldVisibility();
             const expDt = stepDatatypeSelect.value;
             const expEp = stepActionSelect.value;
+            const label = expDt || expEp;
             if (filenameInput.dataset.autoGenerated === 'true') {
-                filenameInput.value = `${expDt.replace(/[^a-zA-Z0-9_-]/g, '_')}_${expEp}`;
+                filenameInput.value = expDt ? `${expDt.replace(/[^a-zA-Z0-9_-]/g, '_')}_${expEp}` : expEp;
             }
-            stepNameInput.value = `Custom: ${formatDisplayName(expDt)} ${expEp}`;
+            stepNameInput.value = `Custom: ${formatDisplayName(label)} ${expEp}`;
             updateYamlPreview();
         });
 
         stepUseridSelect.addEventListener('change', updateYamlPreview);
         validateRangeCheckbox.addEventListener('change', updateYamlPreview);
+        if (verifyWithGetCheckbox) verifyWithGetCheckbox.addEventListener('change', updateYamlPreview);
 
         submitBtn.addEventListener('click', saveCustomTest);
 

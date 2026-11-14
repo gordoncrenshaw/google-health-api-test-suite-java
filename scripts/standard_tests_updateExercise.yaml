@@ -11,7 +11,6 @@
 
 name: "Google Health API Exercise Write & Update Standard Tests"
 description: "Standard tests for creating, reading, updating, and deleting exercise data points"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:
