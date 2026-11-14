@@ -1482,8 +1482,8 @@ document.addEventListener('DOMContentLoaded', () => {
             container.style.setProperty('--suite-visible-rows', rows);
             const thead = container.querySelector('thead');
             const firstRow = container.querySelector('tbody tr');
-            const headerHeight = thead && thead.offsetHeight > 0 ? thead.offsetHeight : 42;
-            const rowHeight = firstRow && firstRow.offsetHeight > 0 ? firstRow.offsetHeight : 48;
+            const headerHeight = thead && thead.offsetHeight > 0 ? thead.offsetHeight : 36;
+            const rowHeight = firstRow && firstRow.offsetHeight > 0 ? firstRow.offsetHeight : 38;
             // +1px for top border
             const maxHeightPx = headerHeight + (rows * rowHeight) + 1;
             container.style.maxHeight = `${maxHeightPx}px`;

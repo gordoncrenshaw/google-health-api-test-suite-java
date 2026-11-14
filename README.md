@@ -611,7 +611,11 @@ public final class AppVersion {
 
 ### Version 1.1.6 (November 14, 2026) - Release 1.1.6
 
-#### 🌟 Diagnostic Failed Test Reports, Max Latency Threshold, Endpoint User ID `both` Mode & API Explorer Enhancements
+#### 🌟 Diagnostic Failed Test Reports, Max Latency Threshold, Endpoint User ID `both` Mode, API Explorer Enhancements & High-Density Full-Width Web UI
+- **High-Density Full-Width Web UI Layout (`Option A`)**:
+  - Expanded `.app-container` to full viewport width (`max-width: 100%; width: 100%`) and merged the top header and navigation tabs into a single compact header bar in [`index.html`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/resources/web/index.html) and [`style.css`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/resources/web/style.css).
+  - Updated the **API Explorer** to a side-by-side 2-column split-pane layout (`7fr` request builder on the left, sticky `5fr` HTTP response inspector on the right), with a merged data type info strip and collapsible `<details>` drawers for **Query Parameters** and **Test Assertions & Validation**.
+  - Condensed the **Full Test Suite** controls and inline summary counters (`Total`, `Passed`, `Failed`, `Avg Latency`) into a single compact toolbar with high-density table rows (`36px` header, `38px` rows) and wider column truncation limits.
 - **Diagnostic Markdown Error Reports (`failed-tests/`) & Per-Feature Logging Controls**:
   - Added [`ErrorReportGenerator.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/runner/ErrorReportGenerator.java) to automatically generate structured Markdown (`.md`) error reports in `failed-tests/` containing test metadata, `bugId`, failure reason, request URL, copyable `curl` command, and formatted response body.
   - Added **Log Failed Tests** checkboxes in the **Preferences & OAuth** tab for **Full Test Suite** (`logFailedTestsSuite`) and **Script Runner** (`logFailedTestsScript`).
