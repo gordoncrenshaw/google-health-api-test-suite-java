@@ -1,7 +1,6 @@
 # Google Health API Hydration Log Standard Tests
 name: "Google Health API Hydration Log Tests"
 description: "Standard tests for Hydration Log datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

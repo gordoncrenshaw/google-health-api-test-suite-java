@@ -1,7 +1,6 @@
 # Google Health API Active Zone Minutes Standard Tests
 name: "Google Health API Active Zone Minutes Tests"
 description: "Standard tests for Active Zone Minutes datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

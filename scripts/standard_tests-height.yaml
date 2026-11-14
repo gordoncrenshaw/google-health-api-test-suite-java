@@ -1,7 +1,6 @@
 # Google Health API Height Standard Tests
 name: "Google Health API Height Tests"
 description: "Standard tests for Height datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

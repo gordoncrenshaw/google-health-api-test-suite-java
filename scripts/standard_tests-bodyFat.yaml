@@ -1,7 +1,6 @@
 # Google Health API Body Fat Standard Tests
 name: "Google Health API Body Fat Tests"
 description: "Standard tests for Body Fat datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

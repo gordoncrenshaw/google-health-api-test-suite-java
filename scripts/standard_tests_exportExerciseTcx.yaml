@@ -8,7 +8,6 @@
 
 name: "Google Health API Exercise Export TCX Standard Tests"
 description: "Standard tests for listing exercise data points and exporting an exercise TCX file"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

@@ -125,6 +125,11 @@ public class RestApiHandler implements HttpHandler {
                     else if ("GET".equals(method)) handleListCustomTests(exchange);
                     else sendError(exchange, 405, "Method Not Allowed");
                 }
+                case "/api/failed-tests" -> {
+                    if ("GET".equals(method)) handleGetFailedTests(exchange);
+                    else if ("DELETE".equals(method)) handleDeleteFailedTests(exchange);
+                    else sendError(exchange, 405, "Method Not Allowed");
+                }
                 case "/api/health/profile" -> {
                     if ("POST".equals(method) || "PATCH".equals(method)) handleUpdateProfile(exchange);
                     else handleGetProfile(exchange);
@@ -313,6 +318,11 @@ public class RestApiHandler implements HttpHandler {
         node.put("effectiveUserId", engine.getApiClient().getEffectiveUserId());
         node.put("useHealthUserId", prefs.isUseHealthUserId());
         node.put("enableAllEndpoints", prefs.isEnableAllEndpoints());
+        node.put("maxLatencyMs", prefs.getMaxLatencyMs());
+        node.put("recordFailedTests", prefs.isRecordFailedTests());
+        node.put("logFailedTestsSuite", prefs.isLogFailedTestsSuite());
+        node.put("logFailedTestsScript", prefs.isLogFailedTestsScript());
+        node.put("failedTestFilesCount", engine.getErrorReportGenerator().countFailedTestFiles());
         // Mask client secret for security
         String secret = prefs.getClientSecret();
         if (secret != null && secret.length() > 4) {
@@ -325,6 +335,7 @@ public class RestApiHandler implements HttpHandler {
 
     private void handleSavePreferences(HttpExchange exchange) throws IOException {
         String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        JsonNode rawNode = jsonMapper.readTree(body);
         Preferences incoming = jsonMapper.readValue(body, Preferences.class);
         Preferences current = configManager.getPreferences();
 
@@ -358,10 +369,31 @@ public class RestApiHandler implements HttpHandler {
         if (incoming.getEndpointUserId() != null && !incoming.getEndpointUserId().trim().isEmpty()) {
             current.setEndpointUserId(incoming.getEndpointUserId().trim());
         }
-        current.setMockMode(incoming.isMockMode());
-        current.setEnableAllEndpoints(incoming.isEnableAllEndpoints());
+        if (rawNode.has("mockMode")) {
+            current.setMockMode(incoming.isMockMode());
+        }
+        if (rawNode.has("enableAllEndpoints")) {
+            current.setEnableAllEndpoints(incoming.isEnableAllEndpoints());
+        }
+        if (rawNode.has("suiteFilterFailedOnly")) {
+            current.setSuiteFilterFailedOnly(incoming.isSuiteFilterFailedOnly());
+        }
+        if (rawNode.has("recordFailedTests") || rawNode.has("record_failed_tests") || rawNode.has("errorLoggingEnabled")) {
+            current.setRecordFailedTests(incoming.isRecordFailedTests());
+        }
+        if (rawNode.has("logFailedTestsSuite") || rawNode.has("log_failed_tests_suite") || rawNode.has("recordFailedTestsSuite")) {
+            current.setLogFailedTestsSuite(incoming.isLogFailedTestsSuite());
+        }
+        if (rawNode.has("logFailedTestsScript") || rawNode.has("log_failed_tests_script") || rawNode.has("recordFailedTestsScript")) {
+            current.setLogFailedTestsScript(incoming.isLogFailedTestsScript());
+        }
         if (incoming.getSuiteVisibleRows() > 0) {
             current.setSuiteVisibleRows(incoming.getSuiteVisibleRows());
+        }
+        if (rawNode.has("maxLatencyMs") || rawNode.has("max_latency_ms") || rawNode.has("latencyThresholdMs") || rawNode.has("latencyMs") || rawNode.has("latency")) {
+            if (incoming.getMaxLatencyMs() > 0) {
+                current.setMaxLatencyMs(incoming.getMaxLatencyMs());
+            }
         }
         if (incoming.getScopes() != null && !incoming.getScopes().isEmpty()) {
             current.setScopes(incoming.getScopes());
@@ -602,13 +634,13 @@ public class RestApiHandler implements HttpHandler {
         String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
         JsonNode json = jsonMapper.readTree(body);
 
-        String dataType = json.path("dataType").asText("steps");
-        String endpoint = json.path("endpoint").asText("list");
-        String requestBody = json.has("body") ? json.path("body").asText(null) : null;
-
-        if (json.has("endpointUserId") && !json.path("endpointUserId").asText().trim().isEmpty()) {
-            configManager.getPreferences().setEndpointUserId(json.path("endpointUserId").asText().trim());
-        }
+        String endpoint = json.has("action") && !json.path("action").asText().isBlank()
+                ? json.path("action").asText().trim()
+                : json.path("endpoint").asText("list").trim();
+        String dataType = json.has("dataType") && !json.path("dataType").isNull() && !json.path("dataType").asText().isBlank()
+                ? json.path("dataType").asText().trim()
+                : null;
+        String requestBody = json.has("body") && !json.path("body").isNull() ? json.path("body").asText(null) : null;
 
         Map<String, String> params = new HashMap<>();
         if (json.has("params") && json.get("params").isObject()) {
@@ -619,8 +651,92 @@ public class RestApiHandler implements HttpHandler {
                 }
             });
         }
+        if (json.has("queryParams") && json.get("queryParams").isObject()) {
+            json.get("queryParams").fields().forEachRemaining(entry -> {
+                String val = entry.getValue().asText();
+                if (val != null && !val.trim().isEmpty()) {
+                    params.put(entry.getKey(), val.trim());
+                }
+            });
+        }
 
-        TestResult result = engine.executeSingleTest(dataType, endpoint, params, requestBody);
+        TestStep step = new TestStep();
+        step.setAction(endpoint);
+        step.setDataType(dataType);
+        step.setBody(requestBody);
+
+        if (json.has("name") && !json.path("name").asText().isBlank()) {
+            step.setName(json.path("name").asText().trim());
+        } else {
+            step.setName("Test " + (dataType != null ? dataType : endpoint) + " [" + endpoint + "]");
+        }
+
+        String userId = null;
+        if (json.has("userId") && !json.path("userId").asText().isBlank()) {
+            userId = json.path("userId").asText().trim();
+        } else if (json.has("endpointUserId") && !json.path("endpointUserId").asText().isBlank()) {
+            userId = json.path("endpointUserId").asText().trim();
+        }
+        if (userId != null) {
+            step.setUserId(userId);
+        }
+
+        if (json.has("bugId") && !json.path("bugId").asText().isBlank()) {
+            step.setBugId(json.path("bugId").asText().trim());
+        } else if (json.has("ticketId") && !json.path("ticketId").asText().isBlank()) {
+            step.setTicketId(json.path("ticketId").asText().trim());
+        }
+
+        if (json.has("dataPointId") && !json.path("dataPointId").asText().isBlank()) {
+            step.setDataPointId(json.path("dataPointId").asText().trim());
+        } else if (params.containsKey("dataPointId")) {
+            step.setDataPointId(params.remove("dataPointId"));
+        }
+
+        step.setQueryParams(params);
+
+        if (json.has("assertStatus") && json.get("assertStatus").isArray()) {
+            List<Integer> statuses = new ArrayList<>();
+            for (JsonNode st : json.get("assertStatus")) {
+                if (st.isNumber()) {
+                    statuses.add(st.asInt());
+                } else {
+                    try {
+                        statuses.add(Integer.parseInt(st.asText().trim()));
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+            if (!statuses.isEmpty()) {
+                step.setAssertStatus(statuses);
+            }
+        }
+
+        if (json.has("validateRange") && !json.path("validateRange").isNull()) {
+            step.setValidateRange(json.path("validateRange").asBoolean(true));
+        }
+
+        if (json.has("assertContains") && json.get("assertContains").isArray()) {
+            List<String> contains = new ArrayList<>();
+            for (JsonNode c : json.get("assertContains")) {
+                String txt = c.asText("").trim();
+                if (!txt.isEmpty()) {
+                    contains.add(txt);
+                }
+            }
+            step.setAssertContains(contains);
+        }
+
+        if (json.has("maxLatencyMs") && !json.path("maxLatencyMs").isNull() && !json.path("maxLatencyMs").asText().isBlank()) {
+            try {
+                step.setMaxLatencyMs(Long.parseLong(json.path("maxLatencyMs").asText().trim()));
+            } catch (NumberFormatException ignored) {}
+        }
+
+        if (json.has("verifyWithGet") && !json.path("verifyWithGet").isNull()) {
+            step.setVerifyWithGet(json.path("verifyWithGet").asBoolean(false));
+        }
+
+        TestResult result = engine.executeStep(step, null, false);
         sendJson(exchange, 200, jsonMapper.writeValueAsString(result));
     }
 
@@ -691,7 +807,7 @@ public class RestApiHandler implements HttpHandler {
 
         logger.info("Executing full test suite from script: {}", scriptFile.getPath());
         ScriptRunner runner = new ScriptRunner(engine);
-        List<TestResult> results = runner.executeScript(scriptFile);
+        List<TestResult> results = runner.executeScript(scriptFile, null, configManager.getPreferences().isLogFailedTestsSuite());
         sendJson(exchange, 200, jsonMapper.writeValueAsString(results));
     }
 
@@ -810,7 +926,8 @@ public class RestApiHandler implements HttpHandler {
                 return;
             }
 
-            int totalSteps = script.getExpandedSteps().size();
+            String defaultUserId = configManager.getPreferences().getEndpointUserId();
+            int totalSteps = script.getExpandedSteps(defaultUserId).size();
             ObjectNode startNode = jsonMapper.createObjectNode();
             startNode.put("type", "start");
             startNode.put("scriptName", script.getName());
@@ -843,7 +960,7 @@ public class RestApiHandler implements HttpHandler {
                 } catch (IOException e) {
                     throw new RuntimeException("Client disconnected: " + e.getMessage(), e);
                 }
-            });
+            }, configManager.getPreferences().isLogFailedTestsSuite());
 
             long duration = System.currentTimeMillis() - startTime;
             ObjectNode completeNode = jsonMapper.createObjectNode();
@@ -867,6 +984,7 @@ public class RestApiHandler implements HttpHandler {
         if (manifest == null || manifest.getScripts() == null) {
             return 0;
         }
+        String defaultUserId = configManager.getPreferences().getEndpointUserId();
         int total = 0;
         for (String sp : manifest.getScripts()) {
             if (sp == null || sp.trim().isEmpty()) continue;
@@ -877,7 +995,7 @@ public class RestApiHandler implements HttpHandler {
                     TestSuiteScript s = sf.getName().endsWith(".json")
                             ? jsonMapper.readValue(sf, TestSuiteScript.class)
                             : yamlMapper.readValue(sf, TestSuiteScript.class);
-                    total += s.getExpandedSteps().size();
+                    total += s.getExpandedSteps(defaultUserId).size();
                 } catch (Exception ignored) {}
             }
         }
@@ -932,7 +1050,7 @@ public class RestApiHandler implements HttpHandler {
                         if (s.getMaxLatencyMs() != null) {
                             sNode.put("maxLatencyMs", s.getMaxLatencyMs());
                         }
-                        sNode.put("totalSteps", s.getExpandedSteps().size());
+                        sNode.put("totalSteps", s.getExpandedSteps(configManager.getPreferences().getEndpointUserId()).size());
                     } catch (Exception ignored) {}
                 }
             }
@@ -1115,8 +1233,17 @@ public class RestApiHandler implements HttpHandler {
             return;
         }
 
+        Boolean recordFailedOverride = null;
+        if (json.has("logFailedTests") && !json.path("logFailedTests").isNull()) {
+            recordFailedOverride = json.path("logFailedTests").asBoolean(true);
+        } else if (json.has("recordFailedTests") && !json.path("recordFailedTests").isNull()) {
+            recordFailedOverride = json.path("recordFailedTests").asBoolean(true);
+        } else if (json.has("logFailedTestsScript") && !json.path("logFailedTestsScript").isNull()) {
+            recordFailedOverride = json.path("logFailedTestsScript").asBoolean(true);
+        }
+
         ScriptRunner runner = new ScriptRunner(engine);
-        ScriptRunner.ScriptRunResult result = runner.runScriptWithDetails(scriptFile);
+        ScriptRunner.ScriptRunResult result = runner.runScriptWithDetails(scriptFile, recordFailedOverride);
 
         ObjectNode resp = jsonMapper.createObjectNode();
         resp.put("exitCode", result.getExitCode());
@@ -1157,8 +1284,61 @@ public class RestApiHandler implements HttpHandler {
             item.put("statusCode", tr.getStatusCode());
             item.put("latencyMs", tr.getLatencyMs());
             item.put("message", tr.getMessage());
+            if (tr.getBugId() != null && !tr.getBugId().isBlank()) {
+                item.put("bugId", tr.getBugId());
+            }
+            if (tr.getErrorReportPath() != null) {
+                item.put("errorReportPath", tr.getErrorReportPath());
+            }
         }
 
+        sendJson(exchange, 200, resp.toPrettyString());
+    }
+
+    private void handleGetFailedTests(HttpExchange exchange) throws IOException {
+        String query = exchange.getRequestURI().getQuery();
+        String requestedPath = null;
+        if (query != null) {
+            for (String param : query.split("&")) {
+                String[] pair = param.split("=", 2);
+                if ("path".equalsIgnoreCase(pair[0]) && pair.length > 1) {
+                    requestedPath = java.net.URLDecoder.decode(pair[1], StandardCharsets.UTF_8);
+                }
+            }
+        }
+
+        if (requestedPath != null && !requestedPath.isBlank()) {
+            File baseDir = new File(engine.getErrorReportGenerator().getBaseDirPath()).getCanonicalFile();
+            File targetFile = new File(requestedPath).getCanonicalFile();
+            if (!targetFile.getPath().startsWith(baseDir.getPath()) || !targetFile.exists() || !targetFile.isFile()) {
+                sendError(exchange, 404, "Failed test report file not found: " + requestedPath);
+                return;
+            }
+            String content = java.nio.file.Files.readString(targetFile.toPath(), StandardCharsets.UTF_8);
+            ObjectNode resp = jsonMapper.createObjectNode();
+            resp.put("path", requestedPath);
+            resp.put("name", targetFile.getName());
+            resp.put("content", content);
+            sendJson(exchange, 200, resp.toPrettyString());
+            return;
+        }
+
+        List<Map<String, Object>> files = engine.getErrorReportGenerator().listFailedTestFiles();
+        ObjectNode resp = jsonMapper.createObjectNode();
+        resp.put("count", files.size());
+        resp.put("recordFailedTests", configManager.getPreferences().isRecordFailedTests());
+        resp.set("files", jsonMapper.valueToTree(files));
+        sendJson(exchange, 200, resp.toPrettyString());
+    }
+
+    private void handleDeleteFailedTests(HttpExchange exchange) throws IOException {
+        int deletedCount = engine.getErrorReportGenerator().deleteFailedTestFiles();
+        ObjectNode resp = jsonMapper.createObjectNode();
+        resp.put("success", true);
+        resp.put("deletedCount", deletedCount);
+        resp.put("message", deletedCount > 0
+                ? "Deleted " + deletedCount + " failed test report file(s) and removed failed-tests/ folder."
+                : "No failed test files found to delete.");
         sendJson(exchange, 200, resp.toPrettyString());
     }
 

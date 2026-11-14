@@ -24,7 +24,11 @@ import java.util.List;
         "mockMode",
         "enableAllEndpoints",
         "suiteVisibleRows",
+        "maxLatencyMs",
         "suiteFilterFailedOnly",
+        "recordFailedTests",
+        "logFailedTestsSuite",
+        "logFailedTestsScript",
         "suiteManifestPath",
         "scopes"
 })
@@ -71,9 +75,25 @@ public class Preferences {
     @JsonAlias({"suite_visible_rows", "visibleRows"})
     private int suiteVisibleRows = 12;
 
+    @JsonProperty("maxLatencyMs")
+    @JsonAlias({"max_latency_ms", "latencyThresholdMs", "latency_threshold_ms", "maxLatency", "latencyMs", "latency"})
+    private long maxLatencyMs = 5000L;
+
     @JsonProperty("suiteFilterFailedOnly")
     @JsonAlias({"suite_filter_failed_only", "filterFailedOnly"})
     private boolean suiteFilterFailedOnly = false;
+
+    @JsonProperty("recordFailedTests")
+    @JsonAlias({"record_failed_tests", "errorLoggingEnabled", "error_logging_enabled"})
+    private boolean recordFailedTests = true;
+
+    @JsonProperty("logFailedTestsSuite")
+    @JsonAlias({"log_failed_tests_suite", "recordFailedTestsSuite"})
+    private boolean logFailedTestsSuite = true;
+
+    @JsonProperty("logFailedTestsScript")
+    @JsonAlias({"log_failed_tests_script", "recordFailedTestsScript"})
+    private boolean logFailedTestsScript = true;
 
     @JsonProperty("suiteManifestPath")
     @JsonAlias({"suite_manifest_path", "manifestPath", "testSuiteManifest", "suiteManifest"})
@@ -170,6 +190,12 @@ public class Preferences {
         if ("false".equalsIgnoreCase(endpointUserId)) {
             return "me";
         }
+        if ("both".equalsIgnoreCase(endpointUserId)) {
+            return "both";
+        }
+        if ("healthuserid".equalsIgnoreCase(endpointUserId) || "health_user_id".equalsIgnoreCase(endpointUserId)) {
+            return "healthUserId";
+        }
         return endpointUserId != null && !endpointUserId.trim().isEmpty() ? endpointUserId : "me";
     }
 
@@ -180,9 +206,20 @@ public class Preferences {
             this.endpointUserId = "healthUserId";
         } else if ("false".equalsIgnoreCase(endpointUserId.trim())) {
             this.endpointUserId = "me";
+        } else if ("both".equalsIgnoreCase(endpointUserId.trim())) {
+            this.endpointUserId = "both";
+        } else if ("healthuserid".equalsIgnoreCase(endpointUserId.trim()) || "health_user_id".equalsIgnoreCase(endpointUserId.trim())) {
+            this.endpointUserId = "healthUserId";
+        } else if ("me".equalsIgnoreCase(endpointUserId.trim())) {
+            this.endpointUserId = "me";
         } else {
             this.endpointUserId = endpointUserId.trim();
         }
+    }
+
+    @JsonIgnore
+    public boolean isUseBothUserIds() {
+        return "both".equalsIgnoreCase(getEndpointUserId());
     }
 
     @JsonIgnore
@@ -234,12 +271,48 @@ public class Preferences {
         this.suiteVisibleRows = suiteVisibleRows > 0 ? suiteVisibleRows : 12;
     }
 
+    public long getMaxLatencyMs() {
+        return maxLatencyMs > 0 ? maxLatencyMs : 5000L;
+    }
+
+    public void setMaxLatencyMs(long maxLatencyMs) {
+        this.maxLatencyMs = maxLatencyMs > 0 ? maxLatencyMs : 5000L;
+    }
+
     public boolean isSuiteFilterFailedOnly() {
         return suiteFilterFailedOnly;
     }
 
     public void setSuiteFilterFailedOnly(boolean suiteFilterFailedOnly) {
         this.suiteFilterFailedOnly = suiteFilterFailedOnly;
+    }
+
+    public boolean isRecordFailedTests() {
+        return recordFailedTests;
+    }
+
+    public void setRecordFailedTests(boolean recordFailedTests) {
+        this.recordFailedTests = recordFailedTests;
+        this.logFailedTestsSuite = recordFailedTests;
+        this.logFailedTestsScript = recordFailedTests;
+    }
+
+    public boolean isLogFailedTestsSuite() {
+        return logFailedTestsSuite;
+    }
+
+    public void setLogFailedTestsSuite(boolean logFailedTestsSuite) {
+        this.logFailedTestsSuite = logFailedTestsSuite;
+        this.recordFailedTests = this.logFailedTestsSuite || this.logFailedTestsScript;
+    }
+
+    public boolean isLogFailedTestsScript() {
+        return logFailedTestsScript;
+    }
+
+    public void setLogFailedTestsScript(boolean logFailedTestsScript) {
+        this.logFailedTestsScript = logFailedTestsScript;
+        this.recordFailedTests = this.logFailedTestsSuite || this.logFailedTestsScript;
     }
 
     public String getSuiteManifestPath() {

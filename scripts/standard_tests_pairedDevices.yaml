@@ -7,7 +7,6 @@
 
 name: "Google Health API Paired Devices Tests"
 description: "Standard tests for paired devices endpoints"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

@@ -1,7 +1,6 @@
 # Google Health API Respiratory Rate Sleep Summary Standard Tests
 name: "Google Health API Respiratory Rate Sleep Summary Tests"
 description: "Standard tests for Respiratory Rate Sleep Summary datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

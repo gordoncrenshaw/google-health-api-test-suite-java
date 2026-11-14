@@ -1,7 +1,6 @@
 # Google Health API Food Standard Tests
 name: "Google Health API Food Tests"
 description: "Standard tests for Food datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

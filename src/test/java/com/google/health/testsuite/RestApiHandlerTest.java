@@ -9,6 +9,7 @@ import com.google.health.testsuite.config.ConfigManager;
 import com.google.health.testsuite.config.DataTypeRegistry;
 import com.google.health.testsuite.config.Preferences;
 import com.google.health.testsuite.model.TestResult;
+import com.google.health.testsuite.runner.ErrorReportGenerator;
 import com.google.health.testsuite.runner.ScriptRunner;
 import com.google.health.testsuite.runner.SuiteExecutionEngine;
 import com.google.health.testsuite.server.RestApiHandler;
@@ -63,6 +64,8 @@ public class RestApiHandlerTest {
         HealthApiClient apiClient = new HealthApiClient(configManager, oAuthService);
         DataTypeRegistry registry = new DataTypeRegistry(new File("config/datatypes.yaml"));
         engine = new SuiteExecutionEngine(configManager, registry, apiClient);
+        File tempFailedDir = Files.createTempDirectory("rest_failed_tests_").toFile();
+        engine.setErrorReportGenerator(new ErrorReportGenerator(tempFailedDir.getAbsolutePath()));
 
         server = HttpServer.create(new InetSocketAddress(0), 0);
         server.createContext("/api", new RestApiHandler(engine, oAuthService));
@@ -74,6 +77,9 @@ public class RestApiHandlerTest {
     public void tearDown() throws Exception {
         if (server != null) {
             server.stop(0);
+        }
+        if (engine != null && engine.getErrorReportGenerator() != null) {
+            engine.getErrorReportGenerator().deleteFailedTestFiles();
         }
         if (tempPrefFile.exists()) tempPrefFile.delete();
         if (tempSecretJsonFile.exists()) tempSecretJsonFile.delete();
@@ -852,6 +858,74 @@ public class RestApiHandlerTest {
         // Verify removed from preferences.yaml on disk
         String yamlAfterDelete = Files.readString(tempPrefFile.toPath());
         assertFalse(yamlAfterDelete.contains(expectedFullScope), "Deleted scope must be removed from preferences.yaml");
+    }
+
+    @Test
+    void testFailedTestsApiListReadAndDelete() throws Exception {
+        File tempScript = File.createTempFile("api_failed_report_test", ".yaml");
+        tempScript.deleteOnExit();
+
+        String yaml = """
+            name: "API Failed Report Suite"
+            stopOnError: false
+            steps:
+              - name: "Intentional Failure Step"
+                action: "get_identity"
+                assertStatus: [404]
+            """;
+        Files.writeString(tempScript.toPath(), yaml);
+
+        // 1. Run script so a failed test report is generated
+        String reqBody = "{\"scriptPath\":\"" + tempScript.getAbsolutePath() + "\"}";
+        HttpRequest runReq = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/test/script"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(reqBody))
+                .build();
+        HttpResponse<String> runResp = httpClient.send(runReq, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, runResp.statusCode());
+        JsonNode runRoot = jsonMapper.readTree(runResp.body());
+        assertEquals(1, runRoot.get("failed").asInt());
+        String reportPath = runRoot.get("failedTests").get(0).get("errorReportPath").asText();
+        assertNotNull(reportPath);
+        assertFalse(reportPath.isEmpty());
+
+        // 2. GET /api/failed-tests should list 1 file
+        HttpRequest listReq = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/failed-tests"))
+                .GET()
+                .build();
+        HttpResponse<String> listResp = httpClient.send(listReq, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, listResp.statusCode());
+        JsonNode listRoot = jsonMapper.readTree(listResp.body());
+        assertEquals(1, listRoot.get("count").asInt());
+        assertEquals(1, listRoot.get("files").size());
+
+        // 3. GET /api/failed-tests?path=... should return markdown content
+        HttpRequest readReq = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/failed-tests?path="
+                        + java.net.URLEncoder.encode(reportPath, java.nio.charset.StandardCharsets.UTF_8)))
+                .GET()
+                .build();
+        HttpResponse<String> readResp = httpClient.send(readReq, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, readResp.statusCode());
+        JsonNode readRoot = jsonMapper.readTree(readResp.body());
+        assertTrue(readRoot.get("content").asText().contains("# Google Health API Test Failure - Intentional Failure Step"));
+
+        // 4. DELETE /api/failed-tests should delete the file and return deletedCount = 1
+        HttpRequest delReq = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/failed-tests"))
+                .DELETE()
+                .build();
+        HttpResponse<String> delResp = httpClient.send(delReq, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, delResp.statusCode());
+        JsonNode delRoot = jsonMapper.readTree(delResp.body());
+        assertTrue(delRoot.get("success").asBoolean());
+        assertEquals(1, delRoot.get("deletedCount").asInt());
+
+        // 5. Verify count is now 0
+        HttpResponse<String> listAfterResp = httpClient.send(listReq, HttpResponse.BodyHandlers.ofString());
+        assertEquals(0, jsonMapper.readTree(listAfterResp.body()).get("count").asInt());
     }
 }
 

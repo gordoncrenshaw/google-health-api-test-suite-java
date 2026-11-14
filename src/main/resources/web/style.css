@@ -53,90 +53,95 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-/* Container */
+/* Container - Full Width Max Real Estate */
 .app-container {
-    max-width: 1300px;
+    max-width: 100%;
+    width: 100%;
     margin: 0 auto;
-    padding: 24px;
+    padding: 10px 18px;
 }
 
-/* Header */
+/* Unified Single-Row Top Bar (Header + Navigation Tabs + Status Pills) */
 .app-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 8px 16px;
     background: var(--bg-surface);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-    margin-bottom: 24px;
+    border-radius: var(--radius-md);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    margin-bottom: 12px;
 }
 
 .header-left {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .logo-box {
-    width: 48px;
-    height: 48px;
+    width: 34px;
+    height: 34px;
     background: rgba(56, 189, 248, 0.1);
     border: 1px solid rgba(56, 189, 248, 0.3);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .google-health-icon {
-    width: 30px;
-    height: 30px;
+    width: 20px;
+    height: 20px;
 }
 
 .app-title {
-    font-size: 22px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--text-primary);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    white-space: nowrap;
 }
 
 .badge-v4 {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
     background: linear-gradient(135deg, #0284c7, #38bdf8);
     color: #fff;
-    padding: 2px 8px;
+    padding: 1px 7px;
     border-radius: var(--radius-full);
 }
 
 .app-subtitle {
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin-top: 2px;
+    display: none;
 }
 
 .header-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 /* Pill Badges */
 .pill-badge {
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 600;
-    padding: 5px 12px;
+    padding: 3px 10px;
     border-radius: var(--radius-full);
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     border: 1px solid transparent;
 }
 
@@ -178,36 +183,36 @@ body {
 
 .pill-cyan {
     background: rgba(56, 189, 248, 0.15);
-    color: var(--accent-cyan);
+    color: var(--primary);
     border-color: rgba(56, 189, 248, 0.3);
 }
 
-/* Navigation Tabs */
+/* Navigation Tabs (Integrated into Unified Top Bar) */
 .nav-tabs {
     display: flex;
-    gap: 8px;
-    background: rgba(14, 21, 38, 0.6);
-    padding: 6px;
-    border-radius: var(--radius-md);
+    gap: 4px;
+    background: rgba(9, 13, 22, 0.55);
+    padding: 3px;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
-    margin-bottom: 24px;
+    margin-bottom: 0;
     overflow-x: auto;
 }
 
 .nav-tab {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     background: transparent;
-    border: none;
+    border: 1px solid transparent;
     color: var(--text-secondary);
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
-    padding: 10px 18px;
-    border-radius: var(--radius-sm);
+    padding: 6px 13px;
+    border-radius: 5px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
     white-space: nowrap;
 }
 
@@ -220,14 +225,84 @@ body {
     background: var(--bg-surface-hover);
     color: var(--primary);
     font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(56, 189, 248, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    border-color: rgba(56, 189, 248, 0.25);
 }
 
 .tab-icon {
-    width: 18px;
-    height: 18px;
+    width: 15px;
+    height: 15px;
     fill: currentColor;
+}
+
+/* API Explorer 2-Column Split-Pane Workspace */
+.explorer-split-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 16px;
+    align-items: start;
+}
+
+@media (max-width: 1100px) {
+    .explorer-split-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.explorer-response-sticky {
+    position: sticky;
+    top: 12px;
+}
+
+/* Collapsible Drawers in API Explorer */
+details.explorer-drawer {
+    background: rgba(14, 21, 38, 0.6);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+details.explorer-drawer > summary {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 12.5px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.02);
+    transition: background 0.15s ease;
+}
+
+details.explorer-drawer > summary::-webkit-details-marker {
+    display: none;
+}
+
+details.explorer-drawer > summary:hover {
+    background: rgba(56, 189, 248, 0.06);
+}
+
+details.explorer-drawer > summary .drawer-chevron {
+    display: inline-block;
+    transition: transform 0.18s ease;
+    color: var(--primary);
+    font-size: 11px;
+    margin-right: 6px;
+}
+
+details.explorer-drawer[open] > summary .drawer-chevron {
+    transform: rotate(90deg);
+}
+
+details.explorer-drawer[open] > summary {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.explorer-drawer-body {
+    padding: 10px 12px;
 }
 
 /* Content Area */
@@ -260,8 +335,8 @@ body {
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
     overflow: hidden;
 }
 
@@ -269,19 +344,19 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 20px;
+    padding: 10px 16px;
     border-bottom: 1px solid var(--border-color);
     background: rgba(255, 255, 255, 0.02);
 }
 
 .card-title {
-    font-size: 16px;
+    font-size: 14.5px;
     font-weight: 600;
     color: var(--text-primary);
 }
 
 .card-body {
-    padding: 20px;
+    padding: 14px 16px;
 }
 
 .file-badge {
@@ -289,7 +364,7 @@ body {
     font-family: var(--font-mono);
     color: var(--primary);
     background: rgba(56, 189, 248, 0.1);
-    padding: 3px 8px;
+    padding: 2px 7px;
     border-radius: var(--radius-sm);
     border: 1px solid rgba(56, 189, 248, 0.2);
 }
@@ -298,7 +373,7 @@ body {
 .grid-2-col {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 24px;
+    gap: 16px;
 }
 
 @media (max-width: 900px) {
@@ -310,7 +385,7 @@ body {
 .grid-3-col {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+    gap: 12px;
 }
 
 @media (max-width: 900px) {
@@ -322,18 +397,18 @@ body {
 .checkbox-group {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 6px;
+    gap: 8px;
+    margin-top: 4px;
 }
 
 .checkbox-label {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    font-size: 13px;
+    gap: 6px;
+    font-size: 12.5px;
     cursor: pointer;
     background: rgba(255, 255, 255, 0.04);
-    padding: 6px 12px;
+    padding: 5px 10px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
@@ -351,7 +426,7 @@ body {
 }
 
 .max-w-700 {
-    max-width: 700px;
+    max-width: 100%;
     margin: 0 auto;
 }
 
@@ -359,9 +434,9 @@ body {
 .metric-row {
     display: flex;
     justify-content: space-between;
-    padding: 10px 0;
+    padding: 7px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .metric-row:last-child {
@@ -383,38 +458,35 @@ body {
 }
 
 .metric-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-}
-
-@media (max-width: 768px) {
-    .metric-cards-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
 }
 
 .metric-card {
-    background: rgba(14, 21, 38, 0.8);
+    background: rgba(14, 21, 38, 0.85);
     border: 1px solid var(--border-color);
-    padding: 16px;
-    border-radius: var(--radius-md);
-    text-align: center;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .metric-card.border-success { border-color: rgba(16, 185, 129, 0.4); }
 .metric-card.border-danger { border-color: rgba(239, 68, 68, 0.4); }
 
 .metric-card-label {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-secondary);
     text-transform: uppercase;
     font-weight: 600;
-    margin-bottom: 6px;
+    margin-bottom: 0;
 }
 
 .metric-card-value {
-    font-size: 24px;
+    font-size: 15px;
     font-weight: 700;
 }
 
@@ -422,7 +494,7 @@ body {
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 160px;
-    gap: 16px;
+    gap: 10px;
 }
 
 @media (max-width: 1024px) {
@@ -438,15 +510,15 @@ body {
 }
 
 .form-group {
-    margin-bottom: 16px;
+    margin-bottom: 10px;
 }
 
 .form-group label {
     display: block;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--text-secondary);
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .form-control {
@@ -456,8 +528,8 @@ body {
     border-radius: var(--radius-sm);
     color: var(--text-primary);
     font-family: var(--font-sans);
-    font-size: 14px;
-    padding: 10px 14px;
+    font-size: 13px;
+    padding: 7px 10px;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -475,9 +547,9 @@ textarea.form-control {
 .checkbox-container {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
+    gap: 8px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .checkbox-container input {
@@ -490,9 +562,9 @@ textarea.form-control {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 10px 20px;
-    font-size: 14px;
+    gap: 6px;
+    padding: 7px 14px;
+    font-size: 13px;
     font-weight: 600;
     border-radius: var(--radius-sm);
     cursor: pointer;
@@ -534,42 +606,42 @@ textarea.form-control {
 }
 
 .btn-sm {
-    padding: 6px 14px;
+    padding: 5px 11px;
     font-size: 12px;
 }
 
 .btn-lg {
-    padding: 12px 26px;
-    font-size: 15px;
+    padding: 8px 18px;
+    font-size: 13.5px;
 }
 
 .btn-block {
     width: 100%;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .btn-icon {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
 }
 
 .action-buttons {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 /* Info Bar */
 .info-bar {
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 14px;
     background: rgba(14, 21, 38, 0.8);
-    padding: 12px 16px;
+    padding: 7px 12px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
-    font-size: 13px;
+    font-size: 12px;
 }
 
 .info-item {
@@ -587,11 +659,12 @@ textarea.form-control {
     background: #060a12;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    padding: 14px;
+    padding: 10px 12px;
     font-family: var(--font-mono);
-    font-size: 13px;
+    font-size: 12.5px;
     color: #e2e8f0;
-    max-height: 400px;
+    max-height: calc(100vh - 280px);
+    min-height: 260px;
     overflow: auto;
     white-space: pre-wrap;
     word-break: break-all;
@@ -599,9 +672,9 @@ textarea.form-control {
 
 .url-display {
     background: rgba(14, 21, 38, 0.8);
-    padding: 8px 12px;
+    padding: 6px 10px;
     border-radius: var(--radius-sm);
-    font-size: 13px;
+    font-size: 12px;
     color: var(--primary);
     border: 1px solid var(--border-color);
     word-break: break-all;
@@ -609,14 +682,16 @@ textarea.form-control {
 
 .curl-display {
     background: #060a12;
-    padding: 10px 12px;
+    padding: 8px 10px;
     border-radius: var(--radius-sm);
-    font-size: 12px;
+    font-size: 11.5px;
     color: #a5b4fc;
     border: 1px solid var(--border-color);
     white-space: pre-wrap;
     word-break: break-all;
     overflow-wrap: anywhere;
+    max-height: 140px;
+    overflow-y: auto;
 }
 
 /* Tables */
@@ -629,8 +704,8 @@ textarea.form-control {
     overflow-y: auto;
     overflow-x: auto;
     position: relative;
-    max-height: calc(42px + (var(--suite-visible-rows, 12) * 48px) + 1px);
-    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    max-height: calc(36px + (var(--suite-visible-rows, 12) * 38px) + 1px);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
     background: rgba(8, 14, 26, 0.4);
     border-top: 1px solid var(--border-color);
     box-sizing: border-box;
@@ -642,9 +717,9 @@ textarea.form-control {
     z-index: 5;
     background: #0b1325 !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-    height: 42px;
+    height: 36px;
     box-sizing: border-box;
-    padding: 11px 16px;
+    padding: 8px 12px;
     white-space: nowrap;
 }
 
@@ -654,13 +729,13 @@ textarea.form-control {
 }
 
 .suite-scroll-box .data-table tbody tr {
-    height: 48px;
+    height: 38px;
     box-sizing: border-box;
 }
 
 .suite-scroll-box .data-table td {
-    height: 48px;
-    padding: 8px 16px;
+    height: 38px;
+    padding: 5px 12px;
     box-sizing: border-box;
     vertical-align: middle;
     white-space: nowrap;
@@ -669,20 +744,20 @@ textarea.form-control {
 }
 
 .suite-scroll-box .data-table td .pill-badge {
-    padding: 3px 10px;
+    padding: 2px 8px;
     font-size: 11px;
     font-weight: 600;
 }
 
-.suite-scroll-box .data-table td:nth-child(3) {
-    max-width: 340px;
+.suite-scroll-box .data-table td:nth-child(4) {
+    max-width: 520px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.suite-scroll-box .data-table td:nth-child(6) {
-    max-width: 440px;
+.suite-scroll-box .data-table td:nth-child(7) {
+    max-width: 680px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -710,13 +785,13 @@ textarea.form-control {
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 12.5px;
     text-align: left;
 }
 
 .data-table th {
     background: rgba(14, 21, 38, 0.8);
-    padding: 12px 16px;
+    padding: 8px 12px;
     color: var(--text-secondary);
     font-weight: 600;
     border-bottom: 1px solid var(--border-color);
@@ -726,7 +801,7 @@ textarea.form-control {
 }
 
 .data-table td {
-    padding: 12px 16px;
+    padding: 8px 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
@@ -737,7 +812,7 @@ textarea.form-control {
 /* Progress Bar */
 .progress-bar-container {
     width: 100%;
-    height: 8px;
+    height: 5px;
     background: rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-full);
     overflow: hidden;
@@ -755,14 +830,15 @@ textarea.form-control {
 .text-success { color: var(--success); }
 .text-danger { color: var(--danger); }
 .text-muted { color: var(--text-muted); }
-.mt-2 { margin-top: 8px; }
-.mt-3 { margin-top: 12px; }
-.mt-4 { margin-top: 16px; }
-.mb-4 { margin-bottom: 16px; }
+.mt-2 { margin-top: 6px; }
+.mt-3 { margin-top: 10px; }
+.mt-4 { margin-top: 12px; }
+.mb-3 { margin-bottom: 10px; }
+.mb-4 { margin-bottom: 12px; }
 .ml-3 { margin-left: 12px; }
 .p-0 { padding: 0 !important; }
 .text-center { text-align: center; }
-.py-4 { padding-top: 24px; padding-bottom: 24px; }
+.py-4 { padding-top: 16px; padding-bottom: 16px; }
 
 /* Suite Error Details */
 .suite-error-cell {
@@ -770,9 +846,9 @@ textarea.form-control {
     flex-direction: row;
     align-items: center;
     gap: 6px;
-    line-height: 1.4;
+    line-height: 1.3;
     white-space: nowrap;
-    max-width: 440px;
+    max-width: 680px;
 }
 
 .suite-error-code {
@@ -797,7 +873,7 @@ textarea.form-control {
     border-left: 2px solid var(--danger);
     padding: 2px 6px;
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    max-width: 320px;
+    max-width: 500px;
 }
 
 /* Scopes Selection Component - Compact Single Column */

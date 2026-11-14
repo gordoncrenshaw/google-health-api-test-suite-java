@@ -12,7 +12,6 @@
 
 name: "Google Health API Body Fat Write, Update & Delete Negative Tests"
 description: "Boundary and negative tests for creating, updating, and deleting body-fat data points using verifyWithGet"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

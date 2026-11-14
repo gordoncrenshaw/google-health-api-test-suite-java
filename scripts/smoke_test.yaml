@@ -10,7 +10,6 @@ steps:
 
   - name: "Smoke Test 2: Profile"
     action: "profile"
-    userId: "me"
     assertStatus: [200]
 
   - name: "Smoke Test 3: Steps"

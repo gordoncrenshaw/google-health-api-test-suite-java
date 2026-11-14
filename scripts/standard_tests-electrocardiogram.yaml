@@ -1,7 +1,6 @@
 # Google Health API Electrocardiogram Standard Tests
 name: "Google Health API Electrocardiogram Tests"
 description: "Standard tests for Electrocardiogram datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

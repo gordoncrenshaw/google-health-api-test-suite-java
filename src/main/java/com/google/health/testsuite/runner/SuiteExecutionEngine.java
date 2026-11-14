@@ -32,6 +32,7 @@ public class SuiteExecutionEngine {
     private final DataTypeRegistry dataTypeRegistry;
     private final HealthApiClient apiClient;
     private final ValidationEngine validationEngine;
+    private ErrorReportGenerator errorReportGenerator = new ErrorReportGenerator();
     private final ObjectMapper jsonMapper = new ObjectMapper();
     private final Map<String, String> lastCreatedUniqueNameByKey = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, String> lastCreatedDataPointIdByKey = new java.util.concurrent.ConcurrentHashMap<>();
@@ -99,7 +100,9 @@ public class SuiteExecutionEngine {
             }
 
             ValidationResult valResult = validationEngine.validate(def, response.getBody());
-            boolean passed = response.isSuccess() && valResult.isValid();
+            long maxLatencyMs = configManager.getPreferences().getMaxLatencyMs();
+            boolean latencyPassed = (maxLatencyMs <= 0) || (response.getLatencyMs() <= maxLatencyMs);
+            boolean passed = response.isSuccess() && valResult.isValid() && latencyPassed;
             String msg;
             if (!response.isSuccess()) {
                 String errorDetail = response.getErrorMessage();
@@ -120,12 +123,18 @@ public class SuiteExecutionEngine {
                 }
             } else if (!valResult.isValid()) {
                 msg = "Failed range validation: " + valResult.getMessage();
+            } else if (!latencyPassed) {
+                msg = "Failed: Latency " + response.getLatencyMs() + "ms exceeded max allowed " + maxLatencyMs + "ms.";
             } else {
                 msg = "Success: HTTP " + response.getStatusCode() + " (" + valResult.getMessage() + ")";
             }
 
-            return new TestResult("Test " + def.getName() + " [" + op + "]", def.getName(), op,
+            TestResult singleResult = new TestResult("Test " + def.getName() + " [" + op + "]", def.getName(), op,
                     passed, response.getStatusCode(), response.getLatencyMs(), msg, valResult, response);
+            if (maxLatencyMs > 0) {
+                singleResult.setMaxLatencyMs(maxLatencyMs);
+            }
+            return singleResult;
 
         } catch (Exception e) {
             logger.error("Error executing test {} {}: {}", def.getName(), op, e.getMessage(), e);
@@ -159,6 +168,27 @@ public class SuiteExecutionEngine {
      * Executes a single TestStep from a script file (Mode 3).
      */
     public TestResult executeStep(TestStep step) {
+        return executeStep(step, null, null);
+    }
+
+    /**
+     * Executes a single TestStep from a script file (Mode 3) with optional script filename metadata.
+     */
+    public TestResult executeStep(TestStep step, String scriptFile) {
+        return executeStep(step, scriptFile, null);
+    }
+
+    /**
+     * Executes a single TestStep with optional script filename metadata and explicit failed-test logging override.
+     */
+    public TestResult executeStep(TestStep step, String scriptFile, Boolean recordFailedOverride) {
+        boolean shouldRecordFailed = recordFailedOverride != null
+                ? recordFailedOverride
+                : (scriptFile != null && !scriptFile.isBlank()
+                        && configManager.getPreferences().isLogFailedTestsSuite());
+        if (step.getUserId() == null || step.getUserId().trim().isEmpty()) {
+            step.setUserId(configManager.getPreferences().getEndpointUserId());
+        }
         String action = step.getAction().toLowerCase().trim();
         String dtName = step.getDataType();
         boolean enableAll = configManager.getPreferences().isEnableAllEndpoints();
@@ -256,7 +286,7 @@ public class SuiteExecutionEngine {
                 case "update_settings", "patch_settings", "updatesettings", "patchsettings" -> {
                     response = apiClient.updateSettings(step.getUserId(), resolvedQueryParams, resolvedBody);
                 }
-                case "devices", "list_devices", "listdevices", "get_devices", "getdevices" -> {
+                case "devices", "list_devices", "listdevices", "get_devices", "getdevices", "paireddevices", "paired_devices" -> {
                     response = apiClient.listPairedDevices(step.getUserId());
                 }
                 case "identity", "get_identity", "getidentity" -> {
@@ -292,6 +322,7 @@ public class SuiteExecutionEngine {
 
             boolean verifyGetPassed = true;
             String verifyGetError = null;
+            ApiResponse getResponse = null;
             String resourceKey = buildStorageKey(step.getUserId(),
                     def != null ? def.getName() : (action.contains("profile") ? "profile" : (action.contains("settings") ? "settings" : dtName)));
             if (response.isSuccess() && resolvedBody != null && !resolvedBody.isBlank()
@@ -305,7 +336,6 @@ public class SuiteExecutionEngine {
             }
 
             if (step.isVerifyWithGet() && statusPassed) {
-                ApiResponse getResponse = null;
                 String getEndpointName = "GET";
                 String expectedJsonForGet = response.isSuccess() ? resolvedBody : lastValidBodyByKey.get(resourceKey);
 
@@ -370,6 +400,12 @@ public class SuiteExecutionEngine {
 
             boolean latencyPassed = true;
             Long maxLatencyMs = step.getMaxLatencyMs();
+            if (maxLatencyMs == null || maxLatencyMs <= 0) {
+                long prefMaxLatency = configManager.getPreferences().getMaxLatencyMs();
+                if (prefMaxLatency > 0) {
+                    maxLatencyMs = prefMaxLatency;
+                }
+            }
             if (maxLatencyMs != null && maxLatencyMs > 0) {
                 if (response.getLatencyMs() > maxLatencyMs) {
                     latencyPassed = false;
@@ -417,12 +453,24 @@ public class SuiteExecutionEngine {
                 msg.append(")");
             }
 
-            return new TestResult(step.getName(), dtName != null ? dtName : "api", action,
+            TestResult stepResult = new TestResult(step.getName(), dtName != null ? dtName : "api", action,
                     overallPassed, response.getStatusCode(), response.getLatencyMs(), msg.toString().trim(),
                     valResult, response);
+            stepResult.setVerificationResponse(getResponse);
+            stepResult.setMaxLatencyMs(maxLatencyMs);
+            if (step.getEffectiveBugId() != null) {
+                stepResult.setBugId(step.getEffectiveBugId());
+            }
+            if (scriptFile != null && !scriptFile.isBlank()) {
+                stepResult.setScriptFile(scriptFile);
+            }
+            if (!overallPassed && shouldRecordFailed) {
+                errorReportGenerator.saveFailedTestToMarkdown(stepResult, step);
+            }
+            return stepResult;
 
         } catch (Exception e) {
-            return errorResult(step, "Exception during step execution: " + e.getMessage());
+            return errorResult(step, "Exception during step execution: " + e.getMessage(), scriptFile, shouldRecordFailed);
         }
     }
 
@@ -610,8 +658,36 @@ public class SuiteExecutionEngine {
     }
 
     private TestResult errorResult(TestStep step, String message) {
-        return TestResult.failure(step.getName(), step.getDataType() != null ? step.getDataType() : "unknown",
+        return errorResult(step, message, null, configManager.getPreferences().isRecordFailedTests());
+    }
+
+    private TestResult errorResult(TestStep step, String message, String scriptFile) {
+        return errorResult(step, message, scriptFile, configManager.getPreferences().isRecordFailedTests());
+    }
+
+    private TestResult errorResult(TestStep step, String message, String scriptFile, boolean recordFailed) {
+        TestResult err = TestResult.failure(step.getName(), step.getDataType() != null ? step.getDataType() : "unknown",
                 step.getAction(), null, null, message);
+        if (step.getEffectiveBugId() != null) {
+            err.setBugId(step.getEffectiveBugId());
+        }
+        if (scriptFile != null && !scriptFile.isBlank()) {
+            err.setScriptFile(scriptFile);
+        }
+        if (recordFailed) {
+            errorReportGenerator.saveFailedTestToMarkdown(err, step);
+        }
+        return err;
+    }
+
+    public ErrorReportGenerator getErrorReportGenerator() {
+        return errorReportGenerator;
+    }
+
+    public void setErrorReportGenerator(ErrorReportGenerator errorReportGenerator) {
+        if (errorReportGenerator != null) {
+            this.errorReportGenerator = errorReportGenerator;
+        }
     }
 
     public HealthApiClient getApiClient() {

@@ -1,7 +1,6 @@
 # Google Health API Calories In Heart Rate Zone Standard Tests
 name: "Google Health API Calories In Heart Rate Zone Tests"
 description: "Standard tests for Calories In Heart Rate Zone datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

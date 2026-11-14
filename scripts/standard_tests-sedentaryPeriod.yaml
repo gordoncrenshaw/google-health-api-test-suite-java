@@ -1,7 +1,6 @@
 # Google Health API Sedentary Period Standard Tests
 name: "Google Health API Sedentary Period Tests"
 description: "Standard tests for Sedentary Period datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

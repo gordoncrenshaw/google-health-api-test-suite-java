@@ -1,7 +1,6 @@
 # Google Health API Daily Oxygen Saturation Standard Tests
 name: "Google Health API Daily Oxygen Saturation Tests"
 description: "Standard tests for Daily Oxygen Saturation datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

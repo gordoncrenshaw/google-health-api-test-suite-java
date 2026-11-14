@@ -609,6 +609,31 @@ public final class AppVersion {
 
 ## 📋 Version History & Changelog
 
+### Version 1.1.6 (November 14, 2026) - Release 1.1.6
+
+#### 🌟 Diagnostic Failed Test Reports, Max Latency Threshold, Endpoint User ID `both` Mode, API Explorer Enhancements & High-Density Full-Width Web UI
+- **High-Density Full-Width Web UI Layout (`Option A`)**:
+  - Expanded `.app-container` to full viewport width (`max-width: 100%; width: 100%`) and merged the top header and navigation tabs into a single compact header bar in [`index.html`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/resources/web/index.html) and [`style.css`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/resources/web/style.css).
+  - Updated the **API Explorer** to a side-by-side 2-column split-pane layout (`7fr` request builder on the left, sticky `5fr` HTTP response inspector on the right), with a merged data type info strip and collapsible `<details>` drawers for **Query Parameters** and **Test Assertions & Validation**.
+  - Condensed the **Full Test Suite** controls and inline summary counters (`Total`, `Passed`, `Failed`, `Avg Latency`) into a single compact toolbar with high-density table rows (`36px` header, `38px` rows) and wider column truncation limits.
+- **Diagnostic Markdown Error Reports (`failed-tests/`) & Per-Feature Logging Controls**:
+  - Added [`ErrorReportGenerator.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/runner/ErrorReportGenerator.java) to automatically generate structured Markdown (`.md`) error reports in `failed-tests/` containing test metadata, `bugId`, failure reason, request URL, copyable `curl` command, and formatted response body.
+  - Added **Log Failed Tests** checkboxes in the **Preferences & OAuth** tab for **Full Test Suite** (`logFailedTestsSuite`) and **Script Runner** (`logFailedTestsScript`).
+  - Added **Delete Failed Test Files** buttons with live report count badges on both the **Full Test Suite** and **Script Runner** tabs, plus `GET /api/failed-tests` and `DELETE /api/failed-tests` endpoints in [`RestApiHandler.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/server/RestApiHandler.java).
+- **Configurable Max Latency Threshold (`maxLatencyMs`)**:
+  - Added a configurable **Max Latency (ms)** setting (`maxLatencyMs`, default `5000` ms) in [`Preferences.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/config/Preferences.java) and the **Preferences & OAuth** tab, with per-step `maxLatencyMs` override support in [`SuiteExecutionEngine.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/runner/SuiteExecutionEngine.java).
+- **Endpoint User ID `both` Execution Mode (`me`, `healthUserId`, `both`) & Non-Custom Script Cleanup**:
+  - Added support for `endpointUserId: both` in [`ScriptRunner.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/runner/ScriptRunner.java), [`RestApiHandler.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/server/RestApiHandler.java), and the **Preferences & OAuth** tab to execute each test step against both `me` and the configured `healthUserId`.
+  - Removed hardcoded `userId` fields from all non-custom test scripts (`standard_tests*`, `negative_tests*`, `latency_tests.yaml`, `smoke_test.yaml`) so they dynamically inherit the configured Endpoint User ID preference.
+- **Support for `bugId` in Test Steps**:
+  - Added `bugId` (with `@JsonAlias({"ticketId", "bug_id"})`) to [`TestStep.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/model/TestStep.java) and [`TestResult.java`](file:///Users/gordoncrenshaw/development/codelibrary/java/google-health-api-test-suite-java/src/main/java/com/google/health/testsuite/model/TestResult.java), surfaced in diagnostic `.md` failure reports and the Custom Test Builder.
+- **API Explorer Complete Test Field Exposure & Virtual Data Types**:
+  - Exposed all test step configuration fields in the **API Explorer** (`Test Step Name`, `Bug / Ticket ID`, `User ID`, `Data Point ID`, `pageSize`, `filter`, `pageToken`, `updateMask`, `names`, `Additional Query Params`, `Expected HTTP Status`, `Assert Response Contains`, `Max Latency (ms)`, `Validate Min/Max Range`, and `Verify Mutation with GET`) with full synchronization into the **Save as Custom Test** modal.
+  - Added password-manager ignore attributes (`data-bwignore="true"`, `data-1p-ignore="true"`, `data-lpignore="true"`) to prevent browser extensions such as Bitwarden from attaching to the User ID field.
+  - Replaced standalone user endpoints in the API Explorer with dedicated data types: `profile` (`getProfile`, `updateProfile`), `settings` (`getSettings`, `updateSettings`), `devices` (`pairedDevices`), and `identity` (`getIdentity`), associated `getIrnProfile` with `irregular-rhythm-notification`, and removed `check_auth`.
+
+---
+
 ### Version 1.1.5 (November 8, 2026) - Release 1.1.5
 
 #### 🌟 OAuth Scope Editor UI, Negative Write/Update Test Suites & Boundary Limit Standard Tests (Closes #11, #47)

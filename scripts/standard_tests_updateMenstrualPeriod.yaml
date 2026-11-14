@@ -10,7 +10,6 @@
 
 name: "Google Health API Menstrual Period Write & Update Standard Tests"
 description: "Standard tests for creating, updating, and deleting menstrual-period data points"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

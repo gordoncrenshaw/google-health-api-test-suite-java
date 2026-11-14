@@ -1,7 +1,6 @@
 # Google Health API Daily Heart Rate Variability Standard Tests
 name: "Google Health API Daily Heart Rate Variability Tests"
 description: "Standard tests for Daily Heart Rate Variability datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

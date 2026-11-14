@@ -14,17 +14,21 @@ import com.google.health.testsuite.client.HealthApiClient;
 import com.google.health.testsuite.config.ConfigManager;
 import com.google.health.testsuite.config.DataTypeRegistry;
 import com.google.health.testsuite.config.Preferences;
+import com.google.health.testsuite.runner.ErrorReportGenerator;
 import com.google.health.testsuite.runner.ScriptRunner;
 import com.google.health.testsuite.runner.SuiteExecutionEngine;
+import org.junit.jupiter.api.AfterEach;
 
 public class ScriptRunnerTest {
 
     private ScriptRunner runner;
+    private SuiteExecutionEngine engine;
+    private ConfigManager configManager;
 
     @BeforeEach
     void setUp() throws Exception {
         File tempPref = File.createTempFile("pref_test", ".yaml");
-        ConfigManager configManager = new ConfigManager(tempPref);
+        configManager = new ConfigManager(tempPref);
 
         Preferences prefs = configManager.getPreferences();
         prefs.setMockMode(true); // Mock mode for offline unit testing
@@ -33,9 +37,18 @@ public class ScriptRunnerTest {
         DataTypeRegistry registry = new DataTypeRegistry(new File("config/datatypes.yaml"));
         OAuthService oAuthService = new OAuthService(configManager);
         HealthApiClient apiClient = new HealthApiClient(configManager, oAuthService);
-        SuiteExecutionEngine engine = new SuiteExecutionEngine(configManager, registry, apiClient);
+        engine = new SuiteExecutionEngine(configManager, registry, apiClient);
+        File tempFailedDir = java.nio.file.Files.createTempDirectory("failed_tests_unit_").toFile();
+        engine.setErrorReportGenerator(new ErrorReportGenerator(tempFailedDir.getAbsolutePath()));
 
         runner = new ScriptRunner(engine);
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (engine != null && engine.getErrorReportGenerator() != null) {
+            engine.getErrorReportGenerator().deleteFailedTestFiles();
+        }
     }
 
     @Test
@@ -72,6 +85,7 @@ public class ScriptRunnerTest {
 
     @Test
     void testRunStandardUserTestsScript() throws Exception {
+        configManager.getPreferences().setEndpointUserId("both");
         File scriptFile = new File("scripts/standard_tests_user.yaml");
         assertTrue(scriptFile.exists(), "standard_tests_user.yaml script must exist");
 
@@ -87,6 +101,7 @@ public class ScriptRunnerTest {
 
     @Test
     void testRunStandardPairedDevicesScript() throws Exception {
+        configManager.getPreferences().setEndpointUserId("both");
         File scriptFile = new File("scripts/standard_tests_pairedDevices.yaml");
         assertTrue(scriptFile.exists(), "standard_tests_pairedDevices.yaml script must exist");
 
@@ -102,6 +117,7 @@ public class ScriptRunnerTest {
 
     @Test
     void testRunStandardUpdateProfileScript() throws Exception {
+        configManager.getPreferences().setEndpointUserId("both");
         File scriptFile = new File("scripts/standard_tests_updateProfile.yaml");
         assertTrue(scriptFile.exists(), "standard_tests_updateProfile.yaml script must exist");
 
@@ -117,6 +133,7 @@ public class ScriptRunnerTest {
 
     @Test
     void testRunStandardUpdateSettingsScript() throws Exception {
+        configManager.getPreferences().setEndpointUserId("both");
         File scriptFile = new File("scripts/standard_tests_updateSettings.yaml");
         assertTrue(scriptFile.exists(), "standard_tests_updateSettings.yaml script must exist");
 
@@ -132,6 +149,7 @@ public class ScriptRunnerTest {
 
     @Test
     void testRunStandardUpdateBodyFatScript() throws Exception {
+        configManager.getPreferences().setEndpointUserId("both");
         File scriptFile = new File("scripts/standard_tests_updatebodyFat.yaml");
         assertTrue(scriptFile.exists(), "standard_tests_updatebodyFat.yaml script must exist");
 
@@ -149,6 +167,7 @@ public class ScriptRunnerTest {
 
     @Test
     void testRunStandardUpdateDataTypeScripts() throws Exception {
+        configManager.getPreferences().setEndpointUserId("both");
         String[] updateScripts = new String[]{
                 "scripts/standard_tests_updateExercise.yaml",
                 "scripts/standard_tests_updateHeight.yaml",
@@ -188,6 +207,7 @@ public class ScriptRunnerTest {
 
     @Test
     void testRunStandardExportExerciseTcxScript() throws Exception {
+        configManager.getPreferences().setEndpointUserId("both");
         File scriptFile = new File("scripts/standard_tests_exportExerciseTcx.yaml");
         assertTrue(scriptFile.exists(), "standard_tests_exportExerciseTcx.yaml script must exist");
 
@@ -206,6 +226,7 @@ public class ScriptRunnerTest {
 
     @Test
     void testRunStandardLatencyTestsScript() throws Exception {
+        configManager.getPreferences().setEndpointUserId("both");
         File scriptFile = new File("scripts/latency_tests.yaml");
         assertTrue(scriptFile.exists(), "latency_tests.yaml script must exist");
 
@@ -455,5 +476,87 @@ public class ScriptRunnerTest {
         assertTrue(results.get(0).getMessage().contains("verified via GET"));
         assertTrue(results.get(1).isPassed(), "Patch with verifyWithGet should pass: " + results.get(1).getMessage());
         assertTrue(results.get(1).getMessage().contains("verified via GET"));
+    }
+
+    @Test
+    void testPreferenceMaxLatencyFailsTestsExceedingThreshold() throws Exception {
+        Preferences prefs = configManager.getPreferences();
+        prefs.setMaxLatencyMs(10L); // Mock backend simulates ~35ms latency, so 10ms threshold causes failure
+        configManager.savePreferences(prefs);
+
+        // 1. Verify single test fails when latency exceeds Preferences.maxLatencyMs
+        var singleRes = engine.executeSingleTest("steps", "list", null, null);
+        assertFalse(singleRes.isPassed(), "Single test should fail when latency exceeds preference maxLatencyMs (10ms)");
+        assertTrue(singleRes.getMessage().contains("exceeded max allowed 10ms"), "Error message should mention 10ms threshold: " + singleRes.getMessage());
+
+        // 2. Verify script step without explicit maxLatencyMs uses Preferences.maxLatencyMs and fails
+        File tempScript = File.createTempFile("pref_latency_test", ".yaml");
+        tempScript.deleteOnExit();
+        String yaml = """
+            name: "Preference Latency Threshold Test"
+            userId: me
+            stopOnError: false
+            steps:
+              - name: "Step Using Preference Latency Threshold"
+                action: "list"
+                dataType: "steps"
+                assertStatus: [200]
+            """;
+        java.nio.file.Files.writeString(tempScript.toPath(), yaml);
+
+        var scriptResults = runner.executeScript(tempScript);
+        assertEquals(1, scriptResults.size());
+        assertFalse(scriptResults.get(0).isPassed(), "Script step should fail when latency exceeds preference maxLatencyMs (10ms)");
+        assertTrue(scriptResults.get(0).getMessage().contains("exceeded max allowed 10ms"));
+    }
+
+    @Test
+    void testEndpointUserIdPreferenceSupportsMeHealthUserIdAndBothWithYamlOverride() throws Exception {
+        Preferences prefs = configManager.getPreferences();
+        prefs.setHealthUserId("8677373576871223311");
+
+        File tempScript = File.createTempFile("pref_user_syntax_test", ".yaml");
+        tempScript.deleteOnExit();
+        String yamlWithoutUserId = """
+            name: "Script Inheriting Preference Endpoint User ID"
+            stopOnError: false
+            steps:
+              - name: "Step Using Preference User"
+                action: "getProfile"
+                assertStatus: [200]
+              - name: "Step Overriding With me"
+                action: "getProfile"
+                userId: "me"
+                assertStatus: [200]
+            """;
+        java.nio.file.Files.writeString(tempScript.toPath(), yamlWithoutUserId);
+
+        // 1. Preference = "me" -> 2 steps, both using /users/me/profile
+        prefs.setEndpointUserId("me");
+        configManager.savePreferences(prefs);
+        var resMe = runner.executeScript(tempScript);
+        assertEquals(2, resMe.size());
+        assertTrue(resMe.get(0).getApiResponse().getRequestUrl().contains("/users/me/profile"));
+        assertTrue(resMe.get(1).getApiResponse().getRequestUrl().contains("/users/me/profile"));
+
+        // 2. Preference = "healthUserId" -> step 1 uses /users/8677373576871223311/profile, step 2 overrides with /users/me/profile
+        prefs.setEndpointUserId("healthUserId");
+        configManager.savePreferences(prefs);
+        var resHealthUser = runner.executeScript(tempScript);
+        assertEquals(2, resHealthUser.size());
+        assertTrue(resHealthUser.get(0).getApiResponse().getRequestUrl().contains("/users/8677373576871223311/profile"));
+        assertTrue(resHealthUser.get(1).getApiResponse().getRequestUrl().contains("/users/me/profile"));
+
+        // 3. Preference = "both" -> step 1 expands into 2 steps (me & healthUserId), step 2 stays 1 step (me) -> total 3 steps
+        prefs.setEndpointUserId("both");
+        configManager.savePreferences(prefs);
+        var resBoth = runner.executeScript(tempScript);
+        assertEquals(3, resBoth.size());
+        assertEquals("Step Using Preference User (me)", resBoth.get(0).getTestName());
+        assertTrue(resBoth.get(0).getApiResponse().getRequestUrl().contains("/users/me/profile"));
+        assertEquals("Step Using Preference User (healthUserId)", resBoth.get(1).getTestName());
+        assertTrue(resBoth.get(1).getApiResponse().getRequestUrl().contains("/users/8677373576871223311/profile"));
+        assertEquals("Step Overriding With me", resBoth.get(2).getTestName());
+        assertTrue(resBoth.get(2).getApiResponse().getRequestUrl().contains("/users/me/profile"));
     }
 }

@@ -2,10 +2,9 @@
 # - Global latency criteria is configured at the top of the file via `maxLatencyMs: 1000` (in milliseconds).
 # - Any individual endpoint step can override the global criteria by specifying `maxLatencyMs: <ms>` on that step.
 name: "Google Health API Latency Tests"
-description: "Latency tests across all Google Health API datatypes and endpoints (fails if latency > 1000 ms)"
-userId: both # Supported values: me, healthUserId, both
+description: "Latency tests across all Google Health API datatypes and endpoints (uses configurable Max Latency threshold from Preferences & OAuth)"
 stopOnError: false
-maxLatencyMs: 5000 # Global max allowed latency in milliseconds for all endpoints
+# maxLatencyMs: 5000 # Uses configurable Max Latency threshold from Preferences & OAuth (default 5000 ms) unless overridden here
 
 steps:
   # ============================================================================

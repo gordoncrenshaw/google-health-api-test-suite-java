@@ -11,7 +11,6 @@
 
 name: "Google Health API Menstrual Period Write, Update & Delete Negative Tests"
 description: "Boundary and negative tests for creating, updating, and deleting menstrual-period data points using verifyWithGet"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

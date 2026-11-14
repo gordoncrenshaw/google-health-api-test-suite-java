@@ -11,7 +11,6 @@
 
 name: "Google Health API Update User Settings Negative Tests"
 description: "Boundary and negative tests for updating user settings via updateSettings and verifying via getSettings"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:

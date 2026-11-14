@@ -1,7 +1,6 @@
 # Google Health API Weight Standard Tests
 name: "Google Health API Weight Tests"
 description: "Standard tests for Weight datatype"
-userId: both # Supported values: me, healthUserId, both
 stopOnError: false
 
 steps:
